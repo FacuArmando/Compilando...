@@ -11,5 +11,5 @@
       - Apellido:
     
     #Integrante 3:
-      - Nombre:
-      - Apellido: 
+      - Nombre: Milagros
+      - Apellido: Carmona
