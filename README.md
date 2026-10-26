@@ -7,8 +7,8 @@
       - Apellido: Armando
       
     #Integrante 2:
-      - Nombre: 
-      - Apellido:
+      - Nombre: Matias
+      - Apellido: Ponce
     
     #Integrante 3:
       - Nombre: Milagros
