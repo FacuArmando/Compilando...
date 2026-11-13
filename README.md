@@ -4,7 +4,11 @@ Plataforma universitaria de preguntas y respuestas con participación humana y r
 
 ## Estado actual
 
-Base Flask modular, página inicial, `/health`, conexión SQLite, infraestructura de migraciones y herramientas de calidad. Los paquetes de autenticación, preguntas, respuestas e IA están reservados; sus funciones y tablas todavía no se implementaron.
+Base Flask modular, página inicial, registro de usuarios desde el navegador, `/health`, conexión SQLite y herramientas de calidad. El registro valida los datos, rechaza duplicados, guarda el hash de la contraseña y muestra una confirmación al volver al inicio. Los formularios están protegidos con Flask-WTF (CSRF). Login, preguntas, respuestas e IA siguen pendientes.
+
+`registrar_usuario` en `compilando/modules/auth/services.py` valida los datos, guarda el correo en minúsculas, genera el hash y persiste la cuenta. Las contraseñas deben tener entre 8 y 128 caracteres. Los datos inválidos o repetidos producen un `ValueError` con un mensaje para mostrar en el formulario.
+
+Para probar el registro, instalar las dependencias con `uv sync --locked`, aplicar `db upgrade`, iniciar el servidor y abrir `/auth/register` o pulsar «Crear una cuenta» desde el inicio. Los errores conservan usuario y correo, pero requieren volver a escribir la contraseña. El registro crea la cuenta; iniciar sesión será el siguiente paso.
 
 ## Preparación
 
@@ -36,12 +40,18 @@ Abrir <http://127.0.0.1:5051>. El estado del proceso está en <http://127.0.0.1:
 uv run flask --app compilando:create_app check-db
 ```
 
-Comprueba una consulta real y crea, si hace falta, `instance/compilando.sqlite`. SQLite no requiere un servicio adicional. Todavía no hay tablas de negocio. Para usar PostgreSQL habrá que configurar `DATABASE_URL` e incorporar su controlador.
+Comprueba una consulta real y crea, si hace falta, `instance/compilando.sqlite`. SQLite se utiliza provisionalmente en desarrollo mientras el equipo confirma el motor. Para usar PostgreSQL habrá que configurar `DATABASE_URL` e incorporar su controlador.
 
-La infraestructura de Alembic está en `migrations/`. Al incorporar modelos, importarlos desde la fábrica para que sean descubiertos y ejecutar:
+La primera migración está en `migrations/versions/` y crea la tabla `usuarios`. Para aplicarla en cada copia local:
 
 ```bash
-uv run flask --app compilando:create_app db migrate -m "Crear usuarios"
+uv run flask --app compilando:create_app db upgrade
+```
+
+El paquete `auth` importa `Usuario` al cargarse, permitiendo que las migraciones descubran su tabla. Al cambiar o incorporar modelos, asegurarse de que se importen al cargar la aplicación y generar una nueva revisión:
+
+```bash
+uv run flask --app compilando:create_app db migrate -m "Describir el cambio de tablas"
 # Revisar el archivo generado antes de aplicarlo y guardarlo en Git.
 uv run flask --app compilando:create_app db upgrade
 ```
@@ -56,7 +66,7 @@ uv run ruff format --check .
 uv run pytest
 ```
 
-La prueba inicial comprueba que dos aplicaciones creadas por la fábrica no comparten su base en memoria. Las pruebas del producto se incorporarán con cada función. Para cobertura: `uv run pytest --cov=compilando --cov-report=term-missing`.
+Las pruebas comprueban el aislamiento entre aplicaciones, las migraciones, el servicio de registro y el recorrido del formulario: persistencia, hash, validaciones, duplicados, confirmación y rechazo de tokens CSRF ausentes, inválidos, vencidos o pertenecientes a otra sesión. Usan bases temporales y mantienen CSRF habilitado. Para cobertura: `uv run pytest --cov=compilando --cov-report=term-missing`.
 
 El archivo `.github/workflows/checks.yml` configura estas comprobaciones para GitHub Actions al subir cambios. Todavía no se ejecutó en GitHub.
 
