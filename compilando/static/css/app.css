@@ -143,7 +143,7 @@ button:focus-visible {
   color: #84251f;
 }
 
-.home .notice {
+.notice {
   padding: 12px 20px;
   border: 1px solid #b7d8bf;
   border-radius: 8px;
@@ -159,4 +159,130 @@ button:focus-visible {
 .button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.auth-main {
+  display: grid;
+  place-items: stretch;
+  width: 100%;
+  padding: 0;
+}
+
+.auth-screen {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.auth-visual {
+  /* Este panel queda preparado para incorporar una foto como fondo más adelante. */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  padding: clamp(32px, 5vw, 80px);
+  background: #1546a0;
+  color: #f2eadf;
+}
+
+.auth-brand {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.5vw, 2.6rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+.auth-visual-copy {
+  margin-top: 80px;
+}
+
+.auth-visual-title {
+  margin: 0;
+  font-size: clamp(2rem, 3.5vw, 4rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+
+.auth-visual-description {
+  max-width: 36ch;
+  margin: 24px 0 0;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(32px, 5vw, 80px);
+  background: #f2eadf;
+  color: #18335f;
+}
+
+.auth-content {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-content h1 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.auth-intro {
+  margin: 16px 0 0;
+  color: #4a5d78;
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 22px;
+  margin-top: 32px;
+}
+
+.auth-form .button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 8px;
+}
+
+.auth-switch {
+  margin: 28px 0 0;
+  color: #4a5d78;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.auth-switch a {
+  color: #1546a0;
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .auth-screen {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .auth-visual {
+    padding: 24px;
+  }
+
+  .auth-visual-copy {
+    display: none;
+  }
+
+  .auth-panel {
+    padding: 40px 24px;
+  }
 }
