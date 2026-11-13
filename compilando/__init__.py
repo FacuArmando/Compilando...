@@ -12,7 +12,8 @@ from flask import Flask
 
 from compilando.commands import register_commands
 from compilando.config import load_config
-from compilando.extensions import db, migrate
+from compilando.extensions import csrf, db, migrate
+from compilando.modules.auth.routes import bp as auth_bp
 from compilando.modules.system.routes import bp as system_bp
 
 
@@ -27,6 +28,8 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     db.init_app(app)
     migrate.init_app(app, db, directory=str(project_root / "migrations"))
+    csrf.init_app(app)
     app.register_blueprint(system_bp)
+    app.register_blueprint(auth_bp)
     register_commands(app)
     return app

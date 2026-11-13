@@ -1,4 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>COMPILANDO...</h1>
+<section class="home">
+  <h1>COMPILANDO...</h1>
+  <p>Una comunidad para compartir preguntas y respuestas sobre programación.</p>
+  {% for message in get_flashed_messages(category_filter=['success']) %}
+    <p class="notice" role="status">{{ message }}</p>
+  {% endfor %}
+  <a class="button" href="{{ url_for('auth.register') }}">Crear una cuenta</a>
+</section>
 {% endblock %}
