@@ -34,7 +34,8 @@ Como usuario con una cuenta, quiero iniciar sesión para participar con mi ident
 - Cerrar sesión impide seguir utilizando las acciones protegidas con esa sesión.
 - Las contraseñas se almacenan mediante hash apropiado para contraseñas.
 
-La elección de sesión/JWT y su mecanismo de invalidación se documentarán antes de implementar, tomando en cuenta el taller y el modelo `Sesion`.
+La decisión de usar sesiones persistentes, su vencimiento y su invalidación están
+documentados en [autenticacion.md](autenticacion.md), siguiendo el modelo `Sesion`.
 
 ### HU-02 — Publicar y consultar preguntas
 

@@ -15,14 +15,14 @@ compilando/
 │   ├── commands.py             # check-db
 │   ├── modules/
 │   │   ├── system/routes.py    # Inicio y /health: implementados
-│   │   ├── auth/               # Autenticación: reservado
+│   │   ├── auth/               # Registro, login, logout y sesiones persistentes
 │   │   ├── questions/          # Preguntas: reservado
 │   │   ├── answers/            # Respuestas y autoría: reservado
 │   │   └── ai/                 # Solicitudes y proveedores: reservado
 │   ├── templates/              # HTML: base y pantallas por módulo
 │   └── static/css/             # Estilos
-├── migrations/                 # Alembic, sin revisiones aún
-├── tests/                      # Prueba inicial de aislamiento de bases
+├── migrations/                 # Alembic: usuarios, sesiones y límites de intentos
+├── tests/                      # Aislamiento, migraciones, registro y autenticación
 ├── instance/                   # SQLite local; ignorado por Git
 ├── .github/workflows/checks.yml
 ├── .env.example
@@ -61,16 +61,19 @@ Las plantillas se ubicarán en `templates/questions/`, `templates/auth/`, etc. L
 - Jinja, HTML y CSS para la primera interfaz dentro de Flask.
 - Strategy para IA al implementar el botón: distinguir al solicitante humano del autor IA y tratar los fallos del proveedor.
 
-La solución de autenticación y el proveedor de IA siguen pendientes. JWT figura en el taller y `Sesion` en el UML; su relación se documentará antes de implementar el login.
+La autenticación usa sesiones persistidas en la base, siguiendo `Sesion` del UML.
+La decisión, los controles y la configuración de producción están documentados en
+[autenticacion.md](autenticacion.md). El proveedor de IA sigue pendiente.
 
 Se utiliza un paquete en la raíz, una disposición habitual para una aplicación Flask pequeña. Esto también permite arrancar desde el repositorio sin depender de un archivo `.pth` de instalación editable: en este equipo macOS vuelve a marcar esos archivos como ocultos y Python los omite. La estructura sigue siendo modular y el proyecto también puede construirse como paquete.
 
 ## Alcance real de esta entrega
 
-- `/`: página inicial que informa que la comunidad está en construcción.
+- `/`: página inicial con enlaces de ingreso o nombre del usuario y cierre de sesión.
 - `/health`: disponibilidad del proceso web, sin consultar servicios externos.
 - `check-db`: consulta real a SQLite.
-- Infraestructura de migraciones preparada, todavía sin entidades ni tablas del producto.
-- Login, preguntas, respuestas y llamadas a IA pendientes del siguiente hito.
+- Registro, login y logout con CSRF, sesiones revocables en la base y límites de intentos.
+- Migraciones para usuarios, sesiones y contadores de autenticación.
+- Preguntas, respuestas y llamadas a IA pendientes del siguiente hito.
 
 Fuentes: [Application Factories](https://flask.palletsprojects.com/en/stable/patterns/appfactories/), [Blueprints](https://flask.palletsprojects.com/en/stable/blueprints/).

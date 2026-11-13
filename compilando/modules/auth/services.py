@@ -1,13 +1,32 @@
-"""Lógica de registro de usuarios, independiente de los formularios y las rutas."""
+"""Registro y comprobación de credenciales, independientes de los formularios."""
 
 import re
+import secrets
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from compilando.extensions import db
 from compilando.modules.auth.models import Usuario
+
+ERROR_CREDENCIALES = "Credenciales incorrectas."
+# Se genera una sola vez; evita omitir el costo del hash cuando el correo no existe.
+_HASH_FICTICIO = generate_password_hash(secrets.token_urlsafe(32))
+
+
+def autenticar_usuario(email: str, password: str) -> Usuario:
+    """Comprobar credenciales sin revelar si existe una cuenta ni cambiar su clave."""
+    email = email.strip().lower()
+    if not email or len(email) > 254 or not 1 <= len(password) <= 128:
+        raise ValueError(ERROR_CREDENCIALES)
+
+    usuario = db.session.scalar(select(Usuario).where(Usuario.email == email))
+    password_hash = usuario.password_hash if usuario is not None else _HASH_FICTICIO
+    coincide = check_password_hash(password_hash, password)
+    if usuario is None or not coincide:
+        raise ValueError(ERROR_CREDENCIALES)
+    return usuario
 
 
 def registrar_usuario(username: str, email: str, password: str) -> Usuario:

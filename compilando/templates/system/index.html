@@ -1,11 +1,20 @@
 {% extends 'base.html' %}
+{% block main_class %}{% if not usuario_actual %}auth-main{% endif %}{% endblock %}
 {% block content %}
+{% if usuario_actual %}
 <section class="home">
   <h1>COMPILANDO...</h1>
   <p>Una comunidad para compartir preguntas y respuestas sobre programación.</p>
   {% for message in get_flashed_messages(category_filter=['success']) %}
     <p class="notice" role="status">{{ message }}</p>
   {% endfor %}
-  <a class="button" href="{{ url_for('auth.register') }}">Crear una cuenta</a>
+  <p>Sesión iniciada como <strong>{{ usuario_actual.username }}</strong>.</p>
+  <form action="{{ url_for('auth.logout') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="button" type="submit">Cerrar sesión</button>
+  </form>
 </section>
+{% else %}
+  {% include 'auth/_login_screen.html' %}
+{% endif %}
 {% endblock %}
