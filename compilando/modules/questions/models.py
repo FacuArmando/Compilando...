@@ -34,4 +34,8 @@ class Pregunta(db.Model):
 
     usuario: Mapped["Usuario"] = relationship("Usuario")
     categoria: Mapped["Categoria"] = relationship("Categoria")
-    tags: Mapped[list["Tag"]] = relationship("Tag", secondary=pregunta_tags)
+    tags: Mapped[list["Tag"]] = relationship(
+        "Tag",
+        secondary=pregunta_tags,
+        back_populates="preguntas"
+    )
