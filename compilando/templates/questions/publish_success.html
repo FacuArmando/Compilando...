@@ -1,0 +1,33 @@
+
+{% extends "base.html" %}
+
+{% block title %}Pregunta publicada | COMPILANDO...{% endblock %}
+
+{% block main_class %}publish-question{% endblock %}
+
+{% block content %}
+<section class="question-container success-container">
+
+    <div class="success-icon">
+        ✓
+    </div>
+
+    <header class="question-header">
+        <span class="question-eyebrow">COMUNIDAD COMPILANDO</span>
+
+        <h1>¡Pregunta publicada!</h1>
+
+        <p>
+            Tu pregunta se publicó correctamente.
+            Ahora la comunidad puede leerla y responderla.
+        </p>
+    </header>
+
+    <div class="form-actions">
+        <a href="{{ url_for('system.index') }}" class="success-button">
+            Volver al inicio
+        </a>
+    </div>
+
+</section>
+{% endblock %}

@@ -5,6 +5,20 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from compilando.extensions import db
 
+pregunta_tags = db.Table(
+    "pregunta_tags",
+    db.Column(
+        "pregunta_id",
+        db.ForeignKey("preguntas.id"),
+        primary_key=True
+    ),
+    db.Column(
+        "tag_id",
+        db.ForeignKey("tags.id"),
+        primary_key=True
+    )
+)
+
 class Pregunta(db.Model):
     """Representa una pregunta publicada por un usuario."""
 
@@ -20,4 +34,14 @@ class Pregunta(db.Model):
         nullable=False
     )
 
+    categoria_id: Mapped[int] = mapped_column(
+        ForeignKey("categorias.id"),
+        nullable=False
+    )
+
     usuario: Mapped["Usuario"] = relationship("Usuario")
+    categoria: Mapped["Categoria"] = relationship("Categoria")
+    tags: Mapped[list["Tag"]] = relationship(
+        "Tag",
+        secondary=pregunta_tags
+    )

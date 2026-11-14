@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}COMPILANDO...{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+      {% block styles %}{% endblock %}
   </head>
   <body>
     <main class="{% block main_class %}{% endblock %}">{% block content %}{% endblock %}</main>
