@@ -1,4 +1,3 @@
-
 import pytest
 
 from compilando.modules.questions.services import (
@@ -10,9 +9,9 @@ from compilando.modules.questions.services import (
 @pytest.mark.parametrize(
     "titulo",
     [
-        "Hola mundo",       # 10 caracteres
-        "A" * 150,          # 150 caracteres
-        "   Hola mundo   ", # Espacios exteriores
+        "Hola mundo",  # 10 caracteres
+        "A" * 150,  # 150 caracteres
+        "   Hola mundo   ",  # Espacios exteriores
     ],
 )
 def test_validar_titulo_valido(titulo):
@@ -22,9 +21,9 @@ def test_validar_titulo_valido(titulo):
 @pytest.mark.parametrize(
     "titulo",
     [
-        "Hola",       # Menos de 10 caracteres
-        "A" * 151,    # Más de 150 caracteres
-        "     ",      # Solo espacios
+        "Hola",  # Menos de 10 caracteres
+        "A" * 151,  # Más de 150 caracteres
+        "     ",  # Solo espacios
     ],
 )
 def test_validar_titulo_invalido(titulo):
@@ -34,7 +33,7 @@ def test_validar_titulo_invalido(titulo):
 @pytest.mark.parametrize(
     "cuerpo",
     [
-        "Hey",       # 3 caracteres
+        "Hey",  # 3 caracteres
         "A" * 5000,  # 5000 caracteres
     ],
 )
@@ -45,9 +44,9 @@ def test_validar_cuerpo_valido(cuerpo):
 @pytest.mark.parametrize(
     "cuerpo",
     [
-        "Hi",        # Menos de 3 caracteres
+        "Hi",  # Menos de 3 caracteres
         "A" * 5001,  # Más de 5000 caracteres
-        "   ",       # Solo espacios
+        "   ",  # Solo espacios
     ],
 )
 def test_validar_cuerpo_invalido(cuerpo):
