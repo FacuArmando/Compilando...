@@ -1,0 +1,145 @@
+
+{% extends "base.html" %}
+
+{% block title %}Publicar pregunta | COMPILANDO...{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">
+{% endblock %}
+
+{% block main_class %}publish-question{% endblock %}
+
+{% block content %}
+
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+    {% if mensajes %}
+        {% for categoria, mensaje in mensajes %}
+            <div class="flash-message flash-{{ categoria }}" role="alert">
+                {{ mensaje }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="question-container">
+
+    <header class="question-header">
+        <span class="question-eyebrow">COMUNIDAD COMPILANDO</span>
+
+        <h1>Compartí tu pregunta</h1>
+
+        <p>
+            ¿Tenés una duda? Este es el lugar para compartirla
+            y encontrar respuestas de la comunidad.
+        </p>
+    </header>
+
+    <form method="POST" class="question-form" novalidate>
+
+        <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+        >
+
+        <div class="form-field">
+            <label for="titulo">Título de la pregunta</label>
+
+            <input
+                    type="text"
+                    id="titulo"
+                    name="titulo"
+                    value="{{ titulo }}"
+                    placeholder="Ej. ¿Cómo funcionan los árboles AVL?"
+                    class="{% if error_titulo %}input-error{% endif %}"
+                    required
+            >
+
+            {% if error_titulo %}
+                <p class="field-error">
+                    Revisá el título: debe tener entre 10 y 150 caracteres.
+                </p>
+            {% endif %}
+
+            <small>Entre 10 y 150 caracteres.</small>
+        </div>
+
+        <div class="form-field">
+            <label for="cuerpo">Descripción detallada</label>
+
+            <textarea
+                    id="cuerpo"
+                    name="cuerpo"
+                    placeholder="Contanos qué necesitás saber..."
+                    class="{% if error_cuerpo %}input-error{% endif %}"
+                    minlength="3"
+                    maxlength="5000"
+                    required
+            >{{ cuerpo }}</textarea>
+
+            {% if error_cuerpo %}
+            <p class="field-error">
+                Revisá el cuerpo: debe tener entre 3 y 5000 caracteres.
+            </p>
+            {% endif %}
+
+            <small>Entre 3 y 5000 caracteres.</small>
+        </div>
+
+        <div class="form-field">
+            <label for="categoria">Categoría</label>
+
+            <input
+                    type="text"
+                    id="categoria"
+                    name="categoria"
+                    list="categorias-disponibles"
+                    value="{{ categoria_nombre }}"
+                    placeholder="Ej. Programación"
+                    class="{% if error_categoria %}input-error{% endif %}"
+                    required
+            >
+
+            {% if error_categoria %}
+            <p class="field-error">
+                Ingresá una categoría para publicar tu pregunta.
+            </p>
+            {% endif %}
+
+            <datalist id="categorias-disponibles">
+                {% for categoria in categorias %}
+                <option value="{{ categoria.nombre }}">
+                    {% endfor %}
+            </datalist>
+
+            <small>Seleccioná una categoría existente o proponé una nueva.</small>
+        </div>
+
+        <div class="form-field">
+            <label for="tags">Etiquetas <span>(opcional)</span></label>
+
+            <input
+                    type="text"
+                    id="tags"
+                    name="tags"
+                    value="{{ tags_texto }}"
+                    placeholder="Java, Árboles, Recursividad..."
+            >
+
+            <small>Separá las etiquetas con comas.</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">
+                Publicar pregunta
+                <span aria-hidden="true">→</span>
+            </button>
+
+            <p>Revisá tu pregunta antes de publicarla.</p>
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

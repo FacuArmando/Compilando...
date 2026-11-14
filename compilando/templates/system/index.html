@@ -17,4 +17,19 @@
 {% else %}
   {% include 'auth/_login_screen.html' %}
 {% endif %}
+
+{% if usuario_actual %}
+<a href="{{ url_for('questions.publish_question') }}">
+    Publicar una pregunta
+</a>
+{% else %}
+<p>
+    Iniciá sesión para publicar una pregunta.
+</p>
+
+<a href="{{ url_for('auth.login') }}">
+    Iniciar sesión
+</a>
+{% endif %}
+
 {% endblock %}
