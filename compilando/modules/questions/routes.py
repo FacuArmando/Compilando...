@@ -1,4 +1,3 @@
-
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 from sqlalchemy import select
 
@@ -16,7 +15,7 @@ def publish_question():
     if g.usuario_actual is None:
         abort(401)
 
-    #Valores iniciales para mostrar el formulario vacío
+    # Valores iniciales para mostrar el formulario vacío
     titulo = ""
     cuerpo = ""
     categoria_nombre = ""
@@ -26,7 +25,6 @@ def publish_question():
     error_categoria = False
 
     if request.method == "POST":
-
         titulo = request.form.get("titulo", "")
         cuerpo = request.form.get("cuerpo", "")
         categoria_nombre = request.form.get("categoria", "")
@@ -39,7 +37,7 @@ def publish_question():
                 cuerpo=cuerpo,
                 categoria_nombre=categoria_nombre,
                 nombres_tags=nombres_tags,
-                usuario=g.usuario_actual
+                usuario=g.usuario_actual,
             )
 
             return redirect(url_for("questions.publish_success"))
@@ -54,14 +52,10 @@ def publish_question():
             if not error_titulo and not error_cuerpo and not error_categoria:
                 flash(str(error), "error")
 
-    #Estas consultas se ejecutan tanto para GET como para POST
-    categorias = db.session.scalars(
-        select(Categoria).order_by(Categoria.nombre)
-    ).all()
+    # Estas consultas se ejecutan tanto para GET como para POST
+    categorias = db.session.scalars(select(Categoria).order_by(Categoria.nombre)).all()
 
-    tags = db.session.scalars(
-        select(Tag).order_by(Tag.nombre)
-    ).all()
+    tags = db.session.scalars(select(Tag).order_by(Tag.nombre)).all()
 
     return render_template(
         "questions/publish_question.html",
@@ -73,7 +67,7 @@ def publish_question():
         tags_texto=tags_texto,
         error_titulo=error_titulo,
         error_cuerpo=error_cuerpo,
-        error_categoria=error_categoria
+        error_categoria=error_categoria,
     )
 
 

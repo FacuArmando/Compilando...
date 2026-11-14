@@ -14,11 +14,8 @@ def normalizar_nombre(nombre: str) -> str:
 
     nombre = unicodedata.normalize("NFD", nombre)
 
-    return "".join(
-        caracter
-        for caracter in nombre
-        if unicodedata.category(caracter) != "Mn"
-    )
+    return "".join(caracter for caracter in nombre if unicodedata.category(caracter) != "Mn")
+
 
 def validar_titulo(titulo: str) -> bool:
     return 10 <= len(titulo.strip()) <= 150
@@ -27,32 +24,27 @@ def validar_titulo(titulo: str) -> bool:
 def validar_cuerpo(cuerpo: str) -> bool:
     return 3 <= len(cuerpo.strip()) <= 5000
 
+
 def obtener_o_crear_categoria(nombre: str) -> Categoria:
     nombre = nombre.strip()
 
-    categorias_existentes = db.session.scalars(
-        select(Categoria)
-    ).all()
+    categorias_existentes = db.session.scalars(select(Categoria)).all()
 
     for categoria in categorias_existentes:
         if normalizar_nombre(categoria.nombre) == normalizar_nombre(nombre):
             return categoria
 
-    categoria = Categoria(
-        nombre=nombre,
-        descripcion=""
-    )
+    categoria = Categoria(nombre=nombre, descripcion="")
 
     db.session.add(categoria)
 
     return categoria
 
+
 def obtener_o_crear_tag(nombre: str) -> Tag:
     nombre = nombre.strip()
 
-    tags_existentes = db.session.scalars(
-        select(Tag)
-    ).all()
+    tags_existentes = db.session.scalars(select(Tag)).all()
 
     for tag in tags_existentes:
         if normalizar_nombre(tag.nombre) == normalizar_nombre(nombre):
@@ -63,13 +55,12 @@ def obtener_o_crear_tag(nombre: str) -> Tag:
 
     return tag
 
+
 """Función encargada de publicar las preguntas a la plataforma"""
+
+
 def publicar_pregunta(
-        titulo: str,
-        cuerpo: str,
-        categoria_nombre: str,
-        nombres_tags: list[str],
-        usuario: Usuario
+    titulo: str, cuerpo: str, categoria_nombre: str, nombres_tags: list[str], usuario: Usuario
 ) -> Pregunta:
 
     if not validar_titulo(titulo):
@@ -100,7 +91,7 @@ def publicar_pregunta(
             cuerpo_detallado=cuerpo.strip(),
             usuario=usuario,
             categoria=categoria,
-            tags=tags
+            tags=tags,
         )
 
         db.session.add(pregunta)
