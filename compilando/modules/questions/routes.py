@@ -1,20 +1,11 @@
 
-from flask import (
-    Blueprint,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    flash,
-    g,
-    abort
-)
+from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 from sqlalchemy import select
 
 from compilando.extensions import db
 from compilando.modules.categories.models import Categoria
-from compilando.modules.tags.models import Tag
 from compilando.modules.questions.services import publicar_pregunta
+from compilando.modules.tags.models import Tag
 
 bp = Blueprint("questions", __name__)
 

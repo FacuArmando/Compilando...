@@ -1,12 +1,13 @@
-from sqlalchemy import func, select
+import unicodedata
+
+from sqlalchemy import select
 
 from compilando.extensions import db
-from compilando.modules.categories.models import Categoria
-from compilando.modules.tags.models import Tag
 from compilando.modules.auth.models import Usuario
+from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.models import Pregunta
+from compilando.modules.tags.models import Tag
 
-import unicodedata
 
 def normalizar_nombre(nombre: str) -> str:
     nombre = nombre.strip().casefold()

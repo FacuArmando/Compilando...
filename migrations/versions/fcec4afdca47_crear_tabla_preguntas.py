@@ -5,9 +5,8 @@ Revises: c891d12e43a0
 Create Date: 2026-11-13 18:06:29.055092
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'fcec4afdca47'
@@ -24,7 +23,11 @@ def upgrade():
     sa.Column('cuerpo_detallado', sa.Text(), nullable=False),
     sa.Column('fecha', sa.Date(), nullable=False),
     sa.Column('usuario_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['usuario_id'], ['usuarios.id'], name=op.f('fk_preguntas_usuario_id_usuarios')),
+                    sa.ForeignKeyConstraint(
+                        ['usuario_id'],
+                        ['usuarios.id'],
+                        name=op.f('fk_preguntas_usuario_id_usuarios')
+                    ),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_preguntas'))
     )
     # ### end Alembic commands ###

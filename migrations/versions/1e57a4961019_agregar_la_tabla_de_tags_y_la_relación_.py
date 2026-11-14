@@ -5,9 +5,8 @@ Revises: 660a298bf154
 Create Date: 2026-11-13 18:45:44.300599
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '1e57a4961019'
@@ -27,7 +26,11 @@ def upgrade():
     op.create_table('pregunta_tags',
     sa.Column('pregunta_id', sa.Integer(), nullable=False),
     sa.Column('tag_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['pregunta_id'], ['preguntas.id'], name=op.f('fk_pregunta_tags_pregunta_id_preguntas')),
+                    sa.ForeignKeyConstraint(
+                        ['pregunta_id'],
+                        ['preguntas.id'],
+                        name=op.f('fk_pregunta_tags_pregunta_id_preguntas')
+                    ),
     sa.ForeignKeyConstraint(['tag_id'], ['tags.id'], name=op.f('fk_pregunta_tags_tag_id_tags')),
     sa.PrimaryKeyConstraint('pregunta_id', 'tag_id', name=op.f('pk_pregunta_tags'))
     )

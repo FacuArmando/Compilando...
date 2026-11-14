@@ -1,9 +1,15 @@
 from datetime import date
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, String, Text, ForeignKey
+from sqlalchemy import Date, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from compilando.extensions import db
+
+if TYPE_CHECKING:
+    from compilando.modules.categories.models import Categoria
+    from compilando.modules.tags.models import Tag
+    from compilando.modules.users.models import Usuario
 
 pregunta_tags = db.Table(
     "pregunta_tags",
