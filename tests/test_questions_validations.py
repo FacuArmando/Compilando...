@@ -2,8 +2,8 @@
 import pytest
 
 from compilando.modules.questions.services import (
-    validar_titulo,
     validar_cuerpo,
+    validar_titulo,
 )
 
 
