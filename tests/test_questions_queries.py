@@ -94,21 +94,28 @@ def test_consultar_preguntas_sin_publicaciones(app):
 @pytest.mark.parametrize("con_sesion", [False, True])
 def test_feed_combina_busqueda_y_categoria_y_conserva_los_controles(app, usuario, con_sesion):
     pregunta = publicar_pregunta(
-        "¿Cómo diseño un TAD?", "Quiero separar la interfaz y los datos.",
-        "Estructuras", [], usuario,
+        "¿Cómo diseño un TAD?",
+        "Quiero separar la interfaz y los datos.",
+        "Estructuras",
+        [],
+        usuario,
     )
     publicar_pregunta(
-        "¿Cómo diseño una cola?", "Quiero organizar sus operaciones.",
-        "Estructuras", [], usuario,
+        "¿Cómo diseño una cola?",
+        "Quiero organizar sus operaciones.",
+        "Estructuras",
+        [],
+        usuario,
     )
     publicar_pregunta(
-        "¿Cómo diseño una interfaz web?", "Quiero organizar los botones.",
-        "Desarrollo web", [], usuario,
+        "¿Cómo diseño una interfaz web?",
+        "Quiero organizar los botones.",
+        "Desarrollo web",
+        [],
+        usuario,
     )
     cliente = cliente_consulta(app, usuario, con_sesion)
-    response = cliente.get(
-        "/", query_string={"q": "INTERFAZ", "categoria": pregunta.categoria_id}
-    )
+    response = cliente.get("/", query_string={"q": "INTERFAZ", "categoria": pregunta.categoria_id})
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     feed = Feed(html)
@@ -124,16 +131,22 @@ def test_feed_pagina_sin_perder_busqueda_ni_categoria(app, usuario, con_sesion):
     ids = []
     for numero in range(12):
         pregunta = publicar_pregunta(
-            f"Pila de prueba {numero:02d}", "Quiero organizar sus operaciones.",
-            "Estructuras", [], usuario,
+            f"Pila de prueba {numero:02d}",
+            "Quiero organizar sus operaciones.",
+            "Estructuras",
+            [],
+            usuario,
         )
         ids.append(pregunta.id)
     categoria_id = db.session.scalar(
         db.select(Categoria.id).where(Categoria.nombre == "Estructuras")
     )
     publicar_pregunta(
-        "Pila de otra categoría", "Una pregunta de desarrollo web.",
-        "Desarrollo web", [], usuario,
+        "Pila de otra categoría",
+        "Una pregunta de desarrollo web.",
+        "Desarrollo web",
+        [],
+        usuario,
     )
     cliente = cliente_consulta(app, usuario, con_sesion)
     primera = cliente.get("/", query_string={"q": "Pila", "categoria": categoria_id})
@@ -145,7 +158,9 @@ def test_feed_pagina_sin_perder_busqueda_ni_categoria(app, usuario, con_sesion):
     assert "prev" not in feed.paginas
     enlace = urlsplit(feed.paginas["next"])
     assert parse_qs(enlace.query) == {
-        "page": ["2"], "q": ["Pila"], "categoria": [str(categoria_id)]
+        "page": ["2"],
+        "q": ["Pila"],
+        "categoria": [str(categoria_id)],
     }
     segunda = cliente.get(f"{enlace.path}?{enlace.query}")
     assert segunda.status_code == 200
@@ -158,7 +173,7 @@ def test_feed_pagina_sin_perder_busqueda_ni_categoria(app, usuario, con_sesion):
 @pytest.mark.parametrize("con_sesion", [False, True])
 def test_feed_sin_coincidencias_conserva_y_escapa_la_busqueda(app, usuario, con_sesion):
     cliente = cliente_consulta(app, usuario, con_sesion)
-    busqueda = '\"><script>alert(1)</script>'
+    busqueda = '"><script>alert(1)</script>'
     response = cliente.get("/", query_string={"q": busqueda})
     assert response.status_code == 200
     html = response.get_data(as_text=True)
