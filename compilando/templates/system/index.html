@@ -1,53 +1,197 @@
 {% extends 'base.html' %}
-{% block main_class %}{% if not usuario_actual %}auth-main{% endif %}{% endblock %}
+
+{% block title %}Inicio | COMPILANDO...{% endblock %}
+
+{% block main_class %}feed-main{% endblock %}
+
 {% block content %}
-{% if usuario_actual %}
-<section class="home">
-  <h1>COMPILANDO...</h1>
-  <p>Una comunidad para compartir preguntas y respuestas sobre programación.</p>
-  {% for message in get_flashed_messages(category_filter=['success']) %}
+
+{% if not usuario_actual %}
+{% include 'auth/_login_screen.html' %}
+{% endif %}
+
+<div class="feed-page">
+
+    <header class="feed-header">
+        <a class="feed-brand" href="{{ url_for('system.index') }}">
+            COMPILANDO...
+        </a>
+
+        {% if usuario_actual %}
+        <div class="feed-user">
+            <span>Sesión iniciada como <strong>{{ usuario_actual.username }}</strong></span>
+
+            <form action="{{ url_for('auth.logout') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="button button-secondary" type="submit">
+                    Cerrar sesión
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+        {% endif %}
+    </header>
+
+    {% for message in get_flashed_messages(category_filter=['success']) %}
     <p class="notice" role="status">{{ message }}</p>
-  {% endfor %}
-  <p>Sesión iniciada como <strong>{{ usuario_actual.username }}</strong>.</p>
-  <form action="{{ url_for('auth.logout') }}" method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="button" type="submit">Cerrar sesión</button>
-  </form>
-</section>
-{% else %}
-  {% include 'auth/_login_screen.html' %}
-{% endif %}
+    {% endfor %}
 
-{% if usuario_actual %}
-<a href="{{ url_for('questions.publish_question') }}">
-    Publicar una pregunta
-</a>
-{% else %}
-<p>
-    Iniciá sesión para publicar una pregunta.
-</p>
+    <section class="feed-welcome">
+        <h1>¿Qué estás aprendiendo hoy?</h1>
+        <p>Encontrá respuestas, compartí tus conocimientos y resolvé tus dudas.</p>
+    </section>
 
-<a href="{{ url_for('auth.login') }}">
-    Iniciar sesión
-</a>
-{% endif %}
-<hr>
-<section class="questions-list">
-  <h2>Preguntas recientes</h2>
-  {% if preguntas %}
-    <ul>
-      {% for pregunta in preguntas %}
-        <li>
-          <a href="{{ url_for('questions.view_question', pregunta_id=pregunta.id) }}">
-            {{ pregunta.titulo }}
-          </a>
-          <small>— por {{ pregunta.usuario.username }} ({{ pregunta.respuestas | length }} respuestas)</small>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>Todavía no hay preguntas publicadas.</p>
-  {% endif %}
-</section>
+    <section class="feed-actions">
+
+        <form class="feed-search" action="{{ url_for('system.index') }}" method="get">
+
+            <div class="field">
+                <label for="q">Buscar preguntas</label>
+                <input
+                        id="q"
+                        type="search"
+                        name="q"
+                        placeholder="Escribí una palabra o frase..."
+                        value="{{ busqueda }}"
+                >
+            </div>
+
+            <div class="field">
+                <label for="categoria">Categoría</label>
+                <select id="categoria" name="categoria">
+                    <option value="">Todas las categorías</option>
+
+                    {% for categoria in categorias %}
+                    <option
+                            value="{{ categoria.id }}"
+                            {% if categoria.id == categoria_seleccionada %}selected{% endif %}
+                    >
+                        {{ categoria.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button class="button button-primary" type="submit">
+                Buscar
+            </button>
+
+            <a class="feed-clear" href="{{ url_for('system.index') }}">
+                Limpiar filtros
+            </a>
+
+        </form>
+
+        {% if usuario_actual %}
+        <a class="button button-publish"
+           href="{{ url_for('questions.publish_question') }}">
+            + Publicar una pregunta
+        </a>
+        {% else %}
+        <a class="button button-publish"
+           href="{{ url_for('auth.login') }}">
+            Iniciá sesión para publicar
+        </a>
+        {% endif %}
+
+    </section>
+
+    <section class="questions-list">
+
+        <div class="feed-section-heading">
+            <h2>Preguntas recientes</h2>
+            <span>{{ paginacion.total }} resultados</span>
+        </div>
+
+        {% if preguntas %}
+
+        <div class="question-cards">
+
+            {% for pregunta in preguntas %}
+
+            <article class="question-card">
+
+                <div class="question-card-top">
+              <span class="question-category">
+                {{ pregunta.categoria.nombre }}
+              </span>
+
+                    <small>
+                        {{ pregunta.fecha.strftime('%d/%m/%Y') }}
+                    </small>
+                </div>
+
+                <h3>
+                    <a href="{{ url_for('questions.view_question', pregunta_id=pregunta.id) }}">
+                        {{ pregunta.titulo }}
+                    </a>
+                </h3>
+
+                <p class="question-preview">
+                    {{ pregunta.cuerpo_detallado | truncate(220, True, '...') }}
+                </p>
+
+                {% if pregunta.tags %}
+                <div class="question-tags">
+                    {% for tag in pregunta.tags %}
+                    <span>#{{ tag.nombre }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="question-card-footer">
+                    <span>Por {{ pregunta.usuario.username }}</span>
+                    <span>{{ pregunta.respuestas | length }} respuestas</span>
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+        {% if paginacion.pages > 1 %}
+        <nav class="feed-pagination" aria-label="Paginación">
+
+            {% if paginacion.has_prev %}
+            <a
+                    href="{{ url_for('system.index', page=paginacion.prev_num, q=busqueda, categoria=categoria_seleccionada) }}"
+                    class="button button-secondary"
+            >
+                Anterior
+            </a>
+            {% endif %}
+
+            <span>
+            Página {{ paginacion.page }} de {{ paginacion.pages }}
+          </span>
+
+            {% if paginacion.has_next %}
+            <a
+                    href="{{ url_for('system.index', page=paginacion.next_num, q=busqueda, categoria=categoria_seleccionada) }}"
+                    class="button button-secondary"
+            >
+                Siguiente
+            </a>
+            {% endif %}
+
+        </nav>
+        {% endif %}
+
+        {% else %}
+
+        <div class="feed-empty">
+            <h3>No encontramos preguntas</h3>
+            <p>Todavía no hay preguntas publicadas.</p>
+            <p>Probá con otras palabras o seleccioná una categoría diferente.</p>
+            <a href="{{ url_for('system.index') }}">Ver todas las preguntas</a>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
 
 {% endblock %}

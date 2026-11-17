@@ -24,7 +24,10 @@ def test_consultar_preguntas_publicadas(app, usuario):
 
     assert response.status_code == 200
     assert b"Preguntas recientes" in response.data
-    assert b"Como funciona Python?" in response.data or "¿Cómo funciona Python?".encode() in response.data
+    assert (
+            b"Como funciona Python?" in response.data
+            or "¿Cómo funciona Python?".encode() in response.data
+    )
     assert "¿Cómo funciona Flask?".encode() in response.data
 
     posicion_flask = response.data.index("¿Cómo funciona Flask?".encode())
