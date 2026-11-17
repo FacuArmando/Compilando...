@@ -103,11 +103,20 @@
                     <div id="contenido-respuesta-{{ respuesta.id }}">
                         <p>{{ respuesta.cuerpo }}</p>
                         <small>
-                            Respondido por <strong>{{ respuesta.usuario.username }}</strong> el día {{ respuesta.fecha_formateada }}
+                             Respondido por <strong>{{ respuesta.autor_nombre }}</strong>
+                             {% if respuesta.es_ia %}
+                             <span class="author-badge badge-ia">IA</span>
+                            {% elif respuesta.es_autor_pregunta %}
+                             <span class="author-badge badge-op">Autor de la pregunta</span>
+                            {% else %}
+                             <span class="author-badge badge-user">Usuario</span>
+                             {% endif %}
+                            el día {{ respuesta.fecha_formateada }}
                             {% if respuesta.fecha_edicion_formateada %}
-                                <br><em>Editado el día {{ respuesta.fecha_edicion_formateada }}</em>
+                             <br><em>Editado el día {{ respuesta.fecha_edicion_formateada }}</em>
                             {% endif %}
                         </small>
+
 
                         {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
                             <div class="answer-actions">

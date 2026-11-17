@@ -237,6 +237,36 @@
     border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.author-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    margin-left: 0.35rem;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.badge-user {
+    background-color: rgba(147, 197, 253, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(147, 197, 253, 0.45);
+}
+
+.badge-op {
+    background-color: rgba(52, 211, 153, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(52, 211, 153, 0.45);
+}
+
+.badge-ia {
+    background-color: rgba(251, 191, 36, 0.22);
+    color: #fde68a;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+}
+
 @media (max-width: 768px) {
     .gemini-layout {
         flex-direction: column;

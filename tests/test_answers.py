@@ -184,3 +184,61 @@ def test_editar_respuesta_cuerpo_invalido(app, usuario):
             nuevo_cuerpo="no",
             usuario=usuario,
         )
+
+
+def test_identificacion_autor_humano_y_autor_pregunta(app, usuario):
+    otro_usuario = Usuario(
+        username="colaborador", email="colab@test.com", password_hash="hash_colab"
+    )
+    db.session.add(otro_usuario)
+    db.session.commit()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo identificar autores en Flask?",
+        cuerpo="Queremos distinguir al autor de la pregunta y a otros usuarios.",
+        categoria_nombre="Arquitectura",
+        nombres_tags=["autores"],
+        usuario=usuario,
+    )
+
+    resp_autor = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Esta respuesta la escribe el mismo creador de la pregunta.",
+        usuario=usuario,
+    )
+    resp_otro = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Esta respuesta la aporta otro miembro de la comunidad.",
+        usuario=otro_usuario,
+    )
+
+    assert resp_autor.autor_nombre == "usuario_test"
+    assert resp_autor.es_autor_pregunta is True
+    assert resp_autor.es_ia is False
+
+    assert resp_otro.autor_nombre == "colaborador"
+    assert resp_otro.es_autor_pregunta is False
+    assert resp_otro.es_ia is False
+
+
+def test_identificacion_autor_ia(app, usuario):
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo etiquetar respuestas generadas por IA?",
+        cuerpo="Necesitamos identificar cuando una respuesta proviene de un modelo de IA.",
+        categoria_nombre="IA",
+        nombres_tags=["ia"],
+        usuario=usuario,
+    )
+
+    resp_ia = Respuesta(
+        cuerpo="Respuesta generada automáticamente.",
+        pregunta=pregunta,
+        usuario=usuario,
+        es_ia=True,
+        modelo_ia="Gemini 2.5",
+    )
+    db.session.add(resp_ia)
+    db.session.commit()
+
+    assert resp_ia.autor_nombre == "Gemini 2.5"
+    assert resp_ia.es_autor_pregunta is False
