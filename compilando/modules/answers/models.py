@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
@@ -27,6 +28,13 @@ MESES = (
 )
 
 
+class EstadoRespuesta(Enum):
+    """Estados posibles de aceptación de una respuesta."""
+
+    NO_ACEPTADA = "No aceptada"
+    ACEPTADA = "Aceptada"
+
+
 def _formatear_fecha_es(dt: datetime) -> str:
     """Devuelve una fecha en formato: 'lunes 16 de noviembre de 2026, a las 20:58 pm'."""
     dia_semana = DIAS_SEMANA[dt.weekday()]
@@ -47,6 +55,13 @@ class Respuesta(db.Model):
     fecha_edicion: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
     es_ia: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
     modelo_ia: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
+
+    estado: Mapped[str] = mapped_column(
+        String(20),
+        default=EstadoRespuesta.NO_ACEPTADA.value,
+        server_default=EstadoRespuesta.NO_ACEPTADA.value,
+        nullable=False,
+    )
 
     pregunta_id: Mapped[int] = mapped_column(ForeignKey("preguntas.id"), nullable=False)
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=False)

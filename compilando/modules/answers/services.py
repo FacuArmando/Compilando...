@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import select
 
 from compilando.extensions import db
-from compilando.modules.answers.models import Respuesta
+from compilando.modules.answers.models import EstadoRespuesta, Respuesta
 from compilando.modules.auth.models import Usuario
 from compilando.modules.questions.models import Pregunta
 
@@ -55,6 +55,38 @@ def editar_respuesta(respuesta_id: int, nuevo_cuerpo: str, usuario: Usuario) -> 
         respuesta.fecha_edicion = datetime.now()
         db.session.commit()
         return respuesta
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def aceptar_respuesta(respuesta_id: int, usuario: Usuario) -> Respuesta:
+    """Permite al autor de una pregunta aceptar una de sus respuestas."""
+
+    respuesta = db.session.scalar(select(Respuesta).where(Respuesta.id == respuesta_id))
+
+    if respuesta is None:
+        raise ValueError("La respuesta que intentás aceptar no existe.")
+
+    if respuesta.pregunta.usuario_id != usuario.id:
+        raise PermissionError("Solo el autor de la pregunta puede aceptar una respuesta.")
+
+    try:
+        respuestas_aceptadas = db.session.scalars(
+            select(Respuesta).where(
+                Respuesta.pregunta_id == respuesta.pregunta_id,
+                Respuesta.estado == EstadoRespuesta.ACEPTADA.value,
+            )
+        ).all()
+
+        for respuesta_anterior in respuestas_aceptadas:
+            respuesta_anterior.estado = EstadoRespuesta.NO_ACEPTADA.value
+
+        respuesta.estado = EstadoRespuesta.ACEPTADA.value
+
+        db.session.commit()
+        return respuesta
+
     except Exception:
         db.session.rollback()
         raise

@@ -3,8 +3,9 @@ from datetime import datetime
 import pytest
 
 from compilando.extensions import db
-from compilando.modules.answers.models import Respuesta
+from compilando.modules.answers.models import EstadoRespuesta, Respuesta
 from compilando.modules.answers.services import (
+    aceptar_respuesta,
     editar_respuesta,
     publicar_respuesta,
     validar_cuerpo,
@@ -240,3 +241,152 @@ def test_identificacion_autor_ia(app, usuario):
 
     assert resp_ia.autor_nombre == "Gemini 2.5"
     assert resp_ia.es_autor_pregunta is False
+
+
+def test_aceptar_respuesta_exitosa(app, usuario):
+    otro_usuario = Usuario(
+        username="colaborador",
+        email="colab@test.com",
+        password_hash="hash_colab",
+    )
+    db.session.add(otro_usuario)
+    db.session.commit()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo funciona la aceptación?",
+        cuerpo="Quiero probar cómo aceptar una respuesta de otro usuario.",
+        categoria_nombre="Testing",
+        nombres_tags=["aceptacion"],
+        usuario=usuario,
+    )
+
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Esta es una respuesta de la comunidad.",
+        usuario=otro_usuario,
+    )
+
+    aceptada = aceptar_respuesta(
+        respuesta_id=respuesta.id,
+        usuario=usuario,
+    )
+
+    assert aceptada.estado == EstadoRespuesta.ACEPTADA.value
+
+
+def test_aceptar_respuesta_otro_usuario_falla(app, usuario):
+    otro_usuario = Usuario(
+        username="intruso",
+        email="intruso@test.com",
+        password_hash="hash_intruso",
+    )
+    db.session.add(otro_usuario)
+    db.session.commit()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Quién puede aceptar respuestas?",
+        cuerpo="Solo el autor de la pregunta debería poder hacerlo.",
+        categoria_nombre="Testing",
+        nombres_tags=["permisos"],
+        usuario=usuario,
+    )
+
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Una respuesta de prueba válida.",
+        usuario=otro_usuario,
+    )
+
+    with pytest.raises(PermissionError, match="Solo el autor"):
+        aceptar_respuesta(
+            respuesta_id=respuesta.id,
+            usuario=otro_usuario,
+        )
+
+
+def test_aceptar_respuesta_inexistente(app, usuario):
+    with pytest.raises(ValueError, match="no existe"):
+        aceptar_respuesta(
+            respuesta_id=9999,
+            usuario=usuario,
+        )
+
+
+def test_aceptar_otra_respuesta_desmarca_la_anterior(app, usuario):
+    otro_usuario = Usuario(
+        username="colaborador",
+        email="colab@test.com",
+        password_hash="hash_colab",
+    )
+    db.session.add(otro_usuario)
+    db.session.commit()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo cambiar una respuesta aceptada?",
+        cuerpo="Quiero comprobar que solo exista una respuesta aceptada.",
+        categoria_nombre="Testing",
+        nombres_tags=["aceptacion"],
+        usuario=usuario,
+    )
+
+    respuesta_1 = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Primera respuesta de prueba.",
+        usuario=otro_usuario,
+    )
+
+    respuesta_2 = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Segunda respuesta de prueba.",
+        usuario=otro_usuario,
+    )
+
+    aceptar_respuesta(respuesta_1.id, usuario)
+    aceptar_respuesta(respuesta_2.id, usuario)
+
+    assert respuesta_1.estado == EstadoRespuesta.NO_ACEPTADA.value
+    assert respuesta_2.estado == EstadoRespuesta.ACEPTADA.value
+
+
+def test_aceptar_respuesta_no_modifica_otra_pregunta(app, usuario):
+    otro_usuario = Usuario(
+        username="colaborador",
+        email="colab@test.com",
+        password_hash="hash_colab",
+    )
+    db.session.add(otro_usuario)
+    db.session.commit()
+
+    pregunta_1 = publicar_pregunta(
+        titulo="¿Cómo funcionan las relaciones?",
+        cuerpo="Primera pregunta para probar la aceptación.",
+        categoria_nombre="Python",
+        nombres_tags=["relaciones"],
+        usuario=usuario,
+    )
+
+    pregunta_2 = publicar_pregunta(
+        titulo="¿Cómo funcionan las consultas?",
+        cuerpo="Segunda pregunta para probar la aceptación.",
+        categoria_nombre="Python",
+        nombres_tags=["consultas"],
+        usuario=usuario,
+    )
+
+    respuesta_1 = publicar_respuesta(
+        pregunta_id=pregunta_1.id,
+        cuerpo="Respuesta correspondiente a la primera pregunta.",
+        usuario=otro_usuario,
+    )
+
+    respuesta_2 = publicar_respuesta(
+        pregunta_id=pregunta_2.id,
+        cuerpo="Respuesta correspondiente a la segunda pregunta.",
+        usuario=otro_usuario,
+    )
+
+    aceptar_respuesta(respuesta_1.id, usuario)
+    aceptar_respuesta(respuesta_2.id, usuario)
+
+    assert respuesta_1.estado == EstadoRespuesta.ACEPTADA.value
+    assert respuesta_2.estado == EstadoRespuesta.ACEPTADA.value

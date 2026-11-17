@@ -67,19 +67,39 @@
                   {% else %}
                     <span class="answer-badge badge-user">Comunidad</span>
                   {% endif %}
+
+                    {% if respuesta.estado == "Aceptada" %}
+                        <span class="answer-accepted-badge">
+                            Respuesta aceptada
+                        </span>
+                    {% endif %}
                 </header>
                 <div class="answer-full-body">{{ respuesta.cuerpo }}</div>
                 {% if respuesta.fecha_edicion_formateada %}
                   <p class="answer-edited">Editado el {{ respuesta.fecha_edicion_formateada }}</p>
                 {% endif %}
-                {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
                   <div class="answer-actions">
-                    <button type="button" class="answer-edit-button btn-editar-respuesta"
-                            data-respuesta-id="{{ respuesta.id }}" aria-controls="form-editar-respuesta-{{ respuesta.id }}">Editar respuesta</button>
+                      {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
+                      <button type="button" class="answer-edit-button btn-editar-respuesta"
+                              data-respuesta-id="{{ respuesta.id }}"
+                              aria-controls="form-editar-respuesta-{{ respuesta.id }}">
+                          Editar respuesta
+                      </button>
+                      {% endif %}
+                      {% if usuario_actual and usuario_actual.id == pregunta.usuario_id
+                      and respuesta.estado != "Aceptada" %}
+                      <form
+                              action="{{ url_for('answers.accept_answer', respuesta_id=respuesta.id) }}"
+                              method="POST"
+                      >
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button type="submit" class="answer-accept-button">
+                              <span class="answer-check" aria-hidden="true"></span>
+                              Aceptar respuesta
+                          </button>
+                      </form>
+                      {% endif %}
                   </div>
-                {% endif %}
-              </div>
-
               {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
                 <form id="form-editar-respuesta-{{ respuesta.id }}"
                       action="{{ url_for('answers.edit_answer', respuesta_id=respuesta.id) }}"

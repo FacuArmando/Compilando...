@@ -5,7 +5,11 @@ from sqlalchemy import select
 
 from compilando.extensions import db
 from compilando.modules.answers.models import Respuesta
-from compilando.modules.answers.services import editar_respuesta, publicar_respuesta
+from compilando.modules.answers.services import (
+    aceptar_respuesta,
+    editar_respuesta,
+    publicar_respuesta,
+)
 from compilando.modules.questions.models import Pregunta
 
 bp = Blueprint("answers", __name__)
@@ -62,3 +66,33 @@ def edit_answer(respuesta_id: int):
         flash(str(error), "error")
 
     return redirect(url_for("questions.view_question", pregunta_id=respuesta.pregunta_id))
+
+
+@bp.post("/answers/<int:respuesta_id>/accept")
+def accept_answer(respuesta_id: int):
+    """Permite al autor de una pregunta aceptar una respuesta."""
+
+    if g.usuario_actual is None:
+        abort(401)
+
+    respuesta = db.session.scalar(select(Respuesta).where(Respuesta.id == respuesta_id))
+
+    if respuesta is None:
+        abort(404)
+
+    try:
+        aceptar_respuesta(
+            respuesta_id=respuesta_id,
+            usuario=g.usuario_actual,
+        )
+        flash("La respuesta fue aceptada correctamente.", "success")
+
+    except PermissionError:
+        abort(403)
+
+    return redirect(
+        url_for(
+            "questions.view_question",
+            pregunta_id=respuesta.pregunta_id,
+        )
+    )
