@@ -42,6 +42,52 @@ POST con CSRF, revoca la sesión en la base y borra el estado del navegador.
   las respuestas dinámicas llevan `Cache-Control: no-store`.
 - Los cuerpos de formularios, contraseñas y tokens no se registran en logs.
 
+## Validación y protección de rutas (#6)
+
+`cargar_usuario` en `compilando/modules/auth/sessions.py` verifica la sesión antes
+de ejecutar las vistas: debe existir junto con su usuario, estar activa y cumplir
+los vencimientos absoluto y por inactividad. Solo entonces establece
+`g.usuario_actual`. Si la sesión falla, borra el estado del navegador y deja la
+identidad vacía. `/health` y los recursos estáticos mantienen su comportamiento
+público.
+
+Las acciones que requieren autenticación deben usar `requiere_sesion`, importado
+desde ese mismo módulo. Colocarlo inmediatamente debajo de `@bp.get`, `@bp.post`
+o `@bp.route`, para que Flask registre la función protegida. Por ejemplo, al
+implementar una ruta de preguntas:
+
+```python
+from compilando.modules.auth.sessions import requiere_sesion
+
+
+@bp.post("/preguntas")
+@requiere_sesion
+def publicar_pregunta():
+    # El servicio de preguntas recibe el autor desde g.usuario_actual.id.
+    ...
+```
+
+El ejemplo ilustra la integración; la ruta de preguntas no forma parte de esta
+tarea. La protección utiliza exclusivamente `g.usuario_actual`, validado en esta
+solicitud. No acepta un identificador de usuario enviado en formularios como
+prueba de identidad. Con una sesión válida ejecuta la vista y conserva sus
+argumentos; sin ella devuelve una redirección 303 a `/auth/login` y no ejecuta
+la acción. No copia parámetros ni cuerpos privados a la dirección del login.
+Tras ingresar, el usuario vuelve al inicio y puede intentar de nuevo la acción;
+no se reproduce automáticamente un envío anterior.
+
+Los POST también deben pasar CSRF. Si falla ese control, se devuelve 400 antes
+de ejecutar la vista. El decorador no exime de CSRF ni reemplaza los permisos
+de cada operación: el servicio debe comprobar la propiedad del recurso o el rol
+cuando corresponda, incluso con una sesión válida.
+
+Las pruebas definen dos rutas privadas únicamente dentro de sus fixtures para
+verificar acceso válido, rechazo sin sesión, vencimiento, inactividad, revocación,
+usuario eliminado y cookies alteradas. También comprueban que la acción no se
+ejecute al rechazar, que una copia de la cookie deje de servir tras logout y que
+un POST necesite tanto sesión como CSRF. No se agregan rutas de demostración a la
+aplicación ni se modifican las tablas o los tiempos de sesión para esta tarea.
+
 ## Preparación y límites
 
 Aplicar `uv run flask --app compilando:create_app db upgrade` para agregar las
@@ -62,5 +108,7 @@ registro, incluida la verificación de correo. MFA y recuperación de cuenta que
 fuera de esta tarea.
 
 Referencias: [seguridad en Flask](https://flask.palletsprojects.com/en/stable/web-security/),
-[autenticación en OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
+[decoradores de vistas en Flask](https://flask.palletsprojects.com/en/stable/patterns/viewdecorators/),
+[autenticación en OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html),
+[autorización en OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)
 y [sesiones en OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).

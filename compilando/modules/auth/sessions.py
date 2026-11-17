@@ -4,12 +4,26 @@ import hashlib
 import re
 import secrets
 from datetime import UTC, datetime, timedelta
+from functools import wraps
 
-from flask import current_app, g, request, session
+from flask import current_app, g, redirect, request, session, url_for
 from sqlalchemy import delete, select, update
 
 from compilando.extensions import db
 from compilando.modules.auth.models import Sesion, Usuario
+
+
+def requiere_sesion(vista):
+    """Permitir la vista solo con el usuario validado por cargar_usuario en esta solicitud."""
+
+    @wraps(vista)
+    def vista_protegida(*args, **kwargs):
+        if g.get("usuario_actual") is None:
+            # 303 conduce al GET del login sin reenviar el cuerpo de un POST privado.
+            return redirect(url_for("auth.login"), code=303)
+        return vista(*args, **kwargs)
+
+    return vista_protegida
 
 
 def ahora_utc() -> datetime:

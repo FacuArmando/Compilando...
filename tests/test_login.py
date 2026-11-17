@@ -7,6 +7,7 @@ from datetime import timedelta
 from html.parser import HTMLParser
 
 import pytest
+from flask import g, request
 from flask_migrate import downgrade, upgrade
 from sqlalchemy import delete, inspect, select, update
 
@@ -18,7 +19,7 @@ from compilando.modules.auth.services import (
     autenticar_usuario,
     registrar_usuario,
 )
-from compilando.modules.auth.sessions import ahora_utc
+from compilando.modules.auth.sessions import ahora_utc, requiere_sesion
 
 PASSWORD = "clave-de-prueba"
 EMAIL = "mati@ejemplo.com"
@@ -480,3 +481,157 @@ def test_migracion_de_sesiones_se_puede_revertir_sin_borrar_usuarios(app_login):
         upgrade()
         assert "sesiones" in inspect(db.engine).get_table_names()
         assert db.session.scalar(select(Usuario)).email == EMAIL
+
+
+@pytest.fixture
+def app_con_rutas_privadas(app_login):
+    """Estas vistas existen solo en las pruebas; no se agregan rutas al producto."""
+    ejecuciones = []
+
+    @app_login.route("/privada/<int:recurso_id>", methods=["GET", "POST"])
+    @requiere_sesion
+    def privada(recurso_id):
+        ejecuciones.append((recurso_id, g.usuario_actual.id, request.method))
+        return {"recurso_id": recurso_id, "usuario_id": g.usuario_actual.id}
+
+    @app_login.get("/otra-privada")
+    @requiere_sesion
+    def otra_privada():
+        ejecuciones.append((None, g.usuario_actual.id, request.method))
+        return {"usuario_id": g.usuario_actual.id}
+
+    return app_login, ejecuciones
+
+
+@pytest.mark.parametrize("metodo", ["GET", "HEAD"])
+def test_ruta_privada_sin_sesion_pide_login_sin_ejecutar_la_vista(app_con_rutas_privadas, metodo):
+    app, ejecuciones = app_con_rutas_privadas
+    response = app.test_client().open("/privada/7", method=metodo)
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/auth/login"
+    assert response.headers["Cache-Control"] == "no-store"
+    assert ejecuciones == []
+
+
+def test_rutas_privadas_permiten_sesion_valida_y_conservan_sus_argumentos(app_con_rutas_privadas):
+    app, ejecuciones = app_con_rutas_privadas
+    cliente = app.test_client()
+    assert ingresar(cliente).status_code == 303
+    with app.app_context():
+        usuario_id = db.session.scalar(select(Usuario.id).where(Usuario.email == EMAIL))
+    assert cliente.get("/privada/17").json == {"recurso_id": 17, "usuario_id": usuario_id}
+    assert cliente.get("/otra-privada").json == {"usuario_id": usuario_id}
+    assert ejecuciones == [(17, usuario_id, "GET"), (None, usuario_id, "GET")]
+
+
+@pytest.mark.parametrize(
+    "motivo",
+    [
+        "vencimiento",
+        "inactividad",
+        "revocacion",
+        "sesion_inexistente",
+        "usuario_eliminado",
+        "cookie",
+    ],
+)
+def test_ruta_privada_rechaza_sesion_invalida_sin_ejecutar_la_vista(app_con_rutas_privadas, motivo):
+    app, ejecuciones = app_con_rutas_privadas
+    cliente = app.test_client()
+    assert ingresar(cliente).status_code == 303
+    if motivo == "cookie":
+        cliente.set_cookie(
+            app.config["SESSION_COOKIE_NAME"], sesion_cookie(app, cliente) + "alterada"
+        )
+    else:
+        with app.app_context():
+            sesion = db.session.scalar(select(Sesion))
+            if motivo == "vencimiento":
+                sesion.fecha_vencimiento = ahora_utc() - timedelta(seconds=1)
+            elif motivo == "inactividad":
+                sesion.ultimo_acceso = ahora_utc() - timedelta(minutes=31)
+            elif motivo == "revocacion":
+                sesion.activa = False
+            elif motivo == "sesion_inexistente":
+                db.session.delete(sesion)
+            else:
+                db.session.execute(delete(Usuario).where(Usuario.id == sesion.usuario_id))
+            db.session.commit()
+
+    response = cliente.get("/privada/7")
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/auth/login"
+    assert ejecuciones == []
+    with cliente.session_transaction() as estado:
+        assert "auth_token" not in estado
+
+
+def test_logout_impide_reusar_la_cookie_en_rutas_privadas(app_con_rutas_privadas):
+    app, ejecuciones = app_con_rutas_privadas
+    cliente = app.test_client()
+    assert ingresar(cliente).status_code == 303
+    assert cliente.get("/privada/7").status_code == 200
+    cookie_anterior = sesion_cookie(app, cliente)
+    csrf = campos(cliente.get("/"))["csrf_token"]["value"]
+    assert cliente.post("/auth/logout", data={"csrf_token": csrf}).status_code == 303
+
+    copia = app.test_client()
+    copia.set_cookie(app.config["SESSION_COOKIE_NAME"], cookie_anterior)
+    assert copia.get("/privada/7").status_code == 303
+    assert cliente.get("/privada/7").status_code == 303
+    assert len(ejecuciones) == 1
+
+    assert ingresar(cliente).status_code == 303
+    assert cliente.get("/privada/7").status_code == 200
+    assert len(ejecuciones) == 2
+
+
+def test_post_privado_requiere_sesion_aunque_el_csrf_sea_valido(app_con_rutas_privadas):
+    app, ejecuciones = app_con_rutas_privadas
+    cliente = app.test_client()
+    csrf = campos(cliente.get("/auth/login"))["csrf_token"]["value"]
+    response = cliente.post("/privada/7", data={"csrf_token": csrf, "usuario_id": 1})
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/auth/login"
+    assert ejecuciones == []
+
+
+def test_post_privado_requiere_csrf_ademas_de_sesion_valida(app_con_rutas_privadas):
+    app, ejecuciones = app_con_rutas_privadas
+    cliente = app.test_client()
+    assert ingresar(cliente).status_code == 303
+    assert cliente.post("/privada/7").status_code == 400
+    assert ejecuciones == []
+
+    csrf = campos(cliente.get("/"))["csrf_token"]["value"]
+    response = cliente.post("/privada/7", data={"csrf_token": csrf})
+    assert response.status_code == 200
+    assert ejecuciones == [(7, response.json["usuario_id"], "POST")]
+
+
+def test_redireccion_al_login_no_copia_parametros_de_la_peticion_privada(app_con_rutas_privadas):
+    app, ejecuciones = app_con_rutas_privadas
+    response = app.test_client().get("/privada/7?next=https://ajeno.invalid&dato=privado")
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/auth/login"
+    assert ejecuciones == []
+
+
+def test_pedir_login_permite_reingresar_y_luego_acceder_a_la_ruta_privada(app_con_rutas_privadas):
+    app, ejecuciones = app_con_rutas_privadas
+    cliente = app.test_client()
+    response = cliente.get("/privada/7", follow_redirects=True)
+    assert response.status_code == 200
+    assert "Iniciar sesión" in response.get_data(as_text=True)
+    assert ejecuciones == []
+    assert ingresar(cliente).status_code == 303
+    assert cliente.get("/privada/7").status_code == 200
+
+
+@pytest.mark.parametrize("ruta", ["/", "/auth/login", "/auth/register", "/health"])
+def test_proteccion_de_rutas_privadas_conserva_el_acceso_a_las_publicas(
+    app_con_rutas_privadas, ruta
+):
+    app, ejecuciones = app_con_rutas_privadas
+    assert app.test_client().get(ruta).status_code == 200
+    assert ejecuciones == []

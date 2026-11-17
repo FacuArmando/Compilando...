@@ -12,6 +12,8 @@ Para probar el recorrido, instalar las dependencias con `uv sync --locked`, apli
 
 El login crea una sesión en la base; la cookie firmada contiene un identificador aleatorio y la base guarda su hash. La sesión vence a las 8 horas o tras 30 minutos de inactividad. Cerrar sesión requiere POST con CSRF e invalida también las copias anteriores de esa cookie. Hay límites de intentos compartidos en la base: por ventana de 15 minutos se admiten 5 envíos de login por correo, 30 por IP y 10 registros por IP; al superarlos se devuelve 429 con `Retry-After`. Los envíos válidos también cuentan.
 
+Las rutas que requieren autenticación deben usar `@requiere_sesion` de `compilando.modules.auth.sessions`, debajo del decorador de ruta. Permite ejecutar la acción con el usuario validado en `g.usuario_actual`; si no hay sesión válida, redirige al login sin ejecutar la acción. Los POST conservan la protección CSRF. El módulo que implemente preguntas, respuestas o edición de datos debe aplicar esta protección y sus permisos específicos.
+
 Las decisiones y controles están en [autenticación](docs/autenticacion.md). En producción se requiere HTTPS, un servidor WSGI, `APP_ENV=production`, una clave secreta aleatoria de al menos 32 caracteres y `TRUSTED_HOSTS` con los dominios permitidos. El servidor valida esa configuración y rechaza HTTP. El comando local de desarrollo se mantiene limitado a `127.0.0.1`.
 
 ## Preparación
