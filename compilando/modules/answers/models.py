@@ -12,8 +12,18 @@ if TYPE_CHECKING:
 
 DIAS_SEMANA = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
 MESES = (
-    "enero", "febrero", "marzo", "abril", "mayo", "junio",
-    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
 )
 
 
@@ -35,9 +45,7 @@ class Respuesta(db.Model):
     cuerpo: Mapped[str] = mapped_column(Text, nullable=False)
     fecha: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     fecha_edicion: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
-    es_ia: Mapped[bool] = mapped_column(
-        Boolean, default=False, server_default="0", nullable=False
-    )
+    es_ia: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
     modelo_ia: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
 
     pregunta_id: Mapped[int] = mapped_column(ForeignKey("preguntas.id"), nullable=False)

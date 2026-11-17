@@ -43,7 +43,6 @@ def publish_question():
 
             return redirect(url_for("questions.view_question", pregunta_id=nueva_pregunta.id))
 
-
         except ValueError as error:
             mensaje = str(error).lower()
 
@@ -77,15 +76,14 @@ def publish_question():
 def publish_success():
     return render_template("questions/publish_success.html")
 
+
 @bp.get("/questions/<int:pregunta_id>")
 def view_question(pregunta_id: int):
     pregunta = db.session.scalar(select(Pregunta).where(Pregunta.id == pregunta_id))
     if pregunta is None:
         abort(404)
 
-    preguntas_historial = db.session.scalars(
-        select(Pregunta).order_by(Pregunta.id.desc())
-    ).all()
+    preguntas_historial = db.session.scalars(select(Pregunta).order_by(Pregunta.id.desc())).all()
 
     return render_template(
         "questions/view_question.html",

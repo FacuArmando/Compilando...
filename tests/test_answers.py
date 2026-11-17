@@ -137,9 +137,7 @@ def test_editar_respuesta_exitosa(app, usuario):
 
 
 def test_editar_respuesta_otro_usuario_falla(app, usuario):
-    otro_usuario = Usuario(
-        username="intruso", email="intruso@test.com", password_hash="hash_otro"
-    )
+    otro_usuario = Usuario(username="intruso", email="intruso@test.com", password_hash="hash_otro")
     db.session.add(otro_usuario)
     db.session.commit()
 
