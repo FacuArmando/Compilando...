@@ -1,0 +1,31 @@
+{% from 'system/_icons.html' import icon %}
+<header class="community-topbar">
+  <div class="community-topbar-inner">
+    <a class="community-brand" href="{{ url_for('system.index') }}" aria-label="Compilando, inicio">
+      <span class="community-brand-mark">{{ icon('code') }}</span>
+      <span>COMPILANDO<span class="community-brand-dots">...</span></span>
+    </a>
+    {% if usuario_actual %}
+    <details class="community-account">
+      <summary aria-label="Menú de {{ usuario_actual.username }}">
+        <span class="community-avatar">{{ usuario_actual.username[0]|upper }}</span>
+        <span class="community-account-name">{{ usuario_actual.username }}</span>
+        {{ icon('chevron') }}
+      </summary>
+      <div class="community-account-menu">
+        <p class="account-session">Sesión iniciada como <strong>{{ usuario_actual.username }}</strong>.</p>
+        <a href="{{ url_for('auth.account') }}">{{ icon('user') }} Mi cuenta</a>
+        <form action="{{ url_for('auth.logout') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit">{{ icon('logout') }} Cerrar sesión</button>
+        </form>
+      </div>
+    </details>
+    {% else %}
+      <nav class="community-auth-links" aria-label="Acceso a la comunidad">
+        <a href="{{ url_for('auth.login') }}">Ingresar</a>
+        <a class="community-register" href="{{ url_for('auth.register') }}">Crear cuenta</a>
+      </nav>
+    {% endif %}
+  </div>
+</header>

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Mi cuenta · COMPILANDO...{% endblock %}
+{% block styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+{% block main_class %}community-main{% endblock %}
+{% block content %}
+  {% include 'community/_header.html' %}
+  <div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+    <section class="community-content account-content" aria-labelledby="account-title">
+      <header class="account-heading">
+        <p class="community-eyebrow">TU PERFIL</p>
+        <h1 id="account-title">Mi cuenta</h1>
+        <p>Un espacio para consultar los datos de tu cuenta.</p>
+      </header>
+
+      <section class="account-card" aria-labelledby="account-data-title">
+        <header class="account-card-header">
+          <span class="community-avatar account-avatar" aria-hidden="true">{{ usuario_actual.username[0]|upper }}</span>
+          <div>
+            <h2 id="account-data-title">Tus datos personales</h2>
+            <p>Tu perfil en la comunidad de Compilando.</p>
+          </div>
+        </header>
+        <dl class="account-data">
+          <div>
+            <dt>Nombre de usuario</dt>
+            <dd>{{ usuario_actual.username }}</dd>
+          </div>
+          <div>
+            <dt>Correo electrónico</dt>
+            <dd>{{ usuario_actual.email }}</dd>
+          </div>
+        </dl>
+        <p class="account-note">Tu nombre de usuario aparece junto a tus preguntas y respuestas.</p>
+      </section>
+
+      <a class="account-back" href="{{ url_for('system.index') }}">← Volver a la comunidad</a>
+    </section>
+  </div>
+  <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
+{% endblock %}

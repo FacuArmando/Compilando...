@@ -1,28 +1,107 @@
 {% extends 'base.html' %}
-{% block main_class %}{% if not usuario_actual %}auth-main{% endif %}{% endblock %}
+{% from 'system/_icons.html' import icon %}
+{% block title %}{% if usuario_actual %}Comunidad · {% endif %}COMPILANDO...{% endblock %}
+{% block styles %}
+  {% if usuario_actual %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+  {% endif %}
+{% endblock %}
+{% block main_class %}{% if usuario_actual %}community-main{% else %}auth-main{% endif %}{% endblock %}
 {% block content %}
 {% if usuario_actual %}
-<section class="home">
-  <h1>COMPILANDO...</h1>
-  <p>Una comunidad para compartir preguntas y respuestas sobre programación.</p>
-  {% for message in get_flashed_messages(category_filter=['success']) %}
-    <p class="notice" role="status">{{ message }}</p>
-  {% endfor %}
-  <p>Sesión iniciada como <strong>{{ usuario_actual.username }}</strong>.</p>
-  <form action="{{ url_for('auth.logout') }}" method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="button" type="submit">Cerrar sesión</button>
-  </form>
-</section>
+  {% include 'community/_header.html' %}
+
+  <div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <div class="community-content">
+      {% for message in get_flashed_messages(category_filter=['success']) %}
+        <p class="notice" role="status">{{ message }}</p>
+      {% endfor %}
+
+      <section class="community-welcome" aria-labelledby="community-title">
+        <h1 id="community-title">¿Qué querés aprender hoy?</h1>
+        <p>Una duda, una idea, otra forma de resolverlo.<br>La próxima conversación empieza con vos.</p>
+      </section>
+
+      <details class="community-composer" id="question-composer"
+               data-form-url="{{ url_for('questions.publish_question') }}"
+               data-login-url="{{ url_for('auth.login') }}">
+        <summary>
+          <span class="community-avatar composer-avatar">{{ usuario_actual.username[0]|upper }}</span>
+          <span class="composer-prompt">¿Qué querés preguntar?</span>
+          <span class="composer-open-icon">{{ icon('plus') }}</span>
+        </summary>
+        <div class="composer-expanded">
+          <div class="composer-heading">
+            <div>
+              <h2>Compartí tu pregunta</h2>
+              <p>Un poco de contexto ayuda a encontrar una buena respuesta.</p>
+            </div>
+            <button class="composer-close" type="button" aria-label="Cerrar el formulario" data-close-composer>×</button>
+          </div>
+          <p class="composer-status" role="status" data-composer-status></p>
+          <div data-question-form-host></div>
+          <a class="composer-fallback" href="{{ url_for('questions.publish_question') }}" data-composer-fallback>
+            Abrir el formulario en su página
+          </a>
+        </div>
+      </details>
+      <p class="composer-caption">Las preguntas se construyen entre todos. Compartí la tuya.</p>
+
+      <section class="community-feed" id="preguntas" aria-labelledby="feed-title">
+        <header class="community-feed-header">
+          <div class="community-feed-title">
+            <h2 id="feed-title">Preguntas recientes</h2>
+            <span class="community-count" aria-label="{{ preguntas|length }} preguntas">{{ preguntas|length }}</span>
+          </div>
+          <span class="community-feed-order">{{ icon('clock') }} Más recientes</span>
+        </header>
+
+        {% if preguntas %}
+          <div class="community-questions">
+            {% for pregunta in preguntas %}
+              <article class="community-question">
+                <header class="community-question-meta">
+                  <span class="community-avatar question-avatar" aria-hidden="true">{{ pregunta.usuario.username[0]|upper }}</span>
+                  <div class="community-question-author">
+                    <span>{{ pregunta.usuario.username }}</span>
+                    <time datetime="{{ pregunta.fecha.isoformat() }}">{{ pregunta.fecha.strftime('%d/%m/%Y') }}</time>
+                  </div>
+                  <span class="community-category">{{ pregunta.categoria.nombre }}</span>
+                </header>
+                <h3>
+                  <a href="{{ url_for('questions.view_question', pregunta_id=pregunta.id) }}">{{ pregunta.titulo }}</a>
+                </h3>
+                <p class="community-question-preview">{{ pregunta.cuerpo_detallado|truncate(190, true) }}</p>
+                <footer class="community-question-footer">
+                  <div class="community-tags" aria-label="Etiquetas">
+                    {% for tag in pregunta.tags %}
+                      <span>#{{ tag.nombre }}</span>
+                    {% endfor %}
+                  </div>
+                  {% set cantidad = pregunta.respuestas|length %}
+                  <span class="community-answer-count{% if cantidad %} has-answers{% endif %}">
+                    {{ icon('reply') }} {{ cantidad }} {{ 'respuesta' if cantidad == 1 else 'respuestas' }}
+                  </span>
+                </footer>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="community-empty">
+            <span class="community-empty-icon">{{ icon('questions') }}</span>
+            <h3>La primera conversación puede ser la tuya.</h3>
+            <p>Usá el espacio de arriba para compartir una pregunta con la comunidad.</p>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
 {% else %}
   {% include 'auth/_login_screen.html' %}
-{% endif %}
-
-{% if usuario_actual %}
-<a href="{{ url_for('questions.publish_question') }}">
-    Publicar una pregunta
-</a>
-{% else %}
 <p>
     Iniciá sesión para publicar una pregunta.
 </p>
@@ -30,7 +109,6 @@
 <a href="{{ url_for('auth.login') }}">
     Iniciar sesión
 </a>
-{% endif %}
 <hr>
 <section class="questions-list">
   <h2>Preguntas recientes</h2>
@@ -49,5 +127,5 @@
     <p>Todavía no hay preguntas publicadas.</p>
   {% endif %}
 </section>
-
+{% endif %}
 {% endblock %}
