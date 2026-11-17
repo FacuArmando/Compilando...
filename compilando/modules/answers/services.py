@@ -1,5 +1,7 @@
 """Lógica de negocio y validaciones para las respuestas a preguntas."""
 
+from datetime import datetime
+
 from sqlalchemy import select
 
 from compilando.extensions import db
@@ -29,6 +31,28 @@ def publicar_respuesta(pregunta_id: int, cuerpo: str, usuario: Usuario) -> Respu
             usuario=usuario,
         )
         db.session.add(respuesta)
+        db.session.commit()
+        return respuesta
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def editar_respuesta(respuesta_id: int, nuevo_cuerpo: str, usuario: Usuario) -> Respuesta:
+    """Actualiza el contenido de una respuesta existente si pertenece al usuario."""
+    if not validar_cuerpo(nuevo_cuerpo):
+        raise ValueError("El cuerpo de la respuesta debe tener entre 3 y 5000 caracteres.")
+
+    respuesta = db.session.scalar(select(Respuesta).where(Respuesta.id == respuesta_id))
+    if respuesta is None:
+        raise ValueError("La respuesta que intentás modificar no existe.")
+
+    if respuesta.usuario_id != usuario.id:
+        raise PermissionError("Solo el autor de la respuesta puede modificarla.")
+
+    try:
+        respuesta.cuerpo = nuevo_cuerpo.strip()
+        respuesta.fecha_edicion = datetime.now()
         db.session.commit()
         return respuesta
     except Exception:
