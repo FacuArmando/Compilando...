@@ -1,0 +1,241 @@
+.gemini-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    min-height: 85vh;
+    max-width: 1280px;
+    margin: 0 auto;
+    gap: 2rem;
+    padding: 2rem 1.5rem;
+    color: #ffffff;
+}
+
+.sidebar-history {
+    width: 300px;
+    flex-shrink: 0;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sidebar-back-link {
+    color: #93c5fd;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.sidebar-back-link:hover {
+    text-decoration: underline;
+}
+
+.btn-new-question {
+    display: block;
+    background-color: #ffffff;
+    color: #163b8c;
+    text-align: center;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.btn-new-question:hover {
+    background-color: #e2e8f0;
+}
+
+.sidebar-history h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #cbd5e1;
+    margin: 0.25rem 0 0 0;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.history-item a {
+    display: block;
+    padding: 0.75rem 0.9rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid transparent;
+    transition: background-color 0.15s ease;
+}
+
+.history-item a:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.history-item.active a {
+    background-color: rgba(255, 255, 255, 0.22);
+    border-color: #93c5fd;
+    font-weight: 600;
+}
+
+.history-meta {
+    display: block;
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    margin-top: 0.25rem;
+}
+
+.main-chat-area {
+    flex: 1;
+    min-width: 0;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.question-detail-header {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+
+.question-detail-header .question-eyebrow {
+    color: #93c5fd;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.question-detail-header h1 {
+    color: #ffffff;
+    margin: 0.4rem 0 0.75rem 0;
+    font-size: 1.8rem;
+    text-align: left;
+}
+
+.question-detail-header p {
+    color: #e2e8f0;
+    line-height: 1.6;
+}
+
+.question-detail-header small,
+.answer-card small {
+    color: #cbd5e1;
+}
+
+.section-divider {
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    margin: 1.5rem 0;
+}
+
+.answers-heading {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.answer-card {
+    background-color: rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    padding: 1.15rem 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.answer-card p {
+    color: #ffffff;
+    margin: 0 0 0.6rem 0;
+    line-height: 1.55;
+}
+
+.answer-mode-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.mode-btn {
+    background-color: #ffffff;
+    color: #163b8c;
+    border: none;
+    padding: 0.7rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.mode-btn:hover {
+    background-color: #e2e8f0;
+}
+
+.mode-btn-secondary {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.mode-btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.ia-notice-box {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.answer-form-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.answer-form-box label {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.answer-form-box textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 0.9rem;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #0f172a;
+    font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.answer-form-box small {
+    color: #cbd5e1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .gemini-layout {
+        flex-direction: column;
+    }
+    .sidebar-history {
+        width: 100%;
+    }
+}

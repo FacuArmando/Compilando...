@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from compilando.extensions import db
 
 if TYPE_CHECKING:
+    from compilando.modules.answers.models import Respuesta
     from compilando.modules.categories.models import Categoria
     from compilando.modules.tags.models import Tag
     from compilando.modules.users.models import Usuario
@@ -36,4 +37,7 @@ class Pregunta(db.Model):
     categoria: Mapped["Categoria"] = relationship("Categoria")
     tags: Mapped[list["Tag"]] = relationship(
         "Tag", secondary=pregunta_tags, back_populates="preguntas"
+    )
+    respuestas: Mapped[list["Respuesta"]] = relationship(
+        "Respuesta", back_populates="pregunta", cascade="all, delete-orphan"
     )

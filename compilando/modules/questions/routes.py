@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from compilando.extensions import db
 from compilando.modules.categories.models import Categoria
+from compilando.modules.questions.models import Pregunta
 from compilando.modules.questions.services import publicar_pregunta
 from compilando.modules.tags.models import Tag
 
@@ -32,7 +33,7 @@ def publish_question():
         nombres_tags = tags_texto.split(",")
 
         try:
-            publicar_pregunta(
+            nueva_pregunta = publicar_pregunta(
                 titulo=titulo,
                 cuerpo=cuerpo,
                 categoria_nombre=categoria_nombre,
@@ -40,7 +41,8 @@ def publish_question():
                 usuario=g.usuario_actual,
             )
 
-            return redirect(url_for("questions.publish_success"))
+            return redirect(url_for("questions.view_question", pregunta_id=nueva_pregunta.id))
+
 
         except ValueError as error:
             mensaje = str(error).lower()
@@ -74,3 +76,19 @@ def publish_question():
 @bp.get("/questions/publish/success")
 def publish_success():
     return render_template("questions/publish_success.html")
+
+@bp.get("/questions/<int:pregunta_id>")
+def view_question(pregunta_id: int):
+    pregunta = db.session.scalar(select(Pregunta).where(Pregunta.id == pregunta_id))
+    if pregunta is None:
+        abort(404)
+
+    preguntas_historial = db.session.scalars(
+        select(Pregunta).order_by(Pregunta.id.desc())
+    ).all()
+
+    return render_template(
+        "questions/view_question.html",
+        pregunta=pregunta,
+        preguntas_historial=preguntas_historial,
+    )

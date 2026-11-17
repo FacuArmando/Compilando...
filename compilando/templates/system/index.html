@@ -31,5 +31,23 @@
     Iniciar sesión
 </a>
 {% endif %}
+<hr>
+<section class="questions-list">
+  <h2>Preguntas recientes</h2>
+  {% if preguntas %}
+    <ul>
+      {% for pregunta in preguntas %}
+        <li>
+          <a href="{{ url_for('questions.view_question', pregunta_id=pregunta.id) }}">
+            {{ pregunta.titulo }}
+          </a>
+          <small>— por {{ pregunta.usuario.username }} ({{ pregunta.respuestas | length }} respuestas)</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Todavía no hay preguntas publicadas.</p>
+  {% endif %}
+</section>
 
 {% endblock %}

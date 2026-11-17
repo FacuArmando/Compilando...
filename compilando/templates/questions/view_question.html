@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ pregunta.titulo }} | COMPILANDO...{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/answers.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="gemini-layout">
+    <aside class="sidebar-history">
+        <a href="{{ url_for('system.index') }}" class="sidebar-back-link">← Volver al inicio</a>
+
+        {% if usuario_actual %}
+            <a href="{{ url_for('questions.publish_question') }}" class="btn-new-question">
+                + Nueva pregunta
+            </a>
+        {% endif %}
+
+        <h3>Historial de preguntas</h3>
+
+        {% if preguntas_historial %}
+            <ul class="history-list">
+                {% for item in preguntas_historial %}
+                    <li class="history-item {% if item.id == pregunta.id %}active{% endif %}">
+                        <a href="{{ url_for('questions.view_question', pregunta_id=item.id) }}">
+                            {{ item.titulo }}
+                            <span class="history-meta">{{ item.respuestas | length }} respuestas · {{ item.usuario.username }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p><small>Aún no hay preguntas registradas.</small></p>
+        {% endif %}
+    </aside>
+
+    <section class="main-chat-area">
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+                {% for categoria, mensaje in mensajes %}
+                    <div class="flash-message flash-{{ categoria }}" role="alert">{{ mensaje }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- APARTADO DE LA PREGUNTA + SELECCIÓN DE RESPUESTA -->
+        <header class="question-detail-header">
+            <span class="question-eyebrow">{{ pregunta.categoria.nombre }}</span>
+            <h1>{{ pregunta.titulo }}</h1>
+            <p>{{ pregunta.cuerpo_detallado }}</p>
+            <small>Publicada por <strong>{{ pregunta.usuario.username }}</strong> el {{ pregunta.fecha }}</small>
+        </header>
+
+        {% if usuario_actual %}
+            <div class="answer-mode-selector">
+                <button type="button" id="btn-modo-usuario" class="mode-btn">
+                    Respuesta de Usuario
+                </button>
+                <button type="button" id="btn-modo-ia" class="mode-btn mode-btn-secondary">
+                    Respuesta IA
+                </button>
+            </div>
+
+            <div id="mensaje-ia-proximamente" class="ia-notice-box hidden" role="status">
+                ¡Esta opción estará disponible al público próximamente, se encuentra en desarrollo!
+            </div>
+
+            <form
+                id="form-respuesta-usuario"
+                action="{{ url_for('answers.publish_answer', pregunta_id=pregunta.id) }}"
+                method="POST"
+                class="answer-form-box hidden"
+                novalidate
+            >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="cuerpo">Tu respuesta</label>
+                <textarea
+                    id="cuerpo"
+                    name="cuerpo"
+                    placeholder="Escribí una respuesta clara y útil..."
+                    minlength="3"
+                    maxlength="5000"
+                    required
+                ></textarea>
+                <small>Entre 3 y 5000 caracteres.</small>
+                <div>
+                    <button type="submit" class="mode-btn">Publicar respuesta →</button>
+                </div>
+            </form>
+        {% else %}
+            <p><a href="{{ url_for('auth.login') }}" class="sidebar-back-link">Iniciá sesión</a> para elegir cómo responder esta pregunta.</p>
+        {% endif %}
+
+        <hr class="section-divider">
+
+        <!-- APARTADO DE RESPUESTAS YA PUBLICADAS -->
+        <h2 class="answers-heading">Respuestas ({{ pregunta.respuestas | length }})</h2>
+
+        {% if pregunta.respuestas %}
+            {% for respuesta in pregunta.respuestas %}
+                <article class="answer-card">
+                    <p>{{ respuesta.cuerpo }}</p>
+                    <small>Respondido por <strong>{{ respuesta.usuario.username }}</strong> el día {{ respuesta.fecha_formateada }}</small>
+                </article>
+            {% endfor %}
+        {% else %}
+            <p>Todavía no hay respuestas para esta pregunta. ¡Elegí una opción arriba para responder!</p>
+        {% endif %}
+    </section>
+</div>
+
+<script src="{{ url_for('static', filename='js/answers.js') }}"></script>
+{% endblock %}

@@ -13,6 +13,7 @@ from flask import Flask
 from compilando.commands import register_commands
 from compilando.config import load_config
 from compilando.extensions import csrf, db, migrate
+from compilando.modules import answers as answers
 from compilando.modules import categories as categories
 from compilando.modules import questions as questions
 from compilando.modules import tags as tags
@@ -20,6 +21,7 @@ from compilando.modules.auth.routes import bp as auth_bp
 from compilando.modules.auth.security import init_app as init_security
 from compilando.modules.auth.sessions import init_app as init_auth
 from compilando.modules.questions.routes import bp as questions_bp
+from compilando.modules.answers.routes import bp as answers_bp
 from compilando.modules.system.routes import bp as system_bp
 
 
@@ -41,4 +43,5 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     app.register_blueprint(auth_bp)
     register_commands(app)
     app.register_blueprint(questions_bp)
+    app.register_blueprint(answers_bp)
     return app
