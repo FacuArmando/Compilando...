@@ -100,8 +100,58 @@
         {% if pregunta.respuestas %}
             {% for respuesta in pregunta.respuestas %}
                 <article class="answer-card">
-                    <p>{{ respuesta.cuerpo }}</p>
-                    <small>Respondido por <strong>{{ respuesta.usuario.username }}</strong> el día {{ respuesta.fecha_formateada }}</small>
+                    <div id="contenido-respuesta-{{ respuesta.id }}">
+                        <p>{{ respuesta.cuerpo }}</p>
+                        <small>
+                            Respondido por <strong>{{ respuesta.usuario.username }}</strong> el día {{ respuesta.fecha_formateada }}
+                            {% if respuesta.fecha_edicion_formateada %}
+                                <br><em>Editado el día {{ respuesta.fecha_edicion_formateada }}</em>
+                            {% endif %}
+                        </small>
+
+                        {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
+                            <div class="answer-actions">
+                                <button
+                                    type="button"
+                                    class="mode-btn mode-btn-secondary btn-editar-respuesta"
+                                    data-respuesta-id="{{ respuesta.id }}"
+                                >
+                                    Editar respuesta
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
+                        <form
+                            id="form-editar-respuesta-{{ respuesta.id }}"
+                            action="{{ url_for('answers.edit_answer', respuesta_id=respuesta.id) }}"
+                            method="POST"
+                            class="answer-form-box hidden"
+                            novalidate
+                        >
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <label for="cuerpo-edit-{{ respuesta.id }}">Modificar tu respuesta</label>
+                            <textarea
+                                id="cuerpo-edit-{{ respuesta.id }}"
+                                name="cuerpo"
+                                minlength="3"
+                                maxlength="5000"
+                                required
+                            >{{ respuesta.cuerpo }}</textarea>
+                            <small>Entre 3 y 5000 caracteres.</small>
+                            <div style="display: flex; gap: 0.75rem;">
+                                <button type="submit" class="mode-btn">Guardar cambios</button>
+                                <button
+                                    type="button"
+                                    class="mode-btn mode-btn-secondary btn-cancelar-edicion"
+                                    data-respuesta-id="{{ respuesta.id }}"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    {% endif %}
                 </article>
             {% endfor %}
         {% else %}

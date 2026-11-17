@@ -17,6 +17,15 @@ MESES = (
 )
 
 
+def _formatear_fecha_es(dt: datetime) -> str:
+    """Devuelve una fecha en formato: 'lunes 16 de noviembre de 2026, a las 20:58 pm'."""
+    dia_semana = DIAS_SEMANA[dt.weekday()]
+    mes = MESES[dt.month - 1]
+    sufijo = "am" if dt.hour < 12 else "pm"
+    hora = dt.strftime("%H:%M")
+    return f"{dia_semana} {dt.day} de {mes} de {dt.year}, a las {hora} {sufijo}"
+
+
 class Respuesta(db.Model):
     """Representa una respuesta publicada por un usuario a una pregunta."""
 
@@ -25,6 +34,7 @@ class Respuesta(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     cuerpo: Mapped[str] = mapped_column(Text, nullable=False)
     fecha: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    fecha_edicion: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
 
     pregunta_id: Mapped[int] = mapped_column(ForeignKey("preguntas.id"), nullable=False)
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=False)
@@ -34,9 +44,10 @@ class Respuesta(db.Model):
 
     @property
     def fecha_formateada(self) -> str:
-        """Devuelve la fecha en formato: 'lunes 16 de noviembre de 2026, a las 20:58 pm'."""
-        dia_semana = DIAS_SEMANA[self.fecha.weekday()]
-        mes = MESES[self.fecha.month - 1]
-        sufijo = "am" if self.fecha.hour < 12 else "pm"
-        hora = self.fecha.strftime("%H:%M")
-        return f"{dia_semana} {self.fecha.day} de {mes} de {self.fecha.year}, a las {hora} {sufijo}"
+        return _formatear_fecha_es(self.fecha)
+
+    @property
+    def fecha_edicion_formateada(self) -> str | None:
+        if self.fecha_edicion is None:
+            return None
+        return _formatear_fecha_es(self.fecha_edicion)

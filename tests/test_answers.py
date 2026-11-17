@@ -2,8 +2,14 @@ from datetime import datetime
 
 import pytest
 
+from compilando.extensions import db
 from compilando.modules.answers.models import Respuesta
-from compilando.modules.answers.services import publicar_respuesta, validar_cuerpo
+from compilando.modules.answers.services import (
+    editar_respuesta,
+    publicar_respuesta,
+    validar_cuerpo,
+)
+from compilando.modules.auth.models import Usuario
 from compilando.modules.questions.services import publicar_pregunta
 
 
@@ -103,3 +109,78 @@ def test_ruta_publicar_respuesta_requiere_login(app, usuario):
         data={"cuerpo": "Intento sin sesión"},
     )
     assert response.status_code == 401
+
+
+def test_editar_respuesta_exitosa(app, usuario):
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo editar en SQLAlchemy?",
+        cuerpo="Quiero probar la actualización de registros en la base.",
+        categoria_nombre="Python",
+        nombres_tags=["sqlalchemy"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Texto original de la respuesta.",
+        usuario=usuario,
+    )
+
+    editada = editar_respuesta(
+        respuesta_id=respuesta.id,
+        nuevo_cuerpo="Texto actualizado correctamente.",
+        usuario=usuario,
+    )
+
+    assert editada.cuerpo == "Texto actualizado correctamente."
+    assert editada.fecha_edicion is not None
+    assert editada.fecha_edicion_formateada is not None
+
+
+def test_editar_respuesta_otro_usuario_falla(app, usuario):
+    otro_usuario = Usuario(
+        username="intruso", email="intruso@test.com", password_hash="hash_otro"
+    )
+    db.session.add(otro_usuario)
+    db.session.commit()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo validar permisos en Flask?",
+        cuerpo="Necesito evitar que un usuario modifique contenido ajeno.",
+        categoria_nombre="Seguridad",
+        nombres_tags=["permisos"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Respuesta privada del autor original.",
+        usuario=usuario,
+    )
+
+    with pytest.raises(PermissionError, match="Solo el autor"):
+        editar_respuesta(
+            respuesta_id=respuesta.id,
+            nuevo_cuerpo="Intento de modificación no autorizada.",
+            usuario=otro_usuario,
+        )
+
+
+def test_editar_respuesta_cuerpo_invalido(app, usuario):
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo validar longitud al editar?",
+        cuerpo="Probando límites de caracteres en edición.",
+        categoria_nombre="Validaciones",
+        nombres_tags=["forms"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Respuesta válida inicial.",
+        usuario=usuario,
+    )
+
+    with pytest.raises(ValueError, match="entre 3 y 5000 caracteres"):
+        editar_respuesta(
+            respuesta_id=respuesta.id,
+            nuevo_cuerpo="no",
+            usuario=usuario,
+        )
