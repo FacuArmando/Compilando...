@@ -130,7 +130,8 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
-.auth-card .form-note {
+.auth-card .form-note,
+.auth-form .form-note {
   margin: 0;
   font-size: 0.9rem;
 }

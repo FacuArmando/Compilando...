@@ -18,6 +18,7 @@ _HASH_FICTICIO = generate_password_hash(secrets.token_urlsafe(32))
 def autenticar_usuario(email: str, password: str) -> Usuario:
     """Comprobar credenciales sin revelar si existe una cuenta ni cambiar su clave."""
     email = email.strip().lower()
+    # Conservar el acceso de las cuentas creadas antes del máximo de 12 caracteres.
     if not email or len(email) > 254 or not 1 <= len(password) <= 128:
         raise ValueError(ERROR_CREDENCIALES)
 
@@ -40,8 +41,8 @@ def registrar_usuario(username: str, email: str, password: str) -> Usuario:
         raise ValueError("El nombre de usuario debe tener como máximo 80 caracteres.")
     if len(email) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
         raise ValueError("Ingresá un correo electrónico válido.")
-    if not 8 <= len(password) <= 128:
-        raise ValueError("La contraseña debe tener entre 8 y 128 caracteres.")
+    if not 8 <= len(password) <= 12:
+        raise ValueError("La contraseña debe tener entre 8 y 12 caracteres.")
 
     usuario = Usuario(
         username=username,

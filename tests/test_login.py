@@ -10,6 +10,7 @@ import pytest
 from flask import g, request
 from flask_migrate import downgrade, upgrade
 from sqlalchemy import delete, inspect, select, update
+from werkzeug.security import generate_password_hash
 
 from compilando import create_app
 from compilando.extensions import db
@@ -21,7 +22,7 @@ from compilando.modules.auth.services import (
 )
 from compilando.modules.auth.sessions import ahora_utc, requiere_sesion
 
-PASSWORD = "clave-de-prueba"
+PASSWORD = "clave-prueba"
 EMAIL = "mati@ejemplo.com"
 SECRET = "clave-aleatoria-exclusiva-de-pruebas-1234567890"
 
@@ -126,12 +127,26 @@ def test_credenciales_invalidas_siempre_rechazan_sin_autenticar(app_login, email
         assert db.session.scalars(select(Sesion)).all() == []
 
 
+@pytest.mark.parametrize("longitud", [13, 128])
+def test_login_conserva_acceso_con_contrasenas_anteriores(app_login, longitud):
+    password = "p" * longitud
+    with app_login.app_context():
+        usuario = db.session.scalar(select(Usuario).where(Usuario.email == EMAIL))
+        usuario.password_hash = generate_password_hash(password)
+        db.session.commit()
+
+    cliente = app_login.test_client()
+    formulario = cliente.get("/auth/login")
+    assert int(campos(formulario)["password"]["maxlength"]) >= longitud
+    assert ingresar(cliente, password=password).status_code == 303
+
+
 def test_contrasena_con_espacios_se_comprueba_sin_recortarla(app_login):
     with app_login.app_context():
-        registrar_usuario("otro", "otro@ejemplo.com", " clave-de-prueba ")
-        assert autenticar_usuario("otro@ejemplo.com", " clave-de-prueba ").username == "otro"
+        registrar_usuario("otro", "otro@ejemplo.com", " clave123 ")
+        assert autenticar_usuario("otro@ejemplo.com", " clave123 ").username == "otro"
         with pytest.raises(ValueError, match=ERROR_CREDENCIALES):
-            autenticar_usuario("otro@ejemplo.com", "clave-de-prueba")
+            autenticar_usuario("otro@ejemplo.com", "clave123")
 
 
 def test_cuenta_inexistente_tambien_comprueba_un_hash(app_login, monkeypatch):

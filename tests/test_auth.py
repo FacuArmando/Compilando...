@@ -67,7 +67,7 @@ def test_migracion_usuarios_crea_y_revierte_tabla(tmp_path):
         usuario = Usuario(
             username="usuario_prueba",
             email="prueba@example.com",
-            password_hash=generate_password_hash("clave-de-prueba"),
+            password_hash=generate_password_hash("clave-prueba"),
         )
         db.session.add(usuario)
         db.session.commit()
@@ -78,7 +78,7 @@ def test_migracion_usuarios_crea_y_revierte_tabla(tmp_path):
         assert guardado is not None
         assert guardado.username == "usuario_prueba"
         assert guardado.email == "prueba@example.com"
-        assert check_password_hash(guardado.password_hash, "clave-de-prueba")
+        assert check_password_hash(guardado.password_hash, "clave-prueba")
         db.session.remove()
 
         # La reversión se prueba únicamente en esta base temporal.
@@ -92,7 +92,7 @@ def test_migracion_usuarios_crea_y_revierte_tabla(tmp_path):
 
 
 def test_registro_guarda_usuario_y_hash_sin_modificar_la_contrasena(app_con_usuarios):
-    password = " clave-de-prueba "
+    password = " clave123 "
     usuario = registrar_usuario("  Mati  ", "  MATI@EJEMPLO.COM  ", password)
     usuario_id = usuario.id
     db.session.remove()
@@ -123,12 +123,12 @@ def test_registro_guarda_usuario_y_hash_sin_modificar_la_contrasena(app_con_usua
         ("email", "ma ti@ejemplo.com", "correo electrónico válido"),
         ("email", "mati@@ejemplo.com", "correo electrónico válido"),
         ("email", "m" * 243 + "@ejemplo.com", "correo electrónico válido"),
-        ("password", "p" * 7, "entre 8 y 128"),
-        ("password", "p" * 129, "entre 8 y 128"),
+        ("password", "p" * 7, "entre 8 y 12"),
+        ("password", "p" * 13, "entre 8 y 12"),
     ],
 )
 def test_registro_rechaza_datos_invalidos(app_con_usuarios, campo, valor, mensaje):
-    datos = {"username": "mati", "email": "mati@ejemplo.com", "password": "clave-de-prueba"}
+    datos = {"username": "mati", "email": "mati@ejemplo.com", "password": "clave-prueba"}
     datos[campo] = valor
 
     with pytest.raises(ValueError, match=mensaje):
@@ -137,7 +137,7 @@ def test_registro_rechaza_datos_invalidos(app_con_usuarios, campo, valor, mensaj
     assert db.session.scalars(select(Usuario)).all() == []
 
 
-@pytest.mark.parametrize("password", ["p" * 8, "p" * 128])
+@pytest.mark.parametrize("password", ["p" * 8, "p" * 12])
 def test_registro_acepta_los_limites_de_longitud_de_contrasena(app_con_usuarios, password):
     usuario = registrar_usuario("mati", "mati@ejemplo.com", password)
     assert check_password_hash(usuario.password_hash, password)
@@ -153,14 +153,14 @@ def test_registro_acepta_los_limites_de_longitud_de_contrasena(app_con_usuarios,
 def test_registro_rechaza_duplicados_y_permite_reintentar(
     app_con_usuarios, username, email, mensaje
 ):
-    registrar_usuario("mati", "mati@ejemplo.com", "clave-de-prueba")
+    registrar_usuario("mati", "mati@ejemplo.com", "clave-prueba")
 
     with pytest.raises(ValueError, match=mensaje):
-        registrar_usuario(username, email, "otra-clave-de-prueba")
+        registrar_usuario(username, email, "otra-clave")
 
     assert len(db.session.scalars(select(Usuario)).all()) == 1
 
-    nuevo = registrar_usuario("nuevo", "nuevo@ejemplo.com", "otra-clave-de-prueba")
+    nuevo = registrar_usuario("nuevo", "nuevo@ejemplo.com", "otra-clave")
     assert nuevo.id is not None
     assert len(db.session.scalars(select(Usuario)).all()) == 2
 
@@ -176,7 +176,7 @@ def test_formulario_registra_y_confirma_sin_reenviar_al_recargar(cliente_registr
             "csrf_token": token,
             "username": "  Mati  ",
             "email": " MATI@EJEMPLO.COM ",
-            "password": "clave-de-prueba",
+            "password": "clave-prueba",
         },
     )
     assert response.status_code == 303
@@ -186,7 +186,7 @@ def test_formulario_registra_y_confirma_sin_reenviar_al_recargar(cliente_registr
     usuario = db.session.scalar(select(Usuario).where(Usuario.email == "mati@ejemplo.com"))
     assert usuario is not None
     assert usuario.username == "Mati"
-    assert check_password_hash(usuario.password_hash, "clave-de-prueba")
+    assert check_password_hash(usuario.password_hash, "clave-prueba")
 
     inicio = cliente_registro.get(response.headers["Location"])
     assert "Tu cuenta se creó correctamente." in inicio.get_data(as_text=True)
@@ -197,7 +197,7 @@ def test_formulario_registra_y_confirma_sin_reenviar_al_recargar(cliente_registr
 
 @pytest.mark.parametrize("token", [None, "token-invalido"])
 def test_formulario_rechaza_csrf_invalido_y_permite_reintentar(cliente_registro, token):
-    datos = {"username": "mati", "email": "mati@ejemplo.com", "password": "clave-de-prueba"}
+    datos = {"username": "mati", "email": "mati@ejemplo.com", "password": "clave-prueba"}
     if token is not None:
         datos["csrf_token"] = token
 
@@ -210,7 +210,7 @@ def test_formulario_rechaza_csrf_invalido_y_permite_reintentar(cliente_registro,
     assert campos["username"]["value"] == "mati"
     assert campos["email"]["value"] == "mati@ejemplo.com"
     assert "value" not in campos["password"]
-    assert "clave-de-prueba" not in response.get_data(as_text=True)
+    assert "clave-prueba" not in response.get_data(as_text=True)
 
     datos["csrf_token"] = campos["csrf_token"]["value"]
     reintento = cliente_registro.post("/auth/register", data=datos)
@@ -232,7 +232,7 @@ def test_formulario_rechaza_token_de_otro_navegador(cliente_registro, app_con_us
             "csrf_token": token_ajeno,
             "username": "mati",
             "email": "mati@ejemplo.com",
-            "password": "clave-de-prueba",
+            "password": "clave-prueba",
         },
     )
     assert response.status_code == 400
@@ -244,7 +244,7 @@ def test_formulario_rechaza_token_de_otro_navegador(cliente_registro, app_con_us
             "csrf_token": token_propio,
             "username": "mati",
             "email": "mati@ejemplo.com",
-            "password": "clave-de-prueba",
+            "password": "clave-prueba",
         },
     )
     assert reintento.status_code == 303
@@ -261,7 +261,7 @@ def test_formulario_rechaza_token_vencido(cliente_registro, app_con_usuarios):
             "csrf_token": token,
             "username": "mati",
             "email": "mati@ejemplo.com",
-            "password": "clave-de-prueba",
+            "password": "clave-prueba",
         },
     )
     assert response.status_code == 400
@@ -274,7 +274,8 @@ def test_formulario_rechaza_token_vencido(cliente_registro, app_con_usuarios):
     [
         ("username", "", "Completá"),
         ("email", "correo-invalido", "correo electrónico válido"),
-        ("password", "corta", "entre 8 y 128"),
+        ("password", "corta", "entre 8 y 12"),
+        ("password", "p" * 13, "entre 8 y 12"),
     ],
 )
 def test_formulario_muestra_errores_sin_guardar_ni_repetir_contrasena(
@@ -286,7 +287,7 @@ def test_formulario_muestra_errores_sin_guardar_ni_repetir_contrasena(
         ],
         "username": "mati",
         "email": "mati@ejemplo.com",
-        "password": "clave-de-prueba",
+        "password": "clave-prueba",
     }
     datos[campo] = valor
 
@@ -309,7 +310,7 @@ def test_formulario_muestra_errores_sin_guardar_ni_repetir_contrasena(
     ],
 )
 def test_formulario_informa_duplicados(cliente_registro, username, email, mensaje):
-    registrar_usuario("mati", "mati@ejemplo.com", "clave-de-prueba")
+    registrar_usuario("mati", "mati@ejemplo.com", "clave-prueba")
     token = campos_formulario(cliente_registro.get("/auth/register"))["csrf_token"]["value"]
 
     response = cliente_registro.post(
@@ -318,7 +319,7 @@ def test_formulario_informa_duplicados(cliente_registro, username, email, mensaj
             "csrf_token": token,
             "username": username,
             "email": email,
-            "password": "otra-clave-de-prueba",
+            "password": "otra-clave",
         },
     )
     assert response.status_code == 400
@@ -335,7 +336,7 @@ def test_formulario_escapa_datos_al_mostrar_error(cliente_registro):
             "csrf_token": token,
             "username": username,
             "email": "correo-invalido",
-            "password": "clave-de-prueba",
+            "password": "clave-prueba",
         },
     )
     assert response.status_code == 400
