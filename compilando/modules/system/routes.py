@@ -1,4 +1,3 @@
-
 """Rutas iniciales disponibles en esta entrega."""
 
 from flask import Blueprint, render_template, request
@@ -50,9 +49,7 @@ def index():
         error_out=False,
     )
 
-    categorias = db.session.scalars(
-        select(Categoria).order_by(Categoria.nombre)
-    ).all()
+    categorias = db.session.scalars(select(Categoria).order_by(Categoria.nombre)).all()
 
     return render_template(
         "system/index.html",
@@ -68,4 +65,3 @@ def index():
 def health():
     """Indicar que el proceso web responde; no evalúa servicios externos."""
     return {"status": "ok", "application": "compilando"}
-
