@@ -237,6 +237,84 @@
     border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.author-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    margin-left: 0;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.badge-user {
+    background-color: rgba(147, 197, 253, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(147, 197, 253, 0.45);
+}
+
+.badge-op {
+    background-color: rgba(52, 211, 153, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(52, 211, 153, 0.45);
+}
+
+.badge-ia {
+    background-color: rgba(251, 191, 36, 0.22);
+    color: #fde68a;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+}
+
+.answer-role-row {
+    margin-bottom: 0.6rem;
+}
+
+.answer-author-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+
+.author-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: rgba(147, 197, 253, 0.25);
+    border: 1px solid rgba(147, 197, 253, 0.55);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.author-username {
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.answer-body-block {
+    margin-bottom: 0.75rem;
+}
+
+.answer-body-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #93c5fd;
+    margin-bottom: 0.25rem;
+}
+
+
 @media (max-width: 768px) {
     .gemini-layout {
         flex-direction: column;

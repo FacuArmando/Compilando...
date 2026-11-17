@@ -101,9 +101,34 @@
             {% for respuesta in pregunta.respuestas %}
                 <article class="answer-card">
                     <div id="contenido-respuesta-{{ respuesta.id }}">
-                        <p>{{ respuesta.cuerpo }}</p>
+                        <!-- 1. ROL DEL AUTOR -->
+                        <div class="answer-role-row">
+                            {% if respuesta.es_ia %}
+                                <span class="author-badge badge-ia">IA</span>
+                            {% elif respuesta.es_autor_pregunta %}
+                                <span class="author-badge badge-op">Autor de la pregunta</span>
+                            {% else %}
+                                <span class="author-badge badge-user">Autor de la respuesta</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- 2. AVATAR + NOMBRE DE USUARIO -->
+                        <div class="answer-author-row">
+                            <div class="author-avatar" title="Foto de perfil">
+                                {{ respuesta.autor_nombre[0] }}
+                            </div>
+                            <span class="author-username">{{ respuesta.autor_nombre }}</span>
+                        </div>
+
+                        <!-- 3. ETIQUETA "RESPUESTA" + TEXTO -->
+                        <div class="answer-body-block">
+                            <span class="answer-body-label">Respuesta</span>
+                            <p>{{ respuesta.cuerpo }}</p>
+                        </div>
+
+                        <!-- 4. FECHA Y HORA -->
                         <small>
-                            Respondido por <strong>{{ respuesta.usuario.username }}</strong> el día {{ respuesta.fecha_formateada }}
+                            Respondido el día {{ respuesta.fecha_formateada }}
                             {% if respuesta.fecha_edicion_formateada %}
                                 <br><em>Editado el día {{ respuesta.fecha_edicion_formateada }}</em>
                             {% endif %}
