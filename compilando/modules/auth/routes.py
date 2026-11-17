@@ -1,11 +1,11 @@
-"""Pantallas de registro e inicio de sesión."""
+"""Pantallas de acceso, registro y consulta de la cuenta."""
 
 from flask import Blueprint, flash, g, make_response, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFError
 
 from compilando.modules.auth.security import DemasiadosIntentos, limitar_intentos
 from compilando.modules.auth.services import autenticar_usuario, registrar_usuario
-from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion
+from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion, requiere_sesion
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -30,6 +30,13 @@ def login():
             iniciar_sesion(usuario)
             return redirect(url_for("system.index"), code=303)
     return render_template("auth/login.html", email=email[:254], error=error), 401 if error else 200
+
+
+@bp.get("/account")
+@requiere_sesion
+def account():
+    """Consultar únicamente los datos del usuario de la sesión validada."""
+    return render_template("auth/account.html")
 
 
 @bp.post("/logout")

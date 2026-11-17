@@ -16,6 +16,8 @@ Las rutas que requieren autenticación deben usar `@requiere_sesion` de `compila
 
 Las decisiones y controles están en [autenticación](docs/autenticacion.md). En producción se requiere HTTPS, un servidor WSGI, `APP_ENV=production`, una clave secreta aleatoria de al menos 32 caracteres y `TRUSTED_HOSTS` con los dominios permitidos. El servidor valida esa configuración y rechaza HTTP. El comando local de desarrollo se mantiene limitado a `127.0.0.1`.
 
+La pantalla «Mi cuenta», disponible en `/auth/account` desde el menú del usuario o la barra lateral, permite consultar el nombre de usuario y el correo de la cuenta conectada. Requiere una sesión válida. En esta primera subtarea de la #7 los datos son solo de consulta.
+
 ## Preparación
 
 Requisitos: Python 3.12, uv, Git, editor y navegador. Ver [lista completa](docs/herramientas.md).

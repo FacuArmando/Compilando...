@@ -1,22 +1,18 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const btnUsuario = document.getElementById("btn-modo-usuario");
     const btnIa = document.getElementById("btn-modo-ia");
-    const formUsuario = document.getElementById("form-respuesta-usuario");
     const avisoIa = document.getElementById("mensaje-ia-proximamente");
     const campoCuerpo = document.getElementById("cuerpo");
 
-    if (btnUsuario && btnIa && formUsuario && avisoIa) {
-        btnUsuario.addEventListener("click", () => {
-            avisoIa.classList.add("hidden");
-            formUsuario.classList.remove("hidden");
-            if (campoCuerpo) {
-                campoCuerpo.focus();
-            }
-        });
+    const responder = document.querySelector('.question-reply-link');
+    if (responder && campoCuerpo) {
+        responder.addEventListener("click", () => campoCuerpo.focus({ preventScroll: true }));
+    }
 
+    if (btnIa && avisoIa) {
         btnIa.addEventListener("click", () => {
-            formUsuario.classList.add("hidden");
-            avisoIa.classList.remove("hidden");
+            const mostrar = avisoIa.classList.contains("hidden");
+            avisoIa.classList.toggle("hidden", !mostrar);
+            btnIa.setAttribute("aria-expanded", String(mostrar));
         });
     }
 
@@ -29,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (vista && formEdit) {
                 vista.classList.add("hidden");
                 formEdit.classList.remove("hidden");
+                formEdit.querySelector("textarea")?.focus();
             }
         });
     });
@@ -42,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (vista && formEdit) {
                 formEdit.classList.add("hidden");
                 vista.classList.remove("hidden");
+                vista.querySelector(".btn-editar-respuesta")?.focus();
             }
         });
     });

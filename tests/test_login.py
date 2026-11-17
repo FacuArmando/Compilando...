@@ -79,6 +79,134 @@ def sesion_cookie(app, cliente):
     return cliente.get_cookie(app.config["SESSION_COOKIE_NAME"]).value
 
 
+@pytest.fixture
+def pregunta_con_sesion(app_login):
+    from compilando.modules.questions.services import publicar_pregunta
+
+    with app_login.app_context():
+        usuario = db.session.scalar(select(Usuario).where(Usuario.email == EMAIL))
+        pregunta = publicar_pregunta(
+            titulo="¿Cómo se implementa un tipo abstracto de datos?",
+            cuerpo="Quiero distinguir la interfaz de un TAD de su implementación.",
+            categoria_nombre="Programación",
+            nombres_tags=["TADs", "Python"],
+            usuario=usuario,
+        )
+        return pregunta.id
+
+
+def test_detalle_de_pregunta_se_puede_leer_sin_iniciar_sesion(app_login, pregunta_con_sesion):
+    response = app_login.test_client().get(f"/questions/{pregunta_con_sesion}")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "Quiero distinguir la interfaz de un TAD" in html
+    assert 'href="/auth/login"' in html
+    assert 'id="form-respuesta-usuario"' not in html
+    assert "Sesión iniciada como" not in html
+
+
+def test_abrir_pregunta_desde_inicio_conserva_la_sesion(app_login, pregunta_con_sesion):
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    inicio = cliente.get("/")
+    assert f'href="/questions/{pregunta_con_sesion}"' in inicio.get_data(as_text=True)
+    with cliente.session_transaction() as estado:
+        token_original = estado["auth_token"]
+
+    for ruta in [f"/questions/{pregunta_con_sesion}", "/auth/account", "/"]:
+        response = cliente.get(ruta)
+        assert response.status_code == 200
+        assert "Sesión iniciada como <strong>Mati</strong>" in response.get_data(as_text=True)
+        with cliente.session_transaction() as estado:
+            assert estado["auth_token"] == token_original
+
+
+def test_responder_desde_detalle_no_pide_otro_login(app_login, pregunta_con_sesion):
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    ruta = f"/questions/{pregunta_con_sesion}"
+    detalle = cliente.get(ruta)
+    assert 'id="form-respuesta-usuario"' in detalle.get_data(as_text=True)
+    csrf = campos(detalle)["csrf_token"]["value"]
+
+    response = cliente.post(
+        f"{ruta}/answers",
+        data={"csrf_token": csrf, "cuerpo": "Respuesta nueva sin volver a ingresar."},
+    )
+    assert response.status_code == 302
+    assert response.headers["Location"] == ruta
+    html = cliente.get(ruta).get_data(as_text=True)
+    assert "Tu respuesta fue publicada correctamente." in html
+    assert "Respuesta nueva sin volver a ingresar." in html
+    assert "Sesión iniciada como <strong>Mati</strong>" in html
+
+
+@pytest.mark.parametrize("motivo", ["vencimiento", "inactividad"])
+def test_detalle_pide_login_para_responder_solo_si_la_sesion_vencio(
+    app_login, pregunta_con_sesion, motivo
+):
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    with app_login.app_context():
+        sesion = db.session.scalar(select(Sesion))
+        if motivo == "vencimiento":
+            sesion.fecha_vencimiento = ahora_utc() - timedelta(seconds=1)
+        else:
+            sesion.ultimo_acceso = ahora_utc() - timedelta(minutes=31)
+        db.session.commit()
+
+    response = cliente.get(f"/questions/{pregunta_con_sesion}")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'id="form-respuesta-usuario"' not in html
+    assert "Sesión iniciada como" not in html
+    with cliente.session_transaction() as estado:
+        assert "auth_token" not in estado
+
+
+def test_respuesta_desde_detalle_conserva_csrf(app_login, pregunta_con_sesion):
+    from compilando.modules.answers.models import Respuesta
+
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    response = cliente.post(
+        f"/questions/{pregunta_con_sesion}/answers",
+        data={"csrf_token": "incorrecto", "cuerpo": "No debe guardarse."},
+    )
+    assert response.status_code == 400
+    with app_login.app_context():
+        assert db.session.scalar(select(Respuesta.id)) is None
+
+
+def test_detalle_y_edicion_respetan_el_autor_de_la_respuesta(app_login, pregunta_con_sesion):
+    from compilando.modules.answers.models import Respuesta
+    from compilando.modules.answers.services import publicar_respuesta
+
+    with app_login.app_context():
+        propio = db.session.scalar(select(Usuario).where(Usuario.email == EMAIL))
+        otro = registrar_usuario("Otro autor", "otro@ejemplo.com", PASSWORD)
+        respuesta_propia = publicar_respuesta(pregunta_con_sesion, "Mi respuesta.", propio)
+        respuesta_ajena = publicar_respuesta(
+            pregunta_con_sesion, "Respuesta de otra persona.", otro
+        )
+        id_propia, id_ajena = respuesta_propia.id, respuesta_ajena.id
+
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    detalle = cliente.get(f"/questions/{pregunta_con_sesion}")
+    html = detalle.get_data(as_text=True)
+    assert f'id="form-editar-respuesta-{id_propia}"' in html
+    assert f'id="form-editar-respuesta-{id_ajena}"' not in html
+    csrf = campos(detalle)["csrf_token"]["value"]
+    response = cliente.post(
+        f"/answers/{id_ajena}/edit",
+        data={"csrf_token": csrf, "cuerpo": "Intento de edición ajena."},
+    )
+    assert response.status_code == 403
+    with app_login.app_context():
+        assert db.session.get(Respuesta, id_ajena).cuerpo == "Respuesta de otra persona."
+
+
 def test_login_lee_cuenta_crea_sesion_y_muestra_nombre(app_login):
     cliente = app_login.test_client()
     response = ingresar(cliente, email="  MATI@EJEMPLO.COM  ")
@@ -101,6 +229,120 @@ def test_login_lee_cuenta_crea_sesion_y_muestra_nombre(app_login):
     assert cliente.get("/auth/login").status_code == 302
     assert "HttpOnly" in response.headers["Set-Cookie"]
     assert "SameSite=Lax" in response.headers["Set-Cookie"]
+
+
+def test_mi_cuenta_muestra_datos_propios_sin_exponer_credenciales(app_login):
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    assert 'href="/auth/account"' in cliente.get("/").get_data(as_text=True)
+
+    response = cliente.get("/auth/account")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "Mi cuenta" in html
+    assert "Nombre de usuario" in html
+    assert "Correo electrónico" in html
+    assert "Mati" in html and EMAIL in html
+    assert PASSWORD not in html
+    assert response.headers["Cache-Control"] == "no-store"
+    with app_login.app_context():
+        usuario = db.session.scalar(select(Usuario).where(Usuario.email == EMAIL))
+        assert usuario.password_hash not in html
+
+
+@pytest.mark.parametrize("metodo", ["GET", "HEAD"])
+def test_mi_cuenta_sin_sesion_redirige_al_login(app_login, metodo):
+    response = app_login.test_client().open("/auth/account", method=metodo)
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/auth/login"
+    assert EMAIL not in response.get_data(as_text=True)
+
+
+def test_mi_cuenta_ignora_identidades_enviadas_en_la_url(app_login):
+    with app_login.app_context():
+        otro = registrar_usuario("Otra persona", "otra@ejemplo.com", PASSWORD)
+        otro_id = otro.id
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+
+    response = cliente.get(f"/auth/account?usuario_id={otro_id}&email=otra@ejemplo.com")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert EMAIL in html
+    assert "otra@ejemplo.com" not in html
+    assert "Otra persona" not in html
+
+
+@pytest.mark.parametrize("motivo", ["vencimiento", "inactividad", "revocacion", "cookie"])
+def test_mi_cuenta_rechaza_sesiones_invalidas(app_login, motivo):
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    if motivo == "cookie":
+        cliente.set_cookie(
+            app_login.config["SESSION_COOKIE_NAME"], sesion_cookie(app_login, cliente) + "alterada"
+        )
+    else:
+        with app_login.app_context():
+            sesion = db.session.scalar(select(Sesion))
+            if motivo == "vencimiento":
+                sesion.fecha_vencimiento = ahora_utc() - timedelta(seconds=1)
+            elif motivo == "inactividad":
+                sesion.ultimo_acceso = ahora_utc() - timedelta(minutes=31)
+            else:
+                sesion.activa = False
+            db.session.commit()
+
+    response = cliente.get("/auth/account")
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/auth/login"
+    assert EMAIL not in response.get_data(as_text=True)
+
+
+def test_mi_cuenta_es_de_consulta_y_no_acepta_modificaciones(app_login):
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    token = campos(cliente.get("/auth/account"))["csrf_token"]["value"]
+    with app_login.app_context():
+        hash_original = db.session.scalar(
+            select(Usuario.password_hash).where(Usuario.email == EMAIL)
+        )
+
+    response = cliente.post(
+        "/auth/account",
+        data={
+            "csrf_token": token,
+            "username": "modificado",
+            "email": "modificado@ejemplo.com",
+            "password": "nueva-clave",
+        },
+    )
+    assert response.status_code == 405
+    with app_login.app_context():
+        usuario = db.session.scalar(select(Usuario).where(Usuario.email == EMAIL))
+        assert usuario.username == "Mati"
+        assert usuario.email == EMAIL
+        assert usuario.password_hash == hash_original
+
+
+def test_mi_cuenta_escapa_el_nombre_del_usuario(app_login):
+    with app_login.app_context():
+        usuario = db.session.scalar(select(Usuario).where(Usuario.email == EMAIL))
+        usuario.username = "Mati <script>alert(1)</script>"
+        db.session.commit()
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+
+    html = cliente.get("/auth/account").get_data(as_text=True)
+    assert "<script>alert(1)</script>" not in html
+    assert "Mati &lt;script&gt;alert(1)&lt;/script&gt;" in html
+
+
+def test_cerrar_sesion_desde_mi_cuenta_impide_volver_a_ver_los_datos(app_login):
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    token = campos(cliente.get("/auth/account"))["csrf_token"]["value"]
+    assert cliente.post("/auth/logout", data={"csrf_token": token}).status_code == 303
+    assert cliente.get("/auth/account").status_code == 303
 
 
 @pytest.mark.parametrize(
