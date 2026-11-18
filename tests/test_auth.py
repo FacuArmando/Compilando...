@@ -123,8 +123,8 @@ def test_registro_guarda_usuario_y_hash_sin_modificar_la_contrasena(app_con_usua
         ("email", "ma ti@ejemplo.com", "correo electrónico válido"),
         ("email", "mati@@ejemplo.com", "correo electrónico válido"),
         ("email", "m" * 243 + "@ejemplo.com", "correo electrónico válido"),
-        ("password", "p" * 7, "entre 8 y 12"),
-        ("password", "p" * 13, "entre 8 y 12"),
+        ("password", "p" * 7, "entre 8 y 18"),
+        ("password", "p" * 19, "entre 8 y 18"),
     ],
 )
 def test_registro_rechaza_datos_invalidos(app_con_usuarios, campo, valor, mensaje):
@@ -137,10 +137,36 @@ def test_registro_rechaza_datos_invalidos(app_con_usuarios, campo, valor, mensaj
     assert db.session.scalars(select(Usuario)).all() == []
 
 
-@pytest.mark.parametrize("password", ["p" * 8, "p" * 12])
+@pytest.mark.parametrize("password", ["p" * 8, "p" * 12, "p" * 13, "p" * 18])
 def test_registro_acepta_los_limites_de_longitud_de_contrasena(app_con_usuarios, password):
     usuario = registrar_usuario("mati", "mati@ejemplo.com", password)
     assert check_password_hash(usuario.password_hash, password)
+
+
+@pytest.mark.parametrize("longitud", [8, 13, 18])
+def test_registro_por_formulario_permite_ingresar_con_el_nuevo_rango(cliente_registro, longitud):
+    formulario = cliente_registro.get("/auth/register")
+    campos = campos_formulario(formulario)
+    assert campos["password"]["pattern"] == r"[\s\S]{8,18}"
+    assert "maxlength" not in campos["password"]
+    password = "P" * longitud
+    registro = cliente_registro.post(
+        "/auth/register",
+        data={
+            "csrf_token": campos["csrf_token"]["value"],
+            "username": "Mati",
+            "email": "mati@ejemplo.com",
+            "password": password,
+        },
+    )
+    assert registro.status_code == 303
+    token = campos_formulario(cliente_registro.get("/auth/login"))["csrf_token"]["value"]
+    login = cliente_registro.post(
+        "/auth/login",
+        data={"csrf_token": token, "email": "mati@ejemplo.com", "password": password},
+    )
+    assert login.status_code == 303
+    assert cliente_registro.get("/auth/account").status_code == 200
 
 
 @pytest.mark.parametrize(
@@ -274,8 +300,8 @@ def test_formulario_rechaza_token_vencido(cliente_registro, app_con_usuarios):
     [
         ("username", "", "Completá"),
         ("email", "correo-invalido", "correo electrónico válido"),
-        ("password", "corta", "entre 8 y 12"),
-        ("password", "p" * 13, "entre 8 y 12"),
+        ("password", "corta", "entre 8 y 18"),
+        ("password", "p" * 19, "entre 8 y 18"),
     ],
 )
 def test_formulario_muestra_errores_sin_guardar_ni_repetir_contrasena(

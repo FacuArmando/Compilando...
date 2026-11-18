@@ -131,6 +131,24 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+.field .password-toggle {
+  justify-self: end;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1546a0;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.field .password-toggle[hidden],
+.field .password-field-error[hidden] { display: none; }
+.field .password-toggle:hover { background: transparent; text-decoration: underline; }
+.field .password-field-error { color: #a12822; font-size: 12px; line-height: 1.6; }
+.field input[aria-invalid="true"] { border-color: #b64a43; }
+
 .auth-card .form-note,
 .auth-form .form-note {
   margin: 0;

@@ -11,13 +11,18 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     url_for,
 )
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import HTTPException
 
 from compilando.modules.auth.security import DemasiadosIntentos, limitar_intentos
-from compilando.modules.auth.services import autenticar_usuario, registrar_usuario
+from compilando.modules.auth.services import (
+    autenticar_usuario,
+    cambiar_contrasena,
+    registrar_usuario,
+)
 from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion, requiere_sesion
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -80,6 +85,39 @@ def account():
     return render_template("auth/account.html")
 
 
+@bp.post("/account/password")
+@requiere_sesion
+def change_password():
+    """Cambiar únicamente la contraseña de la cuenta validada por la sesión."""
+    try:
+        limitar_intentos("password", usuario_id=g.usuario_actual.id)
+        cambiar_contrasena(
+            g.usuario_actual,
+            request.form.get("password_actual", ""),
+            request.form.get("password_nueva", ""),
+            request.form.get("password_confirmacion", ""),
+        )
+    except DemasiadosIntentos as exc:
+        response = make_response(
+            render_template(
+                "auth/account.html",
+                password_error=(
+                    "Hubo demasiados intentos. Esperá unos minutos antes de volver a probar."
+                ),
+            ),
+            429,
+        )
+        response.headers["Retry-After"] = str(exc.segundos)
+        return response
+    except ValueError as exc:
+        return render_template("auth/account.html", password_error=str(exc)), 400
+
+    # La revocación ya se guardó junto con el hash; retirar también la cookie del navegador.
+    session.clear()
+    flash("Tu contraseña se actualizó. Iniciá sesión con la nueva contraseña.", "success")
+    return redirect(url_for("auth.login", next=url_for("auth.account")), code=303)
+
+
 @bp.post("/logout")
 def logout():
     """Invalidar la sesión con POST protegido por CSRF."""
@@ -126,6 +164,13 @@ def register():
 @bp.errorhandler(CSRFError)
 def formulario_invalido(error):
     """Mostrar un formulario nuevo para reintentar un envío vencido o inválido."""
+    if request.endpoint == "auth.change_password":
+        if g.usuario_actual is None:
+            return redirect(url_for("auth.login"), code=303)
+        return render_template(
+            "auth/account.html",
+            password_error="El formulario venció o no es válido. Volvé a completar los campos.",
+        ), 400
     template = "auth/register.html" if request.endpoint == "auth.register" else "auth/login.html"
     return render_template(
         template,

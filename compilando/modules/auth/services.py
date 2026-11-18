@@ -1,14 +1,14 @@
-"""Registro y comprobación de credenciales, independientes de los formularios."""
+"""Registro, comprobación y cambio de credenciales, independientes de los formularios."""
 
 import re
 import secrets
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from compilando.extensions import db
-from compilando.modules.auth.models import Usuario
+from compilando.modules.auth.models import Sesion, Usuario
 
 ERROR_CREDENCIALES = "Credenciales incorrectas."
 # Se genera una sola vez; evita omitir el costo del hash cuando el correo no existe.
@@ -18,7 +18,7 @@ _HASH_FICTICIO = generate_password_hash(secrets.token_urlsafe(32))
 def autenticar_usuario(email: str, password: str) -> Usuario:
     """Comprobar credenciales sin revelar si existe una cuenta ni cambiar su clave."""
     email = email.strip().lower()
-    # Conservar el acceso de las cuentas creadas antes del máximo de 12 caracteres.
+    # Conservar el acceso de las cuentas creadas antes del máximo de 18 caracteres.
     if not email or len(email) > 254 or not 1 <= len(password) <= 128:
         raise ValueError(ERROR_CREDENCIALES)
 
@@ -28,6 +28,43 @@ def autenticar_usuario(email: str, password: str) -> Usuario:
     if usuario is None or not coincide:
         raise ValueError(ERROR_CREDENCIALES)
     return usuario
+
+
+def cambiar_contrasena(usuario: Usuario, actual: str, nueva: str, confirmacion: str) -> None:
+    """Cambiar el hash y revocar todas las sesiones de la cuenta en una sola transacción."""
+    if not actual or not nueva or not confirmacion:
+        raise ValueError("Completá la contraseña actual, la nueva y su confirmación.")
+    if not 1 <= len(actual) <= 128:
+        raise ValueError("La contraseña actual no es correcta.")
+    if not 8 <= len(nueva) <= 18 or not nueva.strip():
+        raise ValueError("La nueva contraseña debe tener entre 8 y 18 caracteres.")
+    if nueva != confirmacion:
+        raise ValueError("La nueva contraseña y su confirmación no coinciden.")
+
+    # Leer el hash vigente, sin depender de la copia cargada al iniciar la solicitud.
+    hash_actual = db.session.scalar(select(Usuario.password_hash).where(Usuario.id == usuario.id))
+    if hash_actual is None or not check_password_hash(hash_actual, actual):
+        raise ValueError("La contraseña actual no es correcta.")
+    if actual == nueva:
+        raise ValueError("Elegí una contraseña diferente de la actual.")
+
+    nuevo_hash = generate_password_hash(nueva)
+    try:
+        resultado = db.session.execute(
+            update(Usuario)
+            .where(Usuario.id == usuario.id, Usuario.password_hash == hash_actual)
+            .values(password_hash=nuevo_hash)
+            .execution_options(synchronize_session=False)
+        )
+        if resultado.rowcount != 1:
+            raise ValueError("La contraseña cambió mientras guardabas. Volvé a iniciar sesión.")
+        db.session.execute(
+            update(Sesion).where(Sesion.usuario_id == usuario.id).values(activa=False)
+        )
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
 
 def registrar_usuario(username: str, email: str, password: str) -> Usuario:
@@ -41,8 +78,8 @@ def registrar_usuario(username: str, email: str, password: str) -> Usuario:
         raise ValueError("El nombre de usuario debe tener como máximo 80 caracteres.")
     if len(email) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
         raise ValueError("Ingresá un correo electrónico válido.")
-    if not 8 <= len(password) <= 12:
-        raise ValueError("La contraseña debe tener entre 8 y 12 caracteres.")
+    if not 8 <= len(password) <= 18:
+        raise ValueError("La contraseña debe tener entre 8 y 18 caracteres.")
 
     usuario = Usuario(
         username=username,
