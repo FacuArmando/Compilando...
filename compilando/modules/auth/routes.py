@@ -1,7 +1,20 @@
 """Pantallas de acceso, registro y consulta de la cuenta."""
 
-from flask import Blueprint, flash, g, make_response, redirect, render_template, request, url_for
+from urllib.parse import urlsplit
+
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    g,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_wtf.csrf import CSRFError
+from werkzeug.exceptions import HTTPException
 
 from compilando.modules.auth.security import DemasiadosIntentos, limitar_intentos
 from compilando.modules.auth.services import autenticar_usuario, registrar_usuario
@@ -10,11 +23,35 @@ from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion, requ
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
+def _destino_de_regreso(valor: str | None) -> str:
+    """Volver solo a pantallas GET conocidas, construyendo de nuevo su URL interna."""
+    inicio = url_for("system.index")
+    if not valor or len(valor) > 1024 or "\\" in valor or any(c.isspace() for c in valor):
+        return inicio
+    destinos = {
+        "system.index": {"", "question-composer"},
+        "questions.view_question": {"", "tu-respuesta"},
+        "questions.publish_question": {""},
+        "auth.account": {""},
+    }
+    try:
+        ruta = urlsplit(valor)
+        if ruta.scheme or ruta.netloc or ruta.query or not ruta.path.startswith("/"):
+            return inicio
+        endpoint, argumentos = current_app.url_map.bind("").match(ruta.path, method="GET")
+    except (ValueError, HTTPException):
+        return inicio
+    if endpoint not in destinos or ruta.fragment not in destinos[endpoint]:
+        return inicio
+    return url_for(endpoint, **argumentos, _anchor=ruta.fragment or None)
+
+
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     """Comprobar credenciales y crear una sesión únicamente ante un ingreso válido."""
+    regreso = _destino_de_regreso(request.form.get("next", request.args.get("next")))
     if request.method == "GET" and g.usuario_actual is not None:
-        return redirect(url_for("system.index"))
+        return redirect(regreso)
     email = ""
     error = None
     if request.method == "POST":
@@ -23,13 +60,17 @@ def login():
             limitar_intentos("login", email)
             usuario = autenticar_usuario(email, request.form.get("password", ""))
         except DemasiadosIntentos as exc:
-            return formulario_con_limite("auth/login.html", exc, email=email[:254])
+            return formulario_con_limite(
+                "auth/login.html", exc, email=email[:254], next_url=regreso
+            )
         except ValueError as exc:
             error = str(exc)
         else:
             iniciar_sesion(usuario)
-            return redirect(url_for("system.index"), code=303)
-    return render_template("auth/login.html", email=email[:254], error=error), 401 if error else 200
+            return redirect(regreso, code=303)
+    return render_template(
+        "auth/login.html", email=email[:254], error=error, next_url=regreso
+    ), 401 if error else 200
 
 
 @bp.get("/account")
@@ -49,6 +90,7 @@ def logout():
 @bp.route("/register", methods=["GET", "POST"])
 def register():
     """Mostrar el formulario y registrar una cuenta cuando los datos son válidos."""
+    regreso = _destino_de_regreso(request.form.get("next", request.args.get("next")))
     username = ""
     email = ""
     error = None
@@ -62,16 +104,22 @@ def register():
             registrar_usuario(username, email, password)
         except DemasiadosIntentos as exc:
             return formulario_con_limite(
-                "auth/register.html", exc, username=username[:80], email=email[:254]
+                "auth/register.html",
+                exc,
+                username=username[:80],
+                email=email[:254],
+                next_url=regreso,
             )
         except ValueError as exc:
             error = str(exc)
         else:
             flash("Tu cuenta se creó correctamente.", "success")
+            if regreso != url_for("system.index"):
+                return redirect(url_for("auth.login", next=regreso), code=303)
             return redirect(url_for("system.index"), code=303)
 
     return render_template(
-        "auth/register.html", username=username, email=email, error=error
+        "auth/register.html", username=username, email=email, error=error, next_url=regreso
     ), 400 if error else 200
 
 
@@ -83,6 +131,7 @@ def formulario_invalido(error):
         template,
         username=request.form.get("username", "")[:80],
         email=request.form.get("email", "")[:254],
+        next_url=_destino_de_regreso(request.form.get("next", request.args.get("next"))),
         error="El formulario venció o no es válido. Revisá los datos y volvé a enviarlo.",
     ), 400
 

@@ -5,6 +5,7 @@ import secrets
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from html.parser import HTMLParser
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from flask import g, request
@@ -62,6 +63,17 @@ def campos(response):
     return formulario.campos
 
 
+class Enlaces(HTMLParser):
+    def __init__(self, response):
+        super().__init__()
+        self.enlaces = []
+        self.feed(response.get_data(as_text=True))
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "a":
+            self.enlaces.append(dict(attrs))
+
+
 def ingresar(cliente, email=EMAIL, password=PASSWORD, *, ip="127.0.0.1", headers=None):
     opciones = {"environ_overrides": {"REMOTE_ADDR": ip}}
     token = campos(cliente.get("/auth/login", follow_redirects=True, **opciones))["csrf_token"][
@@ -95,12 +107,206 @@ def pregunta_con_sesion(app_login):
         return pregunta.id
 
 
+def test_inicio_publico_y_login_son_pantallas_separadas(app_login, pregunta_con_sesion):
+    cliente = app_login.test_client()
+    inicio = cliente.get("/")
+    assert inicio.status_code == 200
+    html = inicio.get_data(as_text=True)
+    assert f'href="/questions/{pregunta_con_sesion}"' in html
+    assert 'class="community-search"' in html
+    assert 'class="auth-form"' not in html
+    assert 'id="login-title"' not in html
+    assert 'id="question-composer"' not in html
+
+    for ruta in ["/auth/login", "/auth/register"]:
+        acceso = cliente.get(ruta)
+        assert acceso.status_code == 200
+        assert 'class="auth-form"' in acceso.get_data(as_text=True)
+        assert 'id="preguntas"' not in acceso.get_data(as_text=True)
+        assert 'class="community-search"' not in acceso.get_data(as_text=True)
+        assert f'href="/questions/{pregunta_con_sesion}"' not in acceso.get_data(as_text=True)
+
+
+def test_visitante_vuelve_a_preguntar_despues_del_login(app_login):
+    cliente = app_login.test_client()
+    enlace = next(
+        item["href"]
+        for item in Enlaces(cliente.get("/")).enlaces
+        if "composer-guest" in item.get("class", "").split()
+    )
+    assert parse_qs(urlsplit(enlace).query)["next"] == ["/#question-composer"]
+    formulario = cliente.get(enlace)
+    datos = {
+        "csrf_token": campos(formulario)["csrf_token"]["value"],
+        "next": campos(formulario)["next"]["value"],
+        "email": EMAIL,
+        "password": "incorrecta",
+    }
+    error = cliente.post("/auth/login", data=datos)
+    assert error.status_code == 401
+    assert campos(error)["next"]["value"] == "/#question-composer"
+    with cliente.session_transaction() as estado:
+        assert "auth_token" not in estado
+    datos["password"] = PASSWORD
+    datos["csrf_token"] = campos(error)["csrf_token"]["value"]
+    ingreso = cliente.post("/auth/login", data=datos)
+    assert ingreso.status_code == 303
+    assert ingreso.headers["Location"] == "/#question-composer"
+    inicio = cliente.get("/")
+    assert 'id="question-composer"' in inicio.get_data(as_text=True)
+    csrf = campos(inicio)["csrf_token"]["value"]
+    salida = cliente.post("/auth/logout", data={"csrf_token": csrf}, follow_redirects=True)
+    assert salida.status_code == 200
+    assert 'class="auth-form"' not in salida.get_data(as_text=True)
+    assert "composer-guest" in salida.get_data(as_text=True)
+
+
+def test_visitante_vuelve_a_responder_despues_del_login(app_login, pregunta_con_sesion):
+    cliente = app_login.test_client()
+    ruta = f"/questions/{pregunta_con_sesion}"
+    enlace = next(
+        item["href"]
+        for item in Enlaces(cliente.get(ruta)).enlaces
+        if item.get("class") == "question-reply-link"
+    )
+    destino = f"{ruta}#tu-respuesta"
+    assert parse_qs(urlsplit(enlace).query)["next"] == [destino]
+    formulario = cliente.get(enlace)
+    datos = {
+        "csrf_token": "incorrecto",
+        "next": campos(formulario)["next"]["value"],
+        "email": EMAIL,
+        "password": PASSWORD,
+    }
+    error = cliente.post("/auth/login", data=datos)
+    assert error.status_code == 400
+    assert campos(error)["next"]["value"] == destino
+    datos["csrf_token"] = campos(error)["csrf_token"]["value"]
+    ingreso = cliente.post("/auth/login", data=datos)
+    assert ingreso.status_code == 303
+    assert ingreso.headers["Location"] == destino
+    detalle = cliente.get(ruta)
+    assert 'id="form-respuesta-usuario"' in detalle.get_data(as_text=True)
+    respuesta = cliente.post(
+        f"{ruta}/answers",
+        data={"csrf_token": campos(detalle)["csrf_token"]["value"], "cuerpo": "Mi solución."},
+    )
+    assert respuesta.status_code == 302
+    assert "Mi solución." in cliente.get(ruta).get_data(as_text=True)
+
+
+def test_registro_desde_login_conserva_la_pregunta_a_responder(app_login, pregunta_con_sesion):
+    cliente = app_login.test_client()
+    destino = f"/questions/{pregunta_con_sesion}#tu-respuesta"
+    login = cliente.get("/auth/login", query_string={"next": destino})
+    registro_url = next(
+        item["href"]
+        for item in Enlaces(login).enlaces
+        if urlsplit(item["href"]).path == "/auth/register"
+    )
+    registro = cliente.get(registro_url)
+    response = cliente.post(
+        "/auth/register",
+        data={
+            "csrf_token": campos(registro)["csrf_token"]["value"],
+            "next": campos(registro)["next"]["value"],
+            "username": "Nuevo visitante",
+            "email": "nuevo@ejemplo.com",
+            "password": PASSWORD,
+        },
+    )
+    assert response.status_code == 303
+    assert urlsplit(response.headers["Location"]).path == "/auth/login"
+    with cliente.session_transaction() as estado:
+        assert "auth_token" not in estado
+    formulario = cliente.get(response.headers["Location"])
+    assert campos(formulario)["next"]["value"] == destino
+    ingreso = cliente.post(
+        "/auth/login",
+        data={
+            "csrf_token": campos(formulario)["csrf_token"]["value"],
+            "next": campos(formulario)["next"]["value"],
+            "email": "nuevo@ejemplo.com",
+            "password": PASSWORD,
+        },
+    )
+    assert ingreso.status_code == 303
+    assert ingreso.headers["Location"] == destino
+
+
+def test_login_con_sesion_vuelve_al_destino_sin_pedir_credenciales(app_login, pregunta_con_sesion):
+    cliente = app_login.test_client()
+    assert ingresar(cliente).status_code == 303
+    destino = f"/questions/{pregunta_con_sesion}#tu-respuesta"
+    response = cliente.get("/auth/login", query_string={"next": destino})
+    assert response.status_code == 302
+    assert response.headers["Location"] == destino
+
+
+@pytest.mark.parametrize(
+    "destino",
+    [
+        "https://ajeno.invalid",
+        "//ajeno.invalid",
+        "/\\ajeno.invalid",
+        "javascript:alert(1)",
+        "/auth/login",
+        "/auth/logout",
+        "/health",
+        "/no-existe",
+        "/questions/1?next=//ajeno.invalid",
+        "/#ajeno",
+        "/%2f%2fajeno.invalid",
+        "\n//ajeno.invalid",
+        "https://[",
+        "/questions/1#tu-respuesta\r\nX-test:1",
+    ],
+)
+def test_regreso_del_login_rechaza_destinos_externos_o_no_permitidos(app_login, destino):
+    cliente = app_login.test_client()
+    formulario = cliente.get("/auth/login", query_string={"next": destino})
+    assert formulario.status_code == 200
+    assert campos(formulario)["next"]["value"] == "/"
+    response = cliente.post(
+        "/auth/login",
+        data={
+            "csrf_token": campos(formulario)["csrf_token"]["value"],
+            "next": destino,
+            "email": EMAIL,
+            "password": PASSWORD,
+        },
+    )
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/"
+
+
+def test_visitante_no_publica_con_url_directa_aunque_tenga_csrf(app_login, pregunta_con_sesion):
+    from compilando.modules.answers.models import Respuesta
+    from compilando.modules.questions.models import Pregunta
+
+    cliente = app_login.test_client()
+    csrf = campos(cliente.get("/auth/login"))["csrf_token"]["value"]
+    assert cliente.get("/questions/publish").status_code == 401
+    pregunta = cliente.post(
+        "/questions/publish",
+        data={"csrf_token": csrf, "titulo": "Intento sin sesión", "cuerpo": "Mi pregunta."},
+    )
+    respuesta = cliente.post(
+        f"/questions/{pregunta_con_sesion}/answers",
+        data={"csrf_token": csrf, "cuerpo": "Intento sin sesión."},
+    )
+    assert pregunta.status_code == respuesta.status_code == 401
+    with app_login.app_context():
+        assert len(db.session.scalars(select(Pregunta)).all()) == 1
+        assert db.session.scalar(select(Respuesta.id)) is None
+
+
 def test_detalle_de_pregunta_se_puede_leer_sin_iniciar_sesion(app_login, pregunta_con_sesion):
     response = app_login.test_client().get(f"/questions/{pregunta_con_sesion}")
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     assert "Quiero distinguir la interfaz de un TAD" in html
-    assert 'href="/auth/login"' in html
+    assert "/auth/login?next=" in html
     assert 'id="form-respuesta-usuario"' not in html
     assert "Sesión iniciada como" not in html
 

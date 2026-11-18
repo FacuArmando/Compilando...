@@ -3,6 +3,7 @@
 
   <section class="auth-panel" aria-labelledby="login-title">
     <div class="auth-content">
+      <a class="back-link" href="{{ url_for('system.index') }}">← Volver al inicio</a>
       <h1 id="login-title">Iniciar sesión</h1>
       <p class="auth-intro">Ingresá con tu cuenta y sumate a la conversación.</p>
 
@@ -16,6 +17,7 @@
 
       <form class="auth-form" action="{{ url_for('auth.login') }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ next_url|default(url_for('system.index')) }}">
 
         <div class="field">
           <label for="email">Correo electrónico</label>
@@ -34,7 +36,7 @@
       </form>
 
       <p class="auth-switch">
-        ¿No tenés cuenta? <a href="{{ url_for('auth.register') }}">Registrate</a>
+        ¿No tenés cuenta? <a href="{{ url_for('auth.register', next=next_url if next_url|default('/') != '/' else none) }}">Registrate</a>
       </p>
     </div>
   </section>

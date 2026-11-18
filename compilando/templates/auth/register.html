@@ -7,6 +7,7 @@
 
   <section class="auth-panel" aria-labelledby="register-title">
     <div class="auth-content">
+      <a class="back-link" href="{{ url_for('system.index') }}">← Volver al inicio</a>
       <h1 id="register-title">Crear una cuenta</h1>
       <p class="auth-intro">Sumate a la comunidad de COMPILANDO...</p>
 
@@ -16,6 +17,7 @@
 
       <form class="auth-form" action="{{ url_for('auth.register') }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ next_url|default(url_for('system.index')) }}">
 
         <div class="field">
           <label for="username">Nombre de usuario</label>
@@ -41,7 +43,7 @@
       </form>
 
       <p class="auth-switch">
-        ¿Ya tenés cuenta? <a href="{{ url_for('auth.login') }}">Iniciá sesión</a>
+        ¿Ya tenés cuenta? <a href="{{ url_for('auth.login', next=next_url if next_url|default('/') != '/' else none) }}">Iniciá sesión</a>
       </p>
     </div>
   </section>

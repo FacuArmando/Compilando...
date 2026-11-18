@@ -23,7 +23,7 @@
     </details>
     {% else %}
       <nav class="community-auth-links" aria-label="Acceso a la comunidad">
-        <a href="{{ url_for('auth.login') }}">Ingresar</a>
+        <a href="{{ login_url|default(url_for('auth.login')) }}">Ingresar</a>
         <a class="community-register" href="{{ url_for('auth.register') }}">Crear cuenta</a>
       </nav>
     {% endif %}
