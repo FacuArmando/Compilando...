@@ -95,7 +95,7 @@ def test_formato_fecha_respuesta():
     assert respuesta.fecha_formateada == "lunes 16 de noviembre de 2026, a las 20:58 pm"
 
 
-def test_ruta_publicar_respuesta_requiere_login(app, usuario):
+def test_ruta_publicar_respuesta_requiere_login(app, usuario, client):
     pregunta = publicar_pregunta(
         titulo="¿Cómo proteger rutas en Flask?",
         cuerpo="Quiero evitar que usuarios anónimos publiquen respuestas.",
@@ -104,8 +104,7 @@ def test_ruta_publicar_respuesta_requiere_login(app, usuario):
         usuario=usuario,
     )
 
-    cliente = app.test_client()
-    response = cliente.post(
+    response = client.post(
         f"/questions/{pregunta.id}/answers",
         data={"cuerpo": "Intento sin sesión"},
     )
@@ -390,3 +389,97 @@ def test_aceptar_respuesta_no_modifica_otra_pregunta(app, usuario):
 
     assert respuesta_1.estado == EstadoRespuesta.ACEPTADA.value
     assert respuesta_2.estado == EstadoRespuesta.ACEPTADA.value
+
+##Pruebas
+
+
+def test_ruta_editar_respuesta_requiere_login(app, usuario, client):
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo probar la edición?",
+        cuerpo="Pregunta para probar la autenticación.",
+        categoria_nombre="Testing",
+        nombres_tags=["pytest"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Respuesta original.",
+        usuario=usuario,
+    )
+
+    response = client.post(
+        f"/answers/{respuesta.id}/edit",
+        data={"cuerpo": "Intento sin sesión."},
+    )
+
+    assert response.status_code == 401
+
+
+def test_ruta_editar_respuesta_no_permite_otro_usuario(
+        app, usuario, cliente_autenticado
+):
+    otro_usuario = Usuario(
+        username="intruso",
+        email="intruso@test.com",
+        password_hash="hash_intruso",
+    )
+    db.session.add(otro_usuario)
+    db.session.commit()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Quién puede editar?",
+        cuerpo="Pregunta para probar los permisos.",
+        categoria_nombre="Testing",
+        nombres_tags=["permisos"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Respuesta del autor original.",
+        usuario=usuario,
+    )
+
+    cliente = cliente_autenticado(otro_usuario)
+    response = cliente.post(
+        f"/answers/{respuesta.id}/edit",
+        data={"cuerpo": "Intento de modificación."},
+    )
+
+    assert response.status_code == 403
+    assert respuesta.cuerpo == "Respuesta del autor original."
+
+
+def test_ruta_editar_respuesta_exitosa(app, usuario, cliente_autenticado):
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo actualizar una respuesta?",
+        cuerpo="Pregunta para probar la ruta de edición.",
+        categoria_nombre="Testing",
+        nombres_tags=["edicion"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Texto original.",
+        usuario=usuario,
+    )
+
+    cliente = cliente_autenticado(usuario)
+    response = cliente.post(
+        f"/answers/{respuesta.id}/edit",
+        data={"cuerpo": "Texto actualizado desde la ruta."},
+    )
+
+    assert response.status_code == 302
+    assert respuesta.cuerpo == "Texto actualizado desde la ruta."
+    assert respuesta.fecha_edicion is not None
+
+
+def test_ruta_editar_respuesta_inexistente(app, usuario, cliente_autenticado):
+    cliente = cliente_autenticado(usuario)
+
+    response = cliente.post(
+        "/answers/9999/edit",
+        data={"cuerpo": "Respuesta que no existe."},
+    )
+
+    assert response.status_code == 404

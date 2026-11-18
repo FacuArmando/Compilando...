@@ -3,7 +3,8 @@ import pytest
 from compilando import create_app
 from compilando.extensions import db
 from compilando.modules.auth.models import Usuario
-
+from compilando.modules.auth.sessions import iniciar_sesion
+from flask import session
 
 @pytest.fixture()
 def app():
@@ -35,3 +36,24 @@ def usuario(app):
     db.session.commit()
 
     return usuario
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
+
+
+@pytest.fixture()
+def cliente_autenticado(app):
+    def crear_cliente(usuario):
+        cliente = app.test_client()
+
+        with app.test_request_context():
+            iniciar_sesion(usuario)
+            token = session["auth_token"]
+
+        with cliente.session_transaction() as sesion_cliente:
+            sesion_cliente["auth_token"] = token
+
+        return cliente
+
+    return crear_cliente
