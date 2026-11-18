@@ -54,7 +54,7 @@
             <h2 id="answers-title">{{ pregunta.respuestas|length }} {{ 'respuesta' if pregunta.respuestas|length == 1 else 'respuestas' }}</h2>
           </header>
 
-            {% for respuesta in pregunta.respuestas %}
+            {% for respuesta in respuestas %}
             <article class="answer-card" id="respuesta-{{ respuesta.id }}" aria-label="Respuesta de {{ respuesta.autor_nombre }}">
                 <div id="contenido-respuesta-{{ respuesta.id }}">
                     <header class="answer-person-row">
@@ -134,7 +134,6 @@
                 </div>
             </div>
             {% endfor %}
-
         </section>
 
         <section class="question-your-answer" id="tu-respuesta" aria-labelledby="your-answer-title">

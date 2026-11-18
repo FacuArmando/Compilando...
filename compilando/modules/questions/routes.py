@@ -6,6 +6,7 @@ from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.models import Pregunta
 from compilando.modules.questions.services import publicar_pregunta
 from compilando.modules.tags.models import Tag
+from compilando.modules.answers.models import EstadoRespuesta
 
 bp = Blueprint("questions", __name__)
 
@@ -79,14 +80,26 @@ def publish_success():
 
 @bp.get("/questions/<int:pregunta_id>")
 def view_question(pregunta_id: int):
+    """Muestra una pregunta y sus respuestas ordenadas."""
+
     pregunta = db.session.scalar(select(Pregunta).where(Pregunta.id == pregunta_id))
+
     if pregunta is None:
         abort(404)
 
-    preguntas_historial = db.session.scalars(select(Pregunta).order_by(Pregunta.id.desc())).all()
+    # Mostrar primero la respuesta aceptada.
+    respuestas_ordenadas = sorted(
+        pregunta.respuestas,
+        key=lambda respuesta: respuesta.estado != EstadoRespuesta.ACEPTADA.value,
+    )
+
+    preguntas_historial = db.session.scalars(
+        select(Pregunta).order_by(Pregunta.id.desc())
+    ).all()
 
     return render_template(
         "questions/view_question.html",
         pregunta=pregunta,
         preguntas_historial=preguntas_historial,
+        respuestas=respuestas_ordenadas,
     )
