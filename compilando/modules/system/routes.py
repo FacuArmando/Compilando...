@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request
 from sqlalchemy import or_, select
 
 from compilando.extensions import db
+from compilando.modules.answers.models import EstadoRespuesta, Respuesta
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.models import Pregunta
 
@@ -36,11 +37,21 @@ def index():
     if categoria_id is not None:
         consulta = consulta.where(Pregunta.categoria_id == categoria_id)
 
-    # Mostrar primero las preguntas más recientes.
-    consulta = consulta.order_by(
-        Pregunta.fecha.desc(),
-        Pregunta.id.desc(),
-    )
+        if busqueda:
+            #Al buscar, mostrar primero las preguntas con respuestas aceptadas.
+            consulta = consulta.order_by(
+                Pregunta.respuestas.any(
+                    Respuesta.estado == EstadoRespuesta.ACEPTADA.value
+                ).desc(),
+                Pregunta.fecha.desc(),
+                Pregunta.id.desc(),
+            )
+    else:
+        #Sin búsqueda, mostrar primero las preguntas más recientes.
+        consulta = consulta.order_by(
+            Pregunta.fecha.desc(),
+            Pregunta.id.desc(),
+        )
 
     paginacion = db.paginate(
         consulta,
