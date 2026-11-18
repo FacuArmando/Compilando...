@@ -53,75 +53,88 @@
           <header class="question-answers-heading">
             <h2 id="answers-title">{{ pregunta.respuestas|length }} {{ 'respuesta' if pregunta.respuestas|length == 1 else 'respuestas' }}</h2>
           </header>
-          {% for respuesta in pregunta.respuestas %}
-            <article class="answer-card" id="respuesta-{{ respuesta.id }}" aria-label="Respuesta de {{ respuesta.autor_nombre }}">
-              <div id="contenido-respuesta-{{ respuesta.id }}">
-                <header class="answer-person-row">
-                  <div class="question-person">
-                    <span class="community-avatar answer-avatar" aria-hidden="true">{{ respuesta.autor_nombre[0]|upper }}</span>
-                    <div><strong>{{ respuesta.autor_nombre }}</strong><small>{{ respuesta.fecha_formateada }}</small></div>
-                  </div>
-                  {% if respuesta.es_ia %}
-                    <span class="answer-badge badge-ia">IA</span>
-                  {% elif respuesta.es_autor_pregunta %}
-                    <span class="answer-badge badge-op">Autor de la pregunta</span>
-                  {% else %}
-                    <span class="answer-badge badge-user">Comunidad</span>
-                  {% endif %}
 
-                    {% if respuesta.estado == "Aceptada" %}
+            {% for respuesta in pregunta.respuestas %}
+            <article class="answer-card" id="respuesta-{{ respuesta.id }}" aria-label="Respuesta de {{ respuesta.autor_nombre }}">
+                <div id="contenido-respuesta-{{ respuesta.id }}">
+                    <header class="answer-person-row">
+                        <div class="question-person">
+                            <span class="community-avatar answer-avatar" aria-hidden="true">{{ respuesta.autor_nombre[0]|upper }}</span>
+                            <div>
+                                <strong>{{ respuesta.autor_nombre }}</strong>
+                                <small>{{ respuesta.fecha_formateada }}</small>
+                            </div>
+                        </div>
+
+                        {% if respuesta.es_ia %}
+                        <span class="answer-badge badge-ia">IA</span>
+                        {% elif respuesta.es_autor_pregunta %}
+                        <span class="answer-badge badge-op">Autor de la pregunta</span>
+                        {% else %}
+                        <span class="answer-badge badge-user">Comunidad</span>
+                        {% endif %}
+
+                        {% if respuesta.estado == "Aceptada" %}
                         <span class="answer-accepted-badge">
-                            Respuesta aceptada
-                        </span>
+            Respuesta aceptada
+          </span>
+                        {% endif %}
+                    </header>
+
+                    <div class="answer-full-body">{{ respuesta.cuerpo }}</div>
+
+                    {% if respuesta.fecha_edicion_formateada %}
+                    <p class="answer-edited">Editado el {{ respuesta.fecha_edicion_formateada }}</p>
                     {% endif %}
-                </header>
-                <div class="answer-full-body">{{ respuesta.cuerpo }}</div>
-                {% if respuesta.fecha_edicion_formateada %}
-                  <p class="answer-edited">Editado el {{ respuesta.fecha_edicion_formateada }}</p>
-                {% endif %}
-                  <div class="answer-actions">
-                      {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
-                      <button type="button" class="answer-edit-button btn-editar-respuesta"
-                              data-respuesta-id="{{ respuesta.id }}"
-                              aria-controls="form-editar-respuesta-{{ respuesta.id }}">
-                          Editar respuesta
-                      </button>
-                      {% endif %}
-                      {% if usuario_actual and usuario_actual.id == pregunta.usuario_id
-                      and respuesta.estado != "Aceptada" %}
-                      <form
-                              action="{{ url_for('answers.accept_answer', respuesta_id=respuesta.id) }}"
-                              method="POST"
-                      >
-                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button type="submit" class="answer-accept-button">
-                              <span class="answer-check" aria-hidden="true"></span>
-                              Aceptar respuesta
-                          </button>
-                      </form>
-                      {% endif %}
-                  </div>
-              {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
+
+                    <div class="answer-actions">
+                        {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
+                        <button type="button" class="answer-edit-button btn-editar-respuesta"
+                                data-respuesta-id="{{ respuesta.id }}"
+                                aria-controls="form-editar-respuesta-{{ respuesta.id }}">
+                            Editar respuesta
+                        </button>
+                        {% endif %}
+
+                        {% if usuario_actual and usuario_actual.id == pregunta.usuario_id
+                        and respuesta.estado != "Aceptada" %}
+                        <form action="{{ url_for('answers.accept_answer', respuesta_id=respuesta.id) }}"
+                              method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="answer-accept-button">
+                                <span class="answer-check" aria-hidden="true"></span>
+                                Aceptar respuesta
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if usuario_actual and usuario_actual.id == respuesta.usuario_id %}
                 <form id="form-editar-respuesta-{{ respuesta.id }}"
                       action="{{ url_for('answers.edit_answer', respuesta_id=respuesta.id) }}"
                       method="POST" class="answer-form-box hidden" novalidate>
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <label for="cuerpo-edit-{{ respuesta.id }}">Modificar tu respuesta</label>
-                  <textarea id="cuerpo-edit-{{ respuesta.id }}" name="cuerpo" minlength="3" maxlength="5000" required>{{ respuesta.cuerpo }}</textarea>
-                  <small>Entre 3 y 5000 caracteres.</small>
-                  <div class="answer-form-actions">
-                    <button type="submit" class="answer-submit">Guardar cambios</button>
-                    <button type="button" class="answer-cancel btn-cancelar-edicion" data-respuesta-id="{{ respuesta.id }}">Cancelar</button>
-                  </div>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="cuerpo-edit-{{ respuesta.id }}">Modificar tu respuesta</label>
+                    <textarea id="cuerpo-edit-{{ respuesta.id }}" name="cuerpo" minlength="3" maxlength="5000" required>{{ respuesta.cuerpo }}</textarea>
+                    <small>Entre 3 y 5000 caracteres.</small>
+                    <div class="answer-form-actions">
+                        <button type="submit" class="answer-submit">Guardar cambios</button>
+                        <button type="button" class="answer-cancel btn-cancelar-edicion" data-respuesta-id="{{ respuesta.id }}">Cancelar</button>
+                    </div>
                 </form>
-              {% endif %}
+                {% endif %}
             </article>
-          {% else %}
+            {% else %}
             <div class="question-no-answers">
-              {{ icon('reply') }}
-              <div><h3>Todavía no hay respuestas.</h3><p>Podés ser la primera persona en aportar una solución.</p></div>
+                {{ icon('reply') }}
+                <div>
+                    <h3>Todavía no hay respuestas.</h3>
+                    <p>Podés ser la primera persona en aportar una solución.</p>
+                </div>
             </div>
-          {% endfor %}
+            {% endfor %}
+
         </section>
 
         <section class="question-your-answer" id="tu-respuesta" aria-labelledby="your-answer-title">
