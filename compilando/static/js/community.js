@@ -60,6 +60,12 @@ if (composer) {
       host.removeAttribute("aria-busy");
     }
   });
+
+  const openRequestedComposer = () => {
+    if (location.hash === "#question-composer") composer.open = true;
+  };
+  window.addEventListener("hashchange", openRequestedComposer);
+  openRequestedComposer();
 }
 
 const account = document.querySelector(".community-account");

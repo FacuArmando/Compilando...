@@ -7,6 +7,7 @@
 {% endblock %}
 {% block main_class %}community-main{% endblock %}
 {% block content %}
+  {% set login_url = url_for('auth.login', next=url_for('questions.view_question', pregunta_id=pregunta.id, _anchor='tu-respuesta')) %}
   {% include 'community/_header.html' %}
   {% set otras_preguntas = preguntas_historial|rejectattr('id', 'equalto', pregunta.id)|list %}
   <div class="community-layout">
@@ -44,7 +45,7 @@
               <span class="community-avatar" aria-hidden="true">{{ pregunta.usuario.username[0]|upper }}</span>
               <div><small>Pregunta de</small><strong>{{ pregunta.usuario.username }}</strong></div>
             </div>
-            <a class="question-reply-link" href="#tu-respuesta">{{ icon('reply') }} Responder</a>
+            <a class="question-reply-link" href="{{ '#tu-respuesta' if usuario_actual else login_url }}">{{ icon('reply') }} Responder</a>
           </footer>
         </article>
 
@@ -143,7 +144,7 @@
           {% else %}
             <div class="question-signin-note">
               <p>Iniciá sesión para escribir una respuesta y participar de la conversación.</p>
-              <a href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+              <a href="{{ login_url }}">Iniciar sesión</a>
             </div>
           {% endif %}
         </section>

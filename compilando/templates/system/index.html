@@ -1,13 +1,12 @@
 {% extends 'base.html' %}
 {% from 'system/_icons.html' import icon %}
-{% block title %}{% if usuario_actual %}Comunidad · {% endif %}COMPILANDO...{% endblock %}
+{% block title %}Comunidad · COMPILANDO...{% endblock %}
 {% block styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
 {% endblock %}
 {% block main_class %}community-main{% endblock %}
 {% block content %}
-{% if usuario_actual %}
   {% include 'community/_header.html' %}
 
   <div class="community-layout">
@@ -23,9 +22,10 @@
         <p>Una duda, una idea, otra forma de resolverlo.<br>La próxima conversación empieza con vos.</p>
       </section>
 
+      {% if usuario_actual %}
       <details class="community-composer" id="question-composer"
                data-form-url="{{ url_for('questions.publish_question') }}"
-               data-login-url="{{ url_for('auth.login') }}">
+               data-login-url="{{ url_for('auth.login', next=url_for('system.index', _anchor='question-composer')) }}">
         <summary>
           <span class="community-avatar composer-avatar">{{ usuario_actual.username[0]|upper }}</span>
           <span class="composer-prompt">¿Qué querés preguntar?</span>
@@ -46,16 +46,19 @@
           </a>
         </div>
       </details>
+      {% else %}
+      <a class="community-composer composer-guest"
+         href="{{ url_for('auth.login', next=url_for('system.index', _anchor='question-composer')) }}"
+         aria-label="Iniciar sesión para publicar una pregunta">
+        <span class="community-avatar composer-avatar" aria-hidden="true">{{ icon('user') }}</span>
+        <span class="composer-prompt">¿Qué querés preguntar?</span>
+        <span class="composer-open-icon">{{ icon('plus') }}</span>
+      </a>
+      {% endif %}
       <p class="composer-caption">Las preguntas se construyen entre todos. Compartí la tuya.</p>
 
       {% include 'system/_question_feed.html' %}
     </div>
   </div>
   <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
-{% else %}
-  {% include 'auth/_login_screen.html' %}
-  <div class="community-public-feed">
-    {% include 'system/_question_feed.html' %}
-  </div>
-{% endif %}
 {% endblock %}

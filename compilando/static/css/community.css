@@ -119,16 +119,15 @@
 .community-sidebar-note p { margin: 10px 0 0; color: var(--community-muted); font-size: 12px; line-height: 1.8; }
 .community-sidebar-footer { margin: 24px 16px; color: #97a2b4; font-size: 10px; }
 .community-content { min-width: 0; width: 100%; }
-.community-public-feed { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 32px 64px; }
 
 .community-welcome { margin: 4px 0 28px; text-align: left; }
 .community-eyebrow { margin: 0 0 18px; color: var(--community-blue); font-size: 10px; font-weight: 650; letter-spacing: 1.8px; }
 .community-welcome h1 { color: #1e304c; font-size: clamp(28px, 2.8vw, 38px); font-weight: 650; line-height: 1.2; letter-spacing: -1.5px; text-align: left; }
 .community-welcome > p:last-child { margin: 18px 0 0; color: var(--community-muted); font-size: 14px; line-height: 1.8; }
 
-.community-composer { overflow: hidden; border: 1px solid #dae2f0; border-radius: 25px; background: #fff; box-shadow: 0 5px 18px #20365905; }
-.community-composer > summary { display: flex; align-items: center; gap: 14px; min-height: 80px; padding: 15px 18px; border-radius: 25px; transition: background 150ms; }
-.community-composer > summary:hover { background: #fbfcff; }
+.community-composer { overflow: hidden; scroll-margin-top: 100px; border: 1px solid #dae2f0; border-radius: 25px; background: #fff; box-shadow: 0 5px 18px #20365905; }
+.community-composer > summary, .composer-guest { display: flex; align-items: center; gap: 14px; min-height: 80px; padding: 15px 18px; border-radius: 25px; transition: background 150ms; }
+.community-composer > summary:hover, .composer-guest:hover { background: #fbfcff; }
 .community-composer > summary:focus-visible { outline-offset: -4px; }
 .composer-avatar { width: 42px; height: 42px; font-size: 16px; }
 .composer-prompt { color: #7c899c; font-size: 16px; }
@@ -216,7 +215,6 @@
 }
 
 @media (max-width: 720px) {
-  .community-public-feed { padding: 0 18px 48px; }
   .community-search { grid-template-columns: minmax(0, 1fr); padding: 18px; }
   .community-pagination { gap: 12px; }
   .community-topbar-inner { min-height: 66px; padding: 0 20px; gap: 12px; }
@@ -232,7 +230,7 @@
   .community-welcome h1 { max-width: 300px; margin: 0 auto; font-size: 32px; text-align: center; }
   .community-welcome > p:last-child { font-size: 12px; }
   .community-composer { border-radius: 19px; }
-  .community-composer > summary { min-height: 72px; gap: 10px; padding: 12px; border-radius: 19px; }
+  .community-composer > summary, .composer-guest { min-height: 72px; gap: 10px; padding: 12px; border-radius: 19px; }
   .composer-avatar { width: 35px; height: 35px; font-size: 13px; }
   .composer-prompt { font-size: 14px; }
   .composer-open-icon { width: 32px; height: 32px; }

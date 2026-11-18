@@ -4,7 +4,9 @@ Plataforma universitaria de preguntas y respuestas con participación humana y r
 
 ## Estado actual
 
-Base Flask modular, página inicial, registro, inicio y cierre de sesión desde el navegador, `/health`, conexión SQLite y herramientas de calidad. El registro valida los datos, rechaza duplicados y guarda el hash de la contraseña. El login comprueba las credenciales y muestra el usuario conectado. Los formularios están protegidos con Flask-WTF (CSRF). Preguntas, respuestas e IA siguen pendientes.
+Base Flask modular, página inicial, registro, inicio y cierre de sesión desde el navegador, `/health`, conexión SQLite y herramientas de calidad. El registro valida los datos, rechaza duplicados y guarda el hash de la contraseña. El login comprueba las credenciales y muestra el usuario conectado. Los formularios están protegidos con Flask-WTF (CSRF). La plataforma permite publicar y consultar preguntas y respuestas; la integración con IA sigue pendiente.
+
+El inicio `/` es público: permite leer preguntas y respuestas, buscar y filtrar. El login `/auth/login` y el registro `/auth/register` son pantallas independientes, sin listado de preguntas debajo. Al intentar preguntar o responder, el visitante pasa por el login y luego vuelve al formulario correspondiente. Solo se admiten destinos internos conocidos para ese regreso. Publicar y modificar contenido requiere una sesión válida; «Mi cuenta» también es privada.
 
 `registrar_usuario` en `compilando/modules/auth/services.py` valida los datos, guarda el correo en minúsculas, genera el hash y persiste la cuenta. Las contraseñas nuevas deben tener entre 8 y 12 caracteres. El login mantiene la compatibilidad con las contraseñas anteriores. Los datos inválidos o repetidos producen un `ValueError` con un mensaje para mostrar en el formulario.
 
