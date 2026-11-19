@@ -1,10 +1,11 @@
 import pytest
+from flask import session
 
 from compilando import create_app
 from compilando.extensions import db
 from compilando.modules.auth.models import Usuario
 from compilando.modules.auth.sessions import iniciar_sesion
-from flask import session
+
 
 @pytest.fixture()
 def app():

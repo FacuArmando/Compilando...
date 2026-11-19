@@ -2,11 +2,11 @@ from flask import Blueprint, abort, flash, g, redirect, render_template, request
 from sqlalchemy import select
 
 from compilando.extensions import db
+from compilando.modules.answers.models import EstadoRespuesta
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.models import Pregunta
 from compilando.modules.questions.services import publicar_pregunta
 from compilando.modules.tags.models import Tag
-from compilando.modules.answers.models import EstadoRespuesta
 
 bp = Blueprint("questions", __name__)
 
