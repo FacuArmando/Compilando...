@@ -25,7 +25,7 @@ POST con CSRF, revoca la sesión en la base y borra el estado del navegador.
 
 ## Controles
 
-- CSRF activo para registro, login y logout. Al ingresar se renueva el token CSRF.
+- CSRF activo para registro, login, logout y cambio de contraseña. Al ingresar se renueva el token CSRF.
 - Formularios de autenticación limitados a 16 KiB antes de leer su contenido.
 - Límites persistentes por ventanas de 15 minutos: 5 envíos de login por correo,
   30 por IP y 10 registros por IP. Incluyen envíos válidos e inválidos con CSRF
@@ -41,6 +41,33 @@ POST con CSRF, revoca la sesión en la base y borra el estado del navegador.
 - Escape de datos con Jinja, CSP, protección contra marcos y detección de tipos;
   las respuestas dinámicas llevan `Cache-Control: no-store`.
 - Los cuerpos de formularios, contraseñas y tokens no se registran en logs.
+
+## Cambio de contraseña (#27)
+
+Desde «Mi cuenta», un POST a `/auth/account/password` exige una sesión válida,
+CSRF, la contraseña actual y una nueva de 8 a 18 caracteres con su confirmación.
+Las contraseñas anteriores de hasta 128 caracteres siguen siendo válidas para
+confirmar la identidad. Se conservan exactamente los caracteres ingresados y se
+rechaza reutilizar la misma contraseña. Los errores vuelven a mostrar campos
+vacíos, sin reproducir contraseñas ni hashes.
+
+El formulario avisa al escribir si la confirmación no coincide. La nueva clave
+se valida entre 8 y 18 caracteres sin recortarla silenciosamente, y ambos
+controles se repiten en el servidor aunque JavaScript esté desactivado. Las
+mayúsculas y minúsculas se conservan y se distinguen al ingresar. Los campos
+incluyen una opción para mostrar u ocultar lo escrito, también en el login.
+
+La identidad proviene de `g.usuario_actual`; los identificadores enviados por el
+cliente no determinan qué cuenta se modifica. Hay límites propios por ventana
+de 15 minutos: 5 envíos por cuenta y 30 por IP, persistidos con el mismo mecanismo
+de HMAC y reservas atómicas. Un exceso devuelve 429 y `Retry-After`.
+
+El nuevo hash y la revocación de todas las sesiones del usuario se guardan en
+una sola transacción. La actualización comprueba que el hash anterior siga
+vigente para evitar que dos cambios simultáneos se sobrescriban. Si falla el
+guardado, ambos cambios se revierten. Tras el éxito se limpia el estado del
+navegador y se redirige al login; las sesiones de otras cuentas no se modifican.
+Este recorrido usa las tablas existentes y no requiere una nueva migración.
 
 ## Validación y protección de rutas (#6)
 

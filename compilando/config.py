@@ -35,6 +35,8 @@ def load_config() -> dict:
         "AUTH_LOGIN_EMAIL_LIMIT": 5,
         "AUTH_LOGIN_IP_LIMIT": 30,
         "AUTH_REGISTER_IP_LIMIT": 10,
+        "AUTH_PASSWORD_IP_LIMIT": 30,
+        "AUTH_PASSWORD_ACCOUNT_LIMIT": 5,
         "TRUSTED_HOSTS": [host.strip() for host in trusted_hosts.split(",") if host.strip()]
         or None,
     }

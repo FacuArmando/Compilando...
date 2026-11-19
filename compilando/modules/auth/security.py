@@ -18,7 +18,7 @@ class DemasiadosIntentos(Exception):
         self.segundos = segundos
 
 
-def limitar_intentos(accion: str, email: str = "") -> None:
+def limitar_intentos(accion: str, email: str = "", *, usuario_id: int | None = None) -> None:
     """Reservar intentos antes de comprobar contraseñas, incluso con varios procesos."""
     ahora = ahora_utc()
     ventana = current_app.config["AUTH_RATE_WINDOW"]
@@ -28,6 +28,11 @@ def limitar_intentos(accion: str, email: str = "") -> None:
     limites = [(f"{accion}:ip:{request.remote_addr or 'desconocida'}", "AUTH_LOGIN_IP_LIMIT")]
     if accion == "login":
         limites.append((f"login:email:{email.strip().lower()}", "AUTH_LOGIN_EMAIL_LIMIT"))
+    elif accion == "password":
+        if usuario_id is None:
+            raise ValueError("El cambio de contraseña requiere un usuario autenticado.")
+        limites[0] = (limites[0][0], "AUTH_PASSWORD_IP_LIMIT")
+        limites.append((f"password:usuario:{usuario_id}", "AUTH_PASSWORD_ACCOUNT_LIMIT"))
     else:
         limites[0] = (limites[0][0], "AUTH_REGISTER_IP_LIMIT")
 

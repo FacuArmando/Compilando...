@@ -8,7 +8,7 @@ Base Flask modular, página inicial, registro, inicio y cierre de sesión desde 
 
 El inicio `/` es público: permite leer preguntas y respuestas, buscar y filtrar. El login `/auth/login` y el registro `/auth/register` son pantallas independientes, sin listado de preguntas debajo. Al intentar preguntar o responder, el visitante pasa por el login y luego vuelve al formulario correspondiente. Solo se admiten destinos internos conocidos para ese regreso. Publicar y modificar contenido requiere una sesión válida; «Mi cuenta» también es privada.
 
-`registrar_usuario` en `compilando/modules/auth/services.py` valida los datos, guarda el correo en minúsculas, genera el hash y persiste la cuenta. Las contraseñas nuevas deben tener entre 8 y 12 caracteres. El login mantiene la compatibilidad con las contraseñas anteriores. Los datos inválidos o repetidos producen un `ValueError` con un mensaje para mostrar en el formulario.
+`registrar_usuario` en `compilando/modules/auth/services.py` valida los datos, guarda el correo en minúsculas, genera el hash y persiste la cuenta. Las contraseñas nuevas deben tener entre 8 y 18 caracteres. El login mantiene la compatibilidad con las contraseñas anteriores. Los datos inválidos o repetidos producen un `ValueError` con un mensaje para mostrar en el formulario.
 
 Para probar el recorrido, instalar las dependencias con `uv sync --locked`, aplicar `db upgrade`, iniciar el servidor y crear una cuenta en `/auth/register`. Después ingresar en `/auth/login` con el correo y contraseña registrados. El inicio muestra el nombre de usuario y el botón «Cerrar sesión». Los errores conservan el correo, pero requieren volver a escribir la contraseña.
 
@@ -18,7 +18,7 @@ Las rutas que requieren autenticación deben usar `@requiere_sesion` de `compila
 
 Las decisiones y controles están en [autenticación](docs/autenticacion.md). En producción se requiere HTTPS, un servidor WSGI, `APP_ENV=production`, una clave secreta aleatoria de al menos 32 caracteres y `TRUSTED_HOSTS` con los dominios permitidos. El servidor valida esa configuración y rechaza HTTP. El comando local de desarrollo se mantiene limitado a `127.0.0.1`.
 
-La pantalla «Mi cuenta», disponible en `/auth/account` desde el menú del usuario o la barra lateral, permite consultar el nombre de usuario y el correo de la cuenta conectada. Requiere una sesión válida. En esta primera subtarea de la #7 los datos son solo de consulta.
+La pantalla «Mi cuenta», disponible en `/auth/account` desde el menú del usuario o la barra lateral, permite consultar el nombre de usuario y el correo de la cuenta conectada. Requiere una sesión válida. Incluye el cambio de contraseña (#27): pide la actual, una nueva de 8 a 18 caracteres y su confirmación. Guarda el nuevo hash e invalida todas las sesiones de esa cuenta en una sola transacción; luego pide ingresar con la nueva contraseña. El correo y el nombre siguen siendo de consulta; el cambio de correo (#28) queda pendiente.
 
 ## Preparación
 
