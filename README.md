@@ -22,6 +22,10 @@ La pantalla «Mi cuenta», disponible en `/auth/account` desde el menú del usua
 
 También permite cambiar el correo (#28), confirmando la contraseña actual. Valida su formato, lo guarda en minúsculas y rechaza correos usados por otra cuenta. El cambio conserva el usuario y sus publicaciones, invalida sus sesiones y pide ingresar con el correo nuevo y la misma contraseña. Ambos cambios de credenciales comparten el límite de intentos de verificación de contraseña. El nombre de usuario sigue siendo de consulta.
 
+Las preguntas admiten archivos de código opcionales (#20), tanto desde el formulario desplegable del inicio como desde `/questions/publish`. Se pueden seleccionar o arrastrar, revisar en tarjetas y quitar antes de publicar. La pregunta muestra los adjuntos con opciones para ver el texto y descargar el original. Inicialmente se admiten `.java`, `.py`, `.js`, `.jsx` y `.txt`, hasta 10 archivos, 1 MB por archivo y 5 MB en total. Se requiere texto UTF-8; nunca se ejecuta ni compila el contenido. Los adjuntos son públicos, igual que la pregunta. Ver [adjuntos](docs/adjuntos.md) para almacenamiento, límites y migración.
+
+La validación de archivos (#21) revisa la selección en el navegador antes de enviarla y repite los controles en el servidor. Informa los límites exactos, rechaza archivos vacíos o binarios, contenido que no sea UTF-8 y nombres inválidos. Si una selección falla, conserva los adjuntos válidos que ya estaban elegidos; si el servidor rechaza una carga, no publica parcialmente la pregunta. La descarga conserva los archivos originales, incluso con acentos o saltos de línea de Windows. No se exige que el código compile.
+
 ## Preparación
 
 Requisitos: Python 3.12, uv, Git, editor y navegador. Ver [lista completa](docs/herramientas.md).

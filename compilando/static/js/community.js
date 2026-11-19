@@ -48,6 +48,7 @@ if (composer) {
       // El formulario original publica en su propia página; conservar ese destino aquí.
       form.action = new URL(original.getAttribute("action") || response.url, response.url).href;
       host.replaceChildren(form);
+      window.iniciarAdjuntos?.(form);
       loaded = true;
       status.hidden = true;
       fallback.hidden = true;

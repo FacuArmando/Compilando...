@@ -22,6 +22,11 @@ def load_config() -> dict:
         "SQLALCHEMY_DATABASE_URI": os.environ.get("DATABASE_URL")
         or f"sqlite:///{database_path.as_posix()}",
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        "QUESTION_UPLOAD_FOLDER": str(database_path.parent / "question-attachments"),
+        "QUESTION_ATTACHMENT_MAX_FILES": 10,
+        "QUESTION_ATTACHMENT_MAX_BYTES": 1024 * 1024,
+        "QUESTION_ATTACHMENT_TOTAL_BYTES": 5 * 1024 * 1024,
+        "QUESTION_ATTACHMENT_EXTENSIONS": (".java", ".py", ".js", ".jsx", ".txt"),
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",
         "SESSION_COOKIE_SECURE": production,

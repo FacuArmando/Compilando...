@@ -1,10 +1,27 @@
-from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from sqlalchemy import select
 
 from compilando.extensions import db
 from compilando.modules.answers.models import EstadoRespuesta
 from compilando.modules.categories.models import Categoria
-from compilando.modules.questions.models import Pregunta
+from compilando.modules.questions.attachments import (
+    AdjuntosInvalidos,
+    leer_adjunto,
+    opciones_adjuntos,
+    ruta_adjunto,
+)
+from compilando.modules.questions.models import AdjuntoPregunta, Pregunta
 from compilando.modules.questions.services import publicar_pregunta
 from compilando.modules.tags.models import Tag
 
@@ -25,6 +42,9 @@ def publish_question():
     error_titulo = False
     error_cuerpo = False
     error_categoria = False
+    error_adjuntos = ""
+    archivos = []
+    estado = 200
 
     if request.method == "POST":
         titulo = request.form.get("titulo", "")
@@ -32,18 +52,29 @@ def publish_question():
         categoria_nombre = request.form.get("categoria", "")
         tags_texto = request.form.get("tags", "")
         nombres_tags = tags_texto.split(",")
+        archivos = request.files.getlist("archivos")
 
         try:
+            if any(campo != "archivos" for campo in request.files):
+                raise AdjuntosInvalidos("Agregá los archivos desde el selector de adjuntos.")
             nueva_pregunta = publicar_pregunta(
                 titulo=titulo,
                 cuerpo=cuerpo,
                 categoria_nombre=categoria_nombre,
                 nombres_tags=nombres_tags,
                 usuario=g.usuario_actual,
+                archivos=archivos,
             )
 
             return redirect(url_for("questions.view_question", pregunta_id=nueva_pregunta.id))
 
+        except AdjuntosInvalidos as error:
+            error_adjuntos = str(error)
+            estado = 400
+        except OSError:
+            current_app.logger.exception("No se pudieron guardar los adjuntos de la pregunta.")
+            error_adjuntos = "No pudimos guardar los archivos. Volvé a intentarlo en unos minutos."
+            estado = 503
         except ValueError as error:
             mensaje = str(error).lower()
 
@@ -70,6 +101,49 @@ def publish_question():
         error_titulo=error_titulo,
         error_cuerpo=error_cuerpo,
         error_categoria=error_categoria,
+        error_adjuntos=error_adjuntos,
+        reseleccionar_adjuntos=any(archivo.filename for archivo in archivos),
+        limites_adjuntos=opciones_adjuntos(),
+    ), estado
+
+
+@bp.errorhandler(413)
+def carga_demasiado_grande(error):
+    return render_template(
+        "questions/upload_too_large.html", limites_adjuntos=opciones_adjuntos()
+    ), 413
+
+
+def _obtener_adjunto(pregunta_id: int, adjunto_id: str) -> AdjuntoPregunta:
+    adjunto = db.session.scalar(
+        select(AdjuntoPregunta).where(
+            AdjuntoPregunta.id == adjunto_id, AdjuntoPregunta.pregunta_id == pregunta_id
+        )
+    )
+    if adjunto is None:
+        abort(404)
+    return adjunto
+
+
+@bp.get("/questions/<int:pregunta_id>/attachments/<adjunto_id>")
+def view_attachment(pregunta_id: int, adjunto_id: str):
+    adjunto = _obtener_adjunto(pregunta_id, adjunto_id)
+    return render_template(
+        "questions/view_attachment.html", adjunto=adjunto, codigo=leer_adjunto(adjunto)
+    )
+
+
+@bp.get("/questions/<int:pregunta_id>/attachments/<adjunto_id>/download")
+def download_attachment(pregunta_id: int, adjunto_id: str):
+    adjunto = _obtener_adjunto(pregunta_id, adjunto_id)
+    ruta = ruta_adjunto(adjunto.id)
+    if not ruta.is_file():
+        abort(404)
+    return send_file(
+        ruta,
+        as_attachment=True,
+        download_name=adjunto.nombre_original,
+        mimetype="application/octet-stream",
     )
 
 

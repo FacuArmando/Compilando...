@@ -4,6 +4,7 @@
 {% block styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/attachments.css') }}">
 {% endblock %}
 {% block main_class %}community-main{% endblock %}
 {% block content %}
@@ -60,5 +61,6 @@
       {% include 'system/_question_feed.html' %}
     </div>
   </div>
+  <script src="{{ url_for('static', filename='js/attachments.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
 {% endblock %}

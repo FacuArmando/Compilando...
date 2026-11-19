@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Revisá los archivos · COMPILANDO...{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">{% endblock %}
+{% block main_class %}publish-question{% endblock %}
+{% block content %}
+  <section class="question-container">
+    <h1>La carga es demasiado grande</h1>
+    <p>Revisá la cantidad y el tamaño de los archivos antes de volver a publicar.</p>
+    <p>Hasta {{ limites_adjuntos.cantidad }} archivos, {{ (limites_adjuntos.por_archivo / 1048576)|round(1) }} MB por archivo y {{ (limites_adjuntos.total / 1048576)|round(1) }} MB en total.</p>
+    <p>Podés volver con el botón Atrás del navegador para revisar tu formulario.</p>
+    <a href="{{ url_for('questions.publish_question') }}">Abrir un formulario nuevo</a>
+  </section>
+{% endblock %}

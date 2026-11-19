@@ -1,10 +1,16 @@
 import unicodedata
 
 from sqlalchemy import select
+from werkzeug.datastructures import FileStorage
 
 from compilando.extensions import db
 from compilando.modules.auth.models import Usuario
 from compilando.modules.categories.models import Categoria
+from compilando.modules.questions.attachments import (
+    guardar_adjunto,
+    preparar_adjuntos,
+    ruta_adjunto,
+)
 from compilando.modules.questions.models import Pregunta
 from compilando.modules.tags.models import Tag
 
@@ -60,7 +66,13 @@ def obtener_o_crear_tag(nombre: str) -> Tag:
 
 
 def publicar_pregunta(
-    titulo: str, cuerpo: str, categoria_nombre: str, nombres_tags: list[str], usuario: Usuario
+    titulo: str,
+    cuerpo: str,
+    categoria_nombre: str,
+    nombres_tags: list[str],
+    usuario: Usuario,
+    *,
+    archivos: list[FileStorage] | None = None,
 ) -> Pregunta:
 
     if not validar_titulo(titulo):
@@ -72,6 +84,8 @@ def publicar_pregunta(
     if not categoria_nombre.strip():
         raise ValueError("La categoría es obligatoria.")
 
+    preparados = preparar_adjuntos(archivos or [])
+    guardados = []
     try:
         categoria = obtener_o_crear_categoria(categoria_nombre)
 
@@ -94,6 +108,11 @@ def publicar_pregunta(
             tags=tags,
         )
 
+        for orden, archivo in enumerate(preparados):
+            adjunto = guardar_adjunto(archivo, orden)
+            guardados.append(ruta_adjunto(adjunto.id))
+            pregunta.adjuntos.append(adjunto)
+
         db.session.add(pregunta)
         db.session.commit()
 
@@ -101,4 +120,6 @@ def publicar_pregunta(
 
     except Exception:
         db.session.rollback()
+        for ruta in guardados:
+            ruta.unlink(missing_ok=True)
         raise

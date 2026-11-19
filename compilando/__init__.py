@@ -21,6 +21,7 @@ from compilando.modules.answers.routes import bp as answers_bp
 from compilando.modules.auth.routes import bp as auth_bp
 from compilando.modules.auth.security import init_app as init_security
 from compilando.modules.auth.sessions import init_app as init_auth
+from compilando.modules.questions.attachments import init_app as init_attachments
 from compilando.modules.questions.routes import bp as questions_bp
 from compilando.modules.system.routes import bp as system_bp
 
@@ -38,6 +39,7 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     migrate.init_app(app, db, directory=str(project_root / "migrations"))
     init_security(app)
     init_auth(app)
+    init_attachments(app)
     csrf.init_app(app)
     app.register_blueprint(system_bp)
     app.register_blueprint(auth_bp)

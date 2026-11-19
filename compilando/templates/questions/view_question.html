@@ -4,6 +4,7 @@
 {% block styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/answers.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/attachments.css') }}">
 {% endblock %}
 {% block main_class %}community-main{% endblock %}
 {% block content %}
@@ -35,6 +36,26 @@
 
         <article class="question-detail-card" aria-label="Contenido de la pregunta">
           <div class="question-full-body">{{ pregunta.cuerpo_detallado }}</div>
+          {% if pregunta.adjuntos %}
+            <section class="question-attachments" aria-labelledby="attachments-title">
+              <h2 id="attachments-title">Archivos adjuntos <span>{{ pregunta.adjuntos|length }}</span></h2>
+              <ul class="attachment-list">
+                {% for adjunto in pregunta.adjuntos %}
+                  <li class="attachment-card">
+                    <span class="attachment-symbol" aria-hidden="true">&lt;/&gt;</span>
+                    <div class="attachment-info">
+                      <strong>{{ adjunto.nombre_original }}</strong>
+                      <small>{% if adjunto.tamanio < 1024 %}{{ adjunto.tamanio }} B{% else %}{{ (adjunto.tamanio / 1024)|round(1) }} KB{% endif %}</small>
+                      <div class="attachment-links">
+                        <a href="{{ url_for('questions.view_attachment', pregunta_id=pregunta.id, adjunto_id=adjunto.id) }}">Ver código<span class="attachment-sr-only"> de {{ adjunto.nombre_original }}</span></a>
+                        <a href="{{ url_for('questions.download_attachment', pregunta_id=pregunta.id, adjunto_id=adjunto.id) }}">Descargar<span class="attachment-sr-only"> {{ adjunto.nombre_original }}</span></a>
+                      </div>
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            </section>
+          {% endif %}
           {% if pregunta.tags %}
             <div class="question-detail-tags" aria-label="Etiquetas">
               {% for tag in pregunta.tags %}<span>{{ tag.nombre }}</span>{% endfor %}

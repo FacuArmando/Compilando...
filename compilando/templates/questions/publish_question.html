@@ -5,6 +5,7 @@
 
 {% block styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/attachments.css') }}">
 {% endblock %}
 
 {% block main_class %}publish-question{% endblock %}
@@ -34,7 +35,7 @@
         </p>
     </header>
 
-    <form method="POST" class="question-form" novalidate>
+    <form method="POST" enctype="multipart/form-data" class="question-form" novalidate>
 
         <input
                 type="hidden"
@@ -129,6 +130,8 @@
             <small>Separá las etiquetas con comas.</small>
         </div>
 
+        {% include 'questions/_attachment_picker.html' %}
+
         <div class="form-actions">
             <button type="submit">
                 Publicar pregunta
@@ -142,4 +145,5 @@
 
 </section>
 
+<script src="{{ url_for('static', filename='js/attachments.js') }}" defer></script>
 {% endblock %}

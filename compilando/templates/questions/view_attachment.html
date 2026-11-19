@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}{{ adjunto.nombre_original }} · COMPILANDO...{% endblock %}
+{% block styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/attachments.css') }}">
+{% endblock %}
+{% block main_class %}community-main{% endblock %}
+{% block content %}
+  {% include 'community/_header.html' %}
+  <div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+    <section class="community-content attachment-viewer">
+      <a class="attachment-back" href="{{ url_for('questions.view_question', pregunta_id=adjunto.pregunta_id) }}">← Volver a la pregunta</a>
+      <header class="attachment-viewer-heading">
+        <div><h1>{{ adjunto.nombre_original }}</h1><p>{% if adjunto.tamanio < 1024 %}{{ adjunto.tamanio }} B{% else %}{{ (adjunto.tamanio / 1024)|round(1) }} KB{% endif %} · Archivo compartido con la comunidad</p></div>
+        <a class="attachment-download" href="{{ url_for('questions.download_attachment', pregunta_id=adjunto.pregunta_id, adjunto_id=adjunto.id) }}">Descargar original</a>
+      </header>
+      <pre class="attachment-code" tabindex="0" aria-label="Código de {{ adjunto.nombre_original }}"><code>{{ codigo }}</code></pre>
+    </section>
+  </div>
+  <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
+{% endblock %}

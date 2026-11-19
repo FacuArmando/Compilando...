@@ -1,0 +1,25 @@
+<section class="attachment-picker" data-attachment-picker
+         data-max-files="{{ limites_adjuntos.cantidad }}"
+         data-max-bytes="{{ limites_adjuntos.por_archivo }}"
+         data-max-total="{{ limites_adjuntos.total }}"
+         data-max-name="{{ limites_adjuntos.nombre_maximo }}">
+  <h3>Archivos de tu código <span>(opcional)</span></h3>
+  <p class="attachment-help" id="attachment-help">
+    Hasta {{ limites_adjuntos.cantidad }} archivos · {{ (limites_adjuntos.por_archivo / 1048576)|round(1) }} MB por archivo · {{ (limites_adjuntos.total / 1048576)|round(1) }} MB en total.<br>
+    {{ limites_adjuntos.extensiones|join(', ') }} · Texto UTF-8. Adjuntá solo archivos que quieras compartir públicamente.
+  </p>
+  <label class="attachment-dropzone" for="question-files" data-dropzone>
+    <span class="attachment-symbol" aria-hidden="true">&lt;/&gt;</span>
+    <span><strong class="attachment-drag-label">Arrastrá tus archivos acá o </strong><strong>seleccioná desde tu equipo</strong>
+      <small>Los archivos se subirán cuando publiques la pregunta.</small>
+    </span>
+    <input type="file" id="question-files" name="archivos" multiple
+           accept="{{ limites_adjuntos.extensiones|join(',') }}" aria-describedby="attachment-help attachment-error">
+  </label>
+  <p class="attachment-error" id="attachment-error" role="alert" data-attachment-error{% if not error_adjuntos %} hidden{% endif %}>{{ error_adjuntos }}</p>
+  {% if reseleccionar_adjuntos %}
+    <p class="attachment-help" role="status">Revisá los datos y volvé a seleccionar los archivos antes de publicar.</p>
+  {% endif %}
+  <ul class="attachment-list" data-attachment-list aria-label="Archivos seleccionados"></ul>
+  <p class="attachment-help" role="status" data-attachment-status>Sin archivos seleccionados.</p>
+</section>

@@ -41,3 +41,19 @@ class Pregunta(db.Model):
     respuestas: Mapped[list["Respuesta"]] = relationship(
         "Respuesta", back_populates="pregunta", cascade="all, delete-orphan"
     )
+    adjuntos: Mapped[list["AdjuntoPregunta"]] = relationship(
+        back_populates="pregunta", cascade="all, delete-orphan", order_by="AdjuntoPregunta.orden"
+    )
+
+
+class AdjuntoPregunta(db.Model):
+    """Metadatos del archivo; su contenido se guarda fuera de la carpeta pública."""
+
+    __tablename__ = "adjuntos_pregunta"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    pregunta_id: Mapped[int] = mapped_column(ForeignKey("preguntas.id"), index=True)
+    nombre_original: Mapped[str] = mapped_column(String(120), nullable=False)
+    tamanio: Mapped[int] = mapped_column(nullable=False)
+    orden: Mapped[int] = mapped_column(nullable=False)
+    pregunta: Mapped["Pregunta"] = relationship(back_populates="adjuntos")

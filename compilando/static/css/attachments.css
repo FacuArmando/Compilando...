@@ -1,0 +1,41 @@
+.attachment-picker { min-width: 0; }
+.attachment-picker h3, .question-attachments h2 { margin: 0 0 10px; color: #354b69; font-size: 14px; font-weight: 600; }
+.attachment-picker h3 span, .question-attachments h2 span { color: #8291a8; font-weight: 400; }
+.attachment-help { margin: 8px 0 14px; color: #7788a0; font-size: 12px; line-height: 1.8; }
+.attachment-dropzone { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 22px; border: 1px dashed #b5c8e5; border-radius: 12px; background: #f8faff; cursor: pointer; }
+.attachment-dropzone strong { color: #325c9a; font-size: 13px; font-weight: 550; }
+.attachment-dropzone small { display: block; margin-top: 7px; color: #7e8fa8; font-size: 11px; line-height: 1.7; }
+.attachment-dropzone:hover, .attachment-dropzone:focus-within, .attachment-dropzone.is-dragging { border-color: #1546a0; background: #edf3ff; outline: 3px solid #1546a015; }
+.attachment-dropzone input { max-width: 100%; }
+.attachment-drag-label { display: none; }
+.attachments-enhanced .attachment-drag-label { display: inline; }
+.attachments-enhanced input[type=file], .attachment-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.attachment-symbol { display: inline-flex; flex: 0 0 38px; width: 38px; height: 42px; align-items: center; justify-content: center; border: 1px solid #dce6f6; border-radius: 8px; background: #edf3ff; color: #315e9f; font: 600 14px ui-monospace, monospace; }
+.attachment-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; padding: 0; margin: 16px 0; list-style: none; }
+.attachment-list:empty { display: none; }
+.attachment-card { display: flex; align-items: flex-start; gap: 12px; min-width: 0; padding: 16px; border: 1px solid #dfe7f3; border-radius: 11px; background: #fff; }
+.attachment-info { display: grid; gap: 6px; flex: 1; min-width: 0; }
+.attachment-info strong { color: #354b69; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.attachment-info small { color: #8190a5; font-size: 11px; }
+.attachment-remove { flex: 0 0 28px; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: #f1f4fa; color: #6b7d98; font: 20px/1 sans-serif; cursor: pointer; }
+.attachment-remove:hover { background: #fff0ed; color: #a03d31; }
+.attachment-remove:disabled { opacity: .45; cursor: wait; }
+.attachment-picker[aria-busy=true] .attachment-dropzone { cursor: wait; }
+.attachment-error { margin: 12px 0; color: #b43c32; font-size: 13px; line-height: 1.7; }
+.attachment-error[hidden] { display: none; }
+.question-attachments { margin-top: 28px; padding-top: 24px; border-top: 1px solid #edf1f7; }
+.attachment-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 5px; }
+.attachment-links a, .attachment-back { color: #1546a0; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.attachment-viewer { min-width: 0; }
+.attachment-viewer-heading { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin: 26px 0; }
+.attachment-viewer-heading h1 { margin: 0; color: #20334f; font-size: 26px; letter-spacing: -.6px; text-align: left; overflow-wrap: anywhere; }
+.attachment-viewer-heading p { margin: 10px 0 0; color: #8190a5; font-size: 12px; line-height: 1.8; }
+.attachment-download { display: inline-flex; flex-shrink: 0; padding: 12px 16px; border-radius: 8px; background: #1546a0; color: white; font-size: 12px; }
+.attachment-code { max-height: 72vh; margin: 0; padding: 26px; overflow: auto; border: 1px solid #dfe7f3; border-radius: 12px; background: #fff; color: #304661; font: 13px/1.9 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; white-space: pre; text-align: left; }
+@media (max-width: 600px) {
+  .attachment-dropzone { padding: 17px; gap: 12px; }
+  .attachment-dropzone > span:nth-child(2) { flex: 1; min-width: 0; }
+  .attachment-list { grid-template-columns: minmax(0, 1fr); }
+  .attachment-code { padding: 18px; font-size: 12px; }
+  .publish-question .question-container { padding: 24px 20px; }
+}
