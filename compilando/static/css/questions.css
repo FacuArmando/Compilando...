@@ -10,9 +10,9 @@
 .publish-question {
     min-height: 100vh;
     padding: 60px 20px;
-    background: #f4f6fb;
+    background: var(--theme-background, #f4f6fb);
     font-family: Arial, sans-serif;
-    color: #253047;
+    color: var(--theme-text, #253047);
 }
 
 /* Contenedor principal */
@@ -21,10 +21,10 @@
     max-width: 760px;
     margin: 0 auto;
     padding: 42px;
-    background: #ffffff;
-    border: 1px solid #e5e9f2;
+    background: var(--theme-surface, #ffffff);
+    border: 1px solid var(--theme-border, #e5e9f2);
     border-radius: 18px;
-    box-shadow: 0 10px 35px rgba(30, 45, 80, 0.07);
+    box-shadow: 0 10px 35px var(--theme-shadow, rgba(30, 45, 80, 0.07));
 }
 
 /* Encabezado */
@@ -34,7 +34,7 @@
 }
 
 .question-eyebrow {
-    color: #6875d9;
+    color: var(--theme-accent, #6875d9);
     font-size: 12px;
     font-weight: bold;
     letter-spacing: 1.5px;
@@ -43,12 +43,12 @@
 .question-header h1 {
     margin: 12px 0;
     font-size: 32px;
-    color: #202b45;
+    color: var(--theme-heading, #202b45);
 }
 
 .question-header p {
     margin: 0;
-    color: #718096;
+    color: var(--theme-muted, #718096);
     line-height: 1.6;
 }
 
@@ -69,11 +69,11 @@
 .form-field label {
     font-size: 14px;
     font-weight: bold;
-    color: #35415b;
+    color: var(--theme-text, #35415b);
 }
 
 .form-field label span {
-    color: #8993a6;
+    color: var(--theme-subtle, #8993a6);
     font-weight: normal;
 }
 
@@ -84,10 +84,10 @@
     width: 100%;
     box-sizing: border-box;
     padding: 14px 16px;
-    border: 1px solid #dce2ed;
+    border: 1px solid var(--theme-border, #dce2ed);
     border-radius: 9px;
-    background: #fbfcfe;
-    color: #253047;
+    background: var(--theme-input, #fbfcfe);
+    color: var(--theme-text, #253047);
     font: inherit;
     font-size: 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -104,20 +104,20 @@
 .form-field input:focus,
 .form-field textarea:focus {
     outline: none;
-    border-color: #6875d9;
-    box-shadow: 0 0 0 3px rgba(104, 117, 217, 0.13);
-    background: #ffffff;
+    border-color: var(--theme-accent, #6875d9);
+    box-shadow: 0 0 0 3px var(--theme-focus, rgba(104, 117, 217, 0.13));
+    background: var(--theme-surface, #ffffff);
 }
 
 .form-field input::placeholder,
 .form-field textarea::placeholder {
-    color: #a2aabb;
+    color: var(--theme-subtle, #a2aabb);
 }
 
 /* Ayudas y aclaraciones */
 
 .form-field small {
-    color: #8993a6;
+    color: var(--theme-subtle, #8993a6);
     font-size: 12px;
 }
 
@@ -125,7 +125,7 @@
 
 .form-actions {
     padding-top: 10px;
-    border-top: 1px solid #edf0f5;
+    border-top: 1px solid var(--theme-border-soft, #edf0f5);
 }
 
 .form-actions button {
@@ -137,8 +137,8 @@
     padding: 15px;
     border: none;
     border-radius: 9px;
-    background: #6875d9;
-    color: #ffffff;
+    background: var(--theme-primary, #6875d9);
+    color: var(--theme-on-primary, #ffffff);
     font-size: 15px;
     font-weight: bold;
     cursor: pointer;
@@ -146,13 +146,13 @@
 }
 
 .form-actions button:hover {
-    background: #5663c5;
+    background: var(--theme-primary-hover, #5663c5);
     transform: translateY(-1px);
 }
 
 .form-actions p {
     margin: 13px 0 0;
-    color: #8993a6;
+    color: var(--theme-subtle, #8993a6);
     font-size: 12px;
     text-align: center;
 }
@@ -171,8 +171,8 @@
     height: 76px;
     margin: 0 auto 24px;
     border-radius: 50%;
-    background-color: #e8f7ed;
-    color: #27834b;
+    background-color: var(--theme-success-bg, #e8f7ed);
+    color: var(--theme-success-text, #27834b);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -184,15 +184,15 @@
     display: inline-block;
     padding: 14px 24px;
     border-radius: 10px;
-    background-color: #5b65d8;
-    color: white;
+    background-color: var(--theme-primary, #5b65d8);
+    color: var(--theme-on-primary, white);
     text-decoration: none;
     font-weight: 600;
     transition: background-color 0.2s ease;
 }
 
 .success-button:hover {
-    background-color: #454fc0;
+    background-color: var(--theme-primary-hover, #454fc0);
 }
 
 
@@ -201,12 +201,12 @@
    ----------------------------------------- */
 
 .input-error {
-    border: 2px solid #e05252 !important;
-    background-color: #fff5f5;
+    border: 2px solid var(--theme-error-border, #e05252) !important;
+    background-color: var(--theme-error-bg, #fff5f5);
 }
 
 .field-error {
-    color: #d93636;
+    color: var(--theme-error-text, #d93636);
     font-size: 0.9rem;
     margin-top: 6px;
     font-weight: 500;
