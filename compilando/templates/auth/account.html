@@ -36,7 +36,35 @@
         <p class="account-note">Tu nombre de usuario aparece junto a tus preguntas y respuestas.</p>
       </section>
 
-      <section class="account-card account-password" id="cambiar-contrasena" aria-labelledby="password-title">
+      <section class="account-card account-settings" id="cambiar-correo" aria-labelledby="email-title">
+        <h2 id="email-title">Cambiar correo electrónico</h2>
+        <p class="account-note">Elegí el correo que vas a usar para ingresar a tu cuenta.</p>
+
+        {% if email_error %}
+          <p class="form-error" id="email-error" role="alert">{{ email_error }}</p>
+        {% endif %}
+
+        <form class="account-settings-form account-email-form" action="{{ url_for('auth.change_email') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field">
+            <label for="email-nuevo">Correo electrónico nuevo</label>
+            <input id="email-nuevo" name="email_nuevo" type="email" autocomplete="email"
+                   maxlength="254" placeholder="nombre@ejemplo.com" value="{{ email_nuevo|default('') }}"
+                   required{% if email_error %} autofocus{% endif %}>
+          </div>
+          <div class="field">
+            <label for="email-password-actual">Contraseña actual</label>
+            <input id="email-password-actual" name="email_password_actual" type="password"
+                   autocomplete="current-password" maxlength="128" required>
+            <button class="password-toggle" type="button" data-password-toggle="email-password-actual"
+                    aria-controls="email-password-actual" aria-pressed="false" hidden>Mostrar contraseña</button>
+          </div>
+          <p class="account-note">Al guardar, se cerrarán todas tus sesiones. Después ingresá con el correo nuevo y la misma contraseña.</p>
+          <button type="submit">Guardar nuevo correo</button>
+        </form>
+      </section>
+
+      <section class="account-card account-settings account-password" id="cambiar-contrasena" aria-labelledby="password-title">
         <h2 id="password-title">Cambiar contraseña</h2>
         <p class="account-note">Para cambiarla, confirmá tu contraseña actual.</p>
 
@@ -44,7 +72,7 @@
           <p class="form-error" id="password-error" role="alert">{{ password_error }}</p>
         {% endif %}
 
-        <form class="account-password-form" action="{{ url_for('auth.change_password') }}" method="post">
+        <form class="account-settings-form account-password-form" action="{{ url_for('auth.change_password') }}" method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="field">
             <label for="password-actual">Contraseña actual</label>
