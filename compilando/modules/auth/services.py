@@ -3,7 +3,7 @@
 import re
 import secrets
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -62,6 +62,57 @@ def cambiar_contrasena(usuario: Usuario, actual: str, nueva: str, confirmacion: 
             update(Sesion).where(Sesion.usuario_id == usuario.id).values(activa=False)
         )
         db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def cambiar_email(usuario: Usuario, nuevo: str, actual: str) -> None:
+    """Cambiar el correo de la cuenta autenticada y revocar sus sesiones al guardar."""
+    nuevo = nuevo.strip().lower()
+    if not nuevo or not actual:
+        raise ValueError("Completá el correo nuevo y tu contraseña actual.")
+    if len(nuevo) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", nuevo):
+        raise ValueError("Ingresá un correo electrónico válido.")
+    if not 1 <= len(actual) <= 128:
+        raise ValueError("La contraseña actual no es correcta.")
+
+    cuenta = db.session.execute(
+        select(Usuario.email, Usuario.password_hash).where(Usuario.id == usuario.id)
+    ).first()
+    if cuenta is None or not check_password_hash(cuenta.password_hash, actual):
+        raise ValueError("La contraseña actual no es correcta.")
+    if nuevo == cuenta.email.lower():
+        raise ValueError("Ingresá un correo diferente del actual.")
+    if db.session.scalar(select(Usuario.id).where(func.lower(Usuario.email) == nuevo)) is not None:
+        raise ValueError("Ese correo electrónico ya está registrado.")
+
+    try:
+        resultado = db.session.execute(
+            update(Usuario)
+            .where(
+                Usuario.id == usuario.id,
+                Usuario.email == cuenta.email,
+                Usuario.password_hash == cuenta.password_hash,
+            )
+            .values(email=nuevo)
+            .execution_options(synchronize_session=False)
+        )
+        if resultado.rowcount != 1:
+            raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
+        db.session.execute(
+            update(Sesion).where(Sesion.usuario_id == usuario.id).values(activa=False)
+        )
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        # La base resuelve también dos cambios que intentan reservar el mismo correo.
+        if (
+            db.session.scalar(select(Usuario.id).where(func.lower(Usuario.email) == nuevo))
+            is not None
+        ):
+            raise ValueError("Ese correo electrónico ya está registrado.") from None
+        raise
     except Exception:
         db.session.rollback()
         raise

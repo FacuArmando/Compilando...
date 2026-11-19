@@ -25,7 +25,7 @@ POST con CSRF, revoca la sesión en la base y borra el estado del navegador.
 
 ## Controles
 
-- CSRF activo para registro, login, logout y cambio de contraseña. Al ingresar se renueva el token CSRF.
+- CSRF activo para registro, login, logout y cambios de contraseña y correo. Al ingresar se renueva el token CSRF.
 - Formularios de autenticación limitados a 16 KiB antes de leer su contenido.
 - Límites persistentes por ventanas de 15 minutos: 5 envíos de login por correo,
   30 por IP y 10 registros por IP. Incluyen envíos válidos e inválidos con CSRF
@@ -58,9 +58,10 @@ mayúsculas y minúsculas se conservan y se distinguen al ingresar. Los campos
 incluyen una opción para mostrar u ocultar lo escrito, también en el login.
 
 La identidad proviene de `g.usuario_actual`; los identificadores enviados por el
-cliente no determinan qué cuenta se modifica. Hay límites propios por ventana
-de 15 minutos: 5 envíos por cuenta y 30 por IP, persistidos con el mismo mecanismo
-de HMAC y reservas atómicas. Un exceso devuelve 429 y `Retry-After`.
+cliente no determinan qué cuenta se modifica. Los cambios de contraseña y de
+correo comparten límites por ventana de 15 minutos: 5 envíos por cuenta y 30
+por IP, persistidos con el mismo mecanismo de HMAC y reservas atómicas.
+Un exceso devuelve 429 y `Retry-After`.
 
 El nuevo hash y la revocación de todas las sesiones del usuario se guardan en
 una sola transacción. La actualización comprueba que el hash anterior siga
@@ -68,6 +69,28 @@ vigente para evitar que dos cambios simultáneos se sobrescriban. Si falla el
 guardado, ambos cambios se revierten. Tras el éxito se limpia el estado del
 navegador y se redirige al login; las sesiones de otras cuentas no se modifican.
 Este recorrido usa las tablas existentes y no requiere una nueva migración.
+
+## Cambio de correo (#28)
+
+Desde «Mi cuenta», un POST a `/auth/account/email` exige una sesión válida,
+CSRF, el correo nuevo y la contraseña actual. Se valida el correo con el mismo
+criterio del registro, se retiran espacios de los extremos y se guarda en
+minúsculas. Se rechazan el correo actual y los usados por otra cuenta. El
+mensaje de correo ocupado solo se muestra después de verificar la contraseña.
+
+La identidad proviene exclusivamente de la sesión. La base garantiza la
+unicidad si dos usuarios intentan elegir el mismo correo al mismo tiempo;
+ese conflicto se informa en el formulario. También se comprueba que el correo
+y el hash anteriores sigan vigentes antes de guardar, para no sobrescribir
+cambios simultáneos en la cuenta. Los errores conservan el correo propuesto
+con escape de HTML y dejan vacíos todos los campos de contraseña.
+
+El correo nuevo y la revocación de las sesiones se guardan en una sola
+transacción; un fallo revierte ambos. Después se limpia la cookie y se pide
+ingresar con el correo nuevo y la misma contraseña. El identificador de usuario,
+el hash, el nombre y la autoría de preguntas y respuestas se conservan.
+No requiere una migración. Dentro del alcance universitario acordado, este
+recorrido no incluye verificación de propiedad mediante envíos de correo.
 
 ## Validación y protección de rutas (#6)
 

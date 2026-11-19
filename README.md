@@ -18,7 +18,9 @@ Las rutas que requieren autenticación deben usar `@requiere_sesion` de `compila
 
 Las decisiones y controles están en [autenticación](docs/autenticacion.md). En producción se requiere HTTPS, un servidor WSGI, `APP_ENV=production`, una clave secreta aleatoria de al menos 32 caracteres y `TRUSTED_HOSTS` con los dominios permitidos. El servidor valida esa configuración y rechaza HTTP. El comando local de desarrollo se mantiene limitado a `127.0.0.1`.
 
-La pantalla «Mi cuenta», disponible en `/auth/account` desde el menú del usuario o la barra lateral, permite consultar el nombre de usuario y el correo de la cuenta conectada. Requiere una sesión válida. Incluye el cambio de contraseña (#27): pide la actual, una nueva de 8 a 18 caracteres y su confirmación. Guarda el nuevo hash e invalida todas las sesiones de esa cuenta en una sola transacción; luego pide ingresar con la nueva contraseña. El correo y el nombre siguen siendo de consulta; el cambio de correo (#28) queda pendiente.
+La pantalla «Mi cuenta», disponible en `/auth/account` desde el menú del usuario o la barra lateral, permite consultar el nombre de usuario y el correo de la cuenta conectada. Requiere una sesión válida. Incluye el cambio de contraseña (#27): pide la actual, una nueva de 8 a 18 caracteres y su confirmación. Guarda el nuevo hash e invalida todas las sesiones de esa cuenta en una sola transacción; luego pide ingresar con la nueva contraseña.
+
+También permite cambiar el correo (#28), confirmando la contraseña actual. Valida su formato, lo guarda en minúsculas y rechaza correos usados por otra cuenta. El cambio conserva el usuario y sus publicaciones, invalida sus sesiones y pide ingresar con el correo nuevo y la misma contraseña. Ambos cambios de credenciales comparten el límite de intentos de verificación de contraseña. El nombre de usuario sigue siendo de consulta.
 
 ## Preparación
 

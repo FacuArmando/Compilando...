@@ -205,15 +205,15 @@
 .account-note { margin: 0; color: #8996a9; font-size: 12px; line-height: 1.8; }
 .account-back { display: inline-flex; margin-top: 24px; color: var(--community-blue); font-size: 13px; text-underline-offset: 3px; }
 .account-back:hover { text-decoration: underline; }
-.account-password { margin-top: 24px; scroll-margin-top: 100px; }
-.account-password h2 { margin: 0 0 12px; font-size: 19px; font-weight: 650; letter-spacing: -0.4px; }
-.account-password .form-error { font-size: 13px; line-height: 1.7; }
-.account-password-form { display: grid; gap: 22px; max-width: 520px; margin-top: 28px; }
-.account-password-form label { color: #50627b; font-size: 12px; font-weight: 600; }
-.account-password-form input { background: #fbfcff; border-color: #dce4f0; font-size: 14px; }
-.account-password-form small { color: #8996a9; font-size: 11px; }
-.account-password-form button { justify-self: start; padding: 12px 18px; border: 0; border-radius: 8px; background: var(--community-blue); color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-.account-password-form button:hover { background: #103b89; }
+.account-settings { margin-top: 24px; scroll-margin-top: 100px; }
+.account-settings h2 { margin: 0 0 12px; font-size: 19px; font-weight: 650; letter-spacing: -0.4px; }
+.account-settings .form-error { font-size: 13px; line-height: 1.7; }
+.account-settings-form { display: grid; gap: 22px; max-width: 520px; margin-top: 28px; }
+.account-settings-form label { color: #50627b; font-size: 12px; font-weight: 600; }
+.account-settings-form input { background: #fbfcff; border-color: #dce4f0; font-size: 14px; }
+.account-settings-form small { color: #8996a9; font-size: 11px; }
+.account-settings-form button { justify-self: start; padding: 12px 18px; border: 0; border-radius: 8px; background: var(--community-blue); color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.account-settings-form button:hover { background: #103b89; }
 
 @media (max-width: 1000px) {
   .community-search { grid-template-columns: repeat(2, minmax(0, 1fr)); }
