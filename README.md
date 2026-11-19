@@ -1,6 +1,6 @@
 # Compilando...
 
-Plataforma universitaria de preguntas y respuestas con participación humana y respuestas de IA solicitadas mediante un botón.
+Plataforma de preguntas y respuestas con participación humana y respuestas de IA solicitadas mediante un botón.
 
 ## Estado actual
 
