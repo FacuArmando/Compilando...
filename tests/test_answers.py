@@ -390,6 +390,7 @@ def test_aceptar_respuesta_no_modifica_otra_pregunta(app, usuario):
     assert respuesta_1.estado == EstadoRespuesta.ACEPTADA.value
     assert respuesta_2.estado == EstadoRespuesta.ACEPTADA.value
 
+
 ##Pruebas
 
 
@@ -415,9 +416,7 @@ def test_ruta_editar_respuesta_requiere_login(app, usuario, client):
     assert response.status_code == 401
 
 
-def test_ruta_editar_respuesta_no_permite_otro_usuario(
-        app, usuario, cliente_autenticado
-):
+def test_ruta_editar_respuesta_no_permite_otro_usuario(app, usuario, cliente_autenticado):
     otro_usuario = Usuario(
         username="intruso",
         email="intruso@test.com",

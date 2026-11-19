@@ -93,9 +93,7 @@ def view_question(pregunta_id: int):
         key=lambda respuesta: respuesta.estado != EstadoRespuesta.ACEPTADA.value,
     )
 
-    preguntas_historial = db.session.scalars(
-        select(Pregunta).order_by(Pregunta.id.desc())
-    ).all()
+    preguntas_historial = db.session.scalars(select(Pregunta).order_by(Pregunta.id.desc())).all()
 
     return render_template(
         "questions/view_question.html",
