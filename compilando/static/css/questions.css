@@ -72,7 +72,7 @@
     color: var(--theme-text, #35415b);
 }
 
-.form-field label span {
+.form-field label > span:not([data-i18n]) {
     color: var(--theme-subtle, #8993a6);
     font-weight: normal;
 }

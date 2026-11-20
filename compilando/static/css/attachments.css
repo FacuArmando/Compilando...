@@ -1,6 +1,6 @@
 .attachment-picker { min-width: 0; }
 .attachment-picker h3, .question-attachments h2 { margin: 0 0 10px; color: var(--theme-text, #354b69); font-size: 14px; font-weight: 600; }
-.attachment-picker h3 span, .question-attachments h2 span { color: var(--theme-muted, #8291a8); font-weight: 400; }
+.attachment-picker h3 > span:not([data-i18n]), .question-attachments h2 > span:not([data-i18n]) { color: var(--theme-muted, #8291a8); font-weight: 400; }
 .attachment-help { margin: 8px 0 14px; color: var(--theme-muted, #7788a0); font-size: 12px; line-height: 1.8; }
 .attachment-dropzone { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 22px; border: 1px dashed var(--theme-border-strong, #b5c8e5); border-radius: 12px; background: var(--theme-input, #f8faff); cursor: pointer; }
 .attachment-dropzone strong { color: var(--theme-accent, #325c9a); font-size: 13px; font-weight: 550; }

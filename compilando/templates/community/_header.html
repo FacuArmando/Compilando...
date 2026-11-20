@@ -1,32 +1,35 @@
 {% from 'system/_icons.html' import icon %}
 <header class="community-topbar">
   <div class="community-topbar-inner">
-    <a class="community-brand" href="{{ url_for('system.index') }}" aria-label="Compilando, inicio">
+    <a class="community-brand" href="{{ url_for('system.index') }}" {{ i18n_attr("aria-label", "Compilando, inicio") }}>
       <span class="community-brand-mark">{{ icon('code') }}</span>
       <span>COMPILANDO<span class="community-brand-dots">...</span></span>
     </a>
     <div class="community-topbar-actions">
-      {% include 'community/_theme_toggle.html' %}
+      <div class="appearance-controls">
+        {% include 'community/_language_toggle.html' %}
+        {% include 'community/_theme_toggle.html' %}
+      </div>
       {% if usuario_actual %}
       <details class="community-account">
-        <summary aria-label="Menú de {{ usuario_actual.username }}">
+        <summary {{ i18n_attr('aria-label', 'Menú de {name}', name=usuario_actual.username) }}>
           <span class="community-avatar">{{ usuario_actual.username[0]|upper }}</span>
           <span class="community-account-name">{{ usuario_actual.username }}</span>
           {{ icon('chevron') }}
         </summary>
         <div class="community-account-menu">
-          <p class="account-session">Sesión iniciada como <strong>{{ usuario_actual.username }}</strong>.</p>
-          <a href="{{ url_for('auth.account') }}">{{ icon('user') }} Mi cuenta</a>
+          <p class="account-session">{{ ui("Sesión iniciada como") }} <strong>{{ usuario_actual.username }}</strong>.</p>
+          <a href="{{ url_for('auth.account') }}">{{ icon('user') }} {{ ui("Mi cuenta") }}</a>
           <form action="{{ url_for('auth.logout') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit">{{ icon('logout') }} Cerrar sesión</button>
+            <button type="submit">{{ icon('logout') }} {{ ui("Cerrar sesión") }}</button>
           </form>
         </div>
       </details>
       {% else %}
-        <nav class="community-auth-links" aria-label="Acceso a la comunidad">
-          <a href="{{ login_url|default(url_for('auth.login')) }}">Ingresar</a>
-          <a class="community-register" href="{{ url_for('auth.register') }}">Crear cuenta</a>
+        <nav class="community-auth-links" {{ i18n_attr("aria-label", "Acceso a la comunidad") }}>
+          <a href="{{ login_url|default(url_for('auth.login')) }}">{{ ui("Ingresar") }}</a>
+          <a class="community-register" href="{{ url_for('auth.register') }}">{{ ui("Crear cuenta") }}</a>
         </nav>
       {% endif %}
     </div>

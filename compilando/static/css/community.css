@@ -63,7 +63,9 @@
 .community-brand-dots { color: var(--community-blue); }
 .community-account { position: relative; margin-left: auto; min-width: 0; }
 .community-auth-links { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-.community-auth-links a { padding: 10px 15px; border: 1px solid var(--theme-border, #dbe4f4); border-radius: 8px; color: var(--community-blue); font-size: 12px; font-weight: 600; white-space: nowrap; }
+/* Reservar el mismo espacio en ES y EN mantiene inmóviles los switches vecinos. */
+.community-auth-links a { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 110px; width: 110px; height: 38px; padding: 0 12px; border: 1px solid var(--theme-border, #dbe4f4); border-radius: 8px; color: var(--community-blue); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.community-auth-links a:first-child { flex-basis: 90px; width: 90px; }
 .community-auth-links .community-register { background: var(--theme-primary, var(--community-blue)); color: var(--theme-on-primary, #fff); border-color: var(--community-blue); }
 .community-account summary { display: flex; align-items: center; gap: 10px; padding: 6px 0 6px 8px; }
 .community-account summary > .community-icon { width: 15px; color: var(--community-muted); }

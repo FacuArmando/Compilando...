@@ -22,6 +22,32 @@ antes de cargar los estilos para evitar un destello claro al navegar.
 
 Esta función no necesita dependencias nuevas ni migraciones de base de datos.
 
+## Castellano e inglés
+
+El control ES / EN está junto al switch de apariencia. Cambia el idioma de la
+interfaz sin recargar la página: navegación, formularios, mensajes de error,
+fechas y controles que se cargan después, como el formulario de preguntas y las
+respuestas de IA. Conserva el texto escrito y los archivos seleccionados.
+
+La elección queda en la cookie `compilando-language` durante un año. El servidor
+también la usa al abrir otra página, por lo que el idioma permanece al navegar.
+El castellano es el valor inicial; los valores desconocidos se ignoran. Esta
+cookie es independiente de la sesión y no contiene datos personales.
+
+Al cambiar de idioma, las etiquetas visibles se transforman brevemente en
+caracteres aleatorios hasta revelar el texto elegido. La animación dura alrededor
+de un segundo, se cancela al ocultar la pestaña y respeta la preferencia de
+movimiento reducido. El control admite mouse, Enter y barra espaciadora.
+
+Se traducen solo las etiquetas marcadas expresamente. Nombres de usuario,
+preguntas, categorías, etiquetas, respuestas humanas o de IA y archivos de código
+mantienen su contenido original. Cambiar el idioma no vuelve a consultar a Gemini.
+
+Las traducciones están en `compilando/translations/en.json`; `compilando/i18n.py`
+las aplica en las plantillas y publica el catálogo de interfaz, sin incluir datos
+de usuarios. `language.js` actualiza el texto y anima las etiquetas; `language.css`
+define el switch y el efecto. No requiere dependencias ni migraciones nuevas.
+
 ## Código animado en las pantallas de acceso
 
 El panel izquierdo del login y del registro comparte una escena de Java: escribe

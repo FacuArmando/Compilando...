@@ -7,7 +7,7 @@ document.querySelectorAll("[data-password-toggle]").forEach((button) => {
   button.addEventListener("click", () => {
     const visible = input.type === "password";
     input.type = visible ? "text" : "password";
-    button.textContent = visible ? "Ocultar contraseña" : "Mostrar contraseña";
+    window.I18n.setText(button, visible ? "Ocultar contraseña" : "Mostrar contraseña");
     button.setAttribute("aria-pressed", String(visible));
   });
 });
@@ -21,8 +21,8 @@ if (passwordForm) {
   let lengthReviewed = false;
 
   const mostrarError = (input, element, message, visible = true) => {
-    input.setCustomValidity(message);
-    element.textContent = message;
+    input.setCustomValidity(window.I18n.t(message));
+    window.I18n.setText(element, message);
     element.hidden = !message || !visible;
     if (message && visible) input.setAttribute("aria-invalid", "true");
     else input.removeAttribute("aria-invalid");
@@ -48,6 +48,7 @@ if (passwordForm) {
     validarCoincidencia();
   };
 
+  window.addEventListener("languagechange", validar);
   nueva.addEventListener("input", validar);
   nueva.addEventListener("change", validar);
   confirmacion.addEventListener("input", validarCoincidencia);

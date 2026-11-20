@@ -2,29 +2,29 @@
 <section class="community-feed" id="preguntas" aria-labelledby="feed-title">
   <header class="community-feed-header">
     <div class="community-feed-title">
-      <h2 id="feed-title">Preguntas recientes</h2>
-      <span class="community-count" aria-label="{{ paginacion.total }} {{ 'resultado' if paginacion.total == 1 else 'resultados' }}">{{ paginacion.total }}</span>
+      <h2 id="feed-title">{{ ui("Preguntas recientes") }}</h2>
+      <span class="community-count" {{ i18n_attr('aria-label', '{count} resultado' if paginacion.total == 1 else '{count} resultados', count=paginacion.total) }}>{{ paginacion.total }}</span>
     </div>
-    <span class="community-feed-order">{{ icon('clock') }} Más recientes</span>
+    <span class="community-feed-order">{{ icon('clock') }} {{ ui("Más recientes") }}</span>
   </header>
 
-  <form class="community-search" action="{{ url_for('system.index') }}#preguntas" method="get" role="search" aria-label="Buscar preguntas">
+  <form class="community-search" action="{{ url_for('system.index') }}#preguntas" method="get" role="search" {{ i18n_attr("aria-label", "Buscar preguntas") }}>
     <div class="community-search-field">
-      <label for="feed-search">Buscar preguntas</label>
-      <input id="feed-search" type="search" name="q" value="{{ busqueda }}" placeholder="Escribí una palabra o frase…">
+      <label for="feed-search">{{ ui("Buscar preguntas") }}</label>
+      <input id="feed-search" type="search" name="q" value="{{ busqueda }}" {{ i18n_attr("placeholder", "Escribí una palabra o frase…") }}>
     </div>
     <div class="community-search-field">
-      <label for="feed-category">Categoría</label>
+      <label for="feed-category">{{ ui("Categoría") }}</label>
       <select id="feed-category" name="categoria">
-        <option value="">Todas las categorías</option>
+        <option value="" data-i18n="Todas las categorías">{{ tr("Todas las categorías") }}</option>
         {% for categoria in categorias %}
           <option value="{{ categoria.id }}"{% if categoria.id == categoria_seleccionada %} selected{% endif %}>{{ categoria.nombre }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="community-search-actions">
-      <button type="submit">Buscar</button>
-      <a href="{{ url_for('system.index') }}#preguntas">Limpiar filtros</a>
+      <button type="submit">{{ ui("Buscar") }}</button>
+      <a href="{{ url_for('system.index') }}#preguntas">{{ ui("Limpiar filtros") }}</a>
     </div>
   </form>
 
@@ -36,19 +36,19 @@
             <span class="community-avatar question-avatar" aria-hidden="true">{{ pregunta.usuario.username[0]|upper }}</span>
             <div class="community-question-author">
               <span>{{ pregunta.usuario.username }}</span>
-              <time datetime="{{ pregunta.fecha.isoformat() }}">{{ pregunta.fecha.strftime('%d/%m/%Y') }}</time>
+              {{ ui_date(pregunta.fecha) }}
             </div>
             <span class="community-category">{{ pregunta.categoria.nombre }}</span>
           </header>
           <h3><a href="{{ url_for('questions.view_question', pregunta_id=pregunta.id) }}">{{ pregunta.titulo }}</a></h3>
           <p class="community-question-preview">{{ pregunta.cuerpo_detallado|truncate(190, true) }}</p>
           <footer class="community-question-footer">
-            <div class="community-tags" aria-label="Etiquetas">
+            <div class="community-tags" {{ i18n_attr("aria-label", "Etiquetas") }}>
               {% for tag in pregunta.tags %}<span>#{{ tag.nombre }}</span>{% endfor %}
             </div>
             {% set cantidad = pregunta.respuestas|length %}
             <span class="community-answer-count{% if cantidad %} has-answers{% endif %}">
-              {{ icon('reply') }} {{ cantidad }} {{ 'respuesta' if cantidad == 1 else 'respuestas' }}
+              {{ icon('reply') }} {{ ui('{count} respuesta' if cantidad == 1 else '{count} respuestas', count=cantidad) }}
             </span>
           </footer>
         </article>
@@ -56,13 +56,13 @@
     </div>
 
     {% if paginacion.pages > 1 %}
-      <nav class="community-pagination" aria-label="Paginación">
+      <nav class="community-pagination" {{ i18n_attr("aria-label", "Paginación") }}>
         {% if paginacion.has_prev %}
-          <a rel="prev" href="{{ url_for('system.index', page=paginacion.prev_num, q=busqueda, categoria=categoria_seleccionada, _anchor='preguntas') }}">Anterior</a>
+          <a rel="prev" href="{{ url_for('system.index', page=paginacion.prev_num, q=busqueda, categoria=categoria_seleccionada, _anchor='preguntas') }}">{{ ui("Anterior") }}</a>
         {% endif %}
-        <span>Página {{ paginacion.page }} de {{ paginacion.pages }}</span>
+        <span>{{ ui('Página {page} de {pages}', page=paginacion.page, pages=paginacion.pages) }}</span>
         {% if paginacion.has_next %}
-          <a rel="next" href="{{ url_for('system.index', page=paginacion.next_num, q=busqueda, categoria=categoria_seleccionada, _anchor='preguntas') }}">Siguiente</a>
+          <a rel="next" href="{{ url_for('system.index', page=paginacion.next_num, q=busqueda, categoria=categoria_seleccionada, _anchor='preguntas') }}">{{ ui("Siguiente") }}</a>
         {% endif %}
       </nav>
     {% endif %}
@@ -70,15 +70,15 @@
     <div class="community-empty">
       <span class="community-empty-icon">{{ icon('questions') }}</span>
       {% if busqueda or categoria_seleccionada %}
-        <h3>No encontramos preguntas</h3>
-        <p>Probá con otras palabras o seleccioná una categoría diferente.</p>
-        <a href="{{ url_for('system.index') }}#preguntas">Ver todas las preguntas</a>
+        <h3>{{ ui("No encontramos preguntas") }}</h3>
+        <p>{{ ui("Probá con otras palabras o seleccioná una categoría diferente.") }}</p>
+        <a href="{{ url_for('system.index') }}#preguntas">{{ ui("Ver todas las preguntas") }}</a>
       {% else %}
-        <h3>Todavía no hay preguntas publicadas.</h3>
+        <h3>{{ ui("Todavía no hay preguntas publicadas.") }}</h3>
         {% if usuario_actual %}
-          <p>Usá el espacio de arriba para compartir una pregunta con la comunidad.</p>
+          <p>{{ ui("Usá el espacio de arriba para compartir una pregunta con la comunidad.") }}</p>
         {% else %}
-          <p><a href="{{ url_for('auth.login') }}">Iniciá sesión</a> para compartir una pregunta con la comunidad.</p>
+          <p><a href="{{ url_for('auth.login') }}">{{ ui("Iniciá sesión") }}</a> {{ ui("para compartir una pregunta con la comunidad.") }}</p>
         {% endif %}
       {% endif %}
     </div>

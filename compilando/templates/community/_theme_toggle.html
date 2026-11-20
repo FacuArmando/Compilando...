@@ -1,5 +1,5 @@
 <button class="theme-toggle" type="button" role="switch" aria-checked="false"
-        aria-label="Modo oscuro" title="Activar modo oscuro" data-theme-toggle hidden>
+        {{ i18n_attr("aria-label", "Modo oscuro") }} {{ i18n_attr("title", "Activar modo oscuro") }} data-theme-toggle hidden>
   <span class="theme-toggle-track" aria-hidden="true">
     <svg class="theme-toggle-stars" viewBox="0 0 64 34" fill="currentColor">
       <circle cx="43" cy="10" r="1"/><circle cx="52" cy="19" r="1.4"/><circle cx="40" cy="24" r=".8"/>

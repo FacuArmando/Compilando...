@@ -19,7 +19,7 @@ if (composer) {
 
     loading = true;
     status.hidden = false;
-    status.textContent = "Abriendo el formulario…";
+    window.I18n.setText(status, "Abriendo el formulario…");
     host.setAttribute("aria-busy", "true");
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
@@ -32,9 +32,9 @@ if (composer) {
       });
 
       if (response.status === 401) {
-        status.textContent = "Tu sesión venció. Iniciá sesión para continuar.";
+        window.I18n.setText(status, "Tu sesión venció. Iniciá sesión para continuar.");
         fallback.href = composer.dataset.loginUrl;
-        fallback.textContent = "Iniciar sesión";
+        window.I18n.setText(fallback, "Iniciar sesión");
         return;
       }
       if (!response.ok) throw new Error("No se pudo abrir el formulario.");
@@ -54,7 +54,7 @@ if (composer) {
       fallback.hidden = true;
       if (composer.open) form.querySelector("input[name='titulo']")?.focus({ preventScroll: true });
     } catch {
-      status.textContent = "No pudimos abrir el formulario acá. Podés continuar desde su página.";
+      window.I18n.setText(status, "No pudimos abrir el formulario acá. Podés continuar desde su página.");
     } finally {
       clearTimeout(timeout);
       loading = false;

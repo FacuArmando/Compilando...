@@ -16,30 +16,30 @@
     {% include 'community/_sidebar.html' %}
     <div class="community-content question-detail-grid{% if otras_preguntas %} has-related{% endif %}">
       <div class="question-main-column">
-        <nav class="question-breadcrumb" aria-label="Ubicación">
-          <a href="{{ url_for('system.index') }}#preguntas">Preguntas</a>
+        <nav class="question-breadcrumb" {{ i18n_attr("aria-label", "Ubicación") }}>
+          <a href="{{ url_for('system.index') }}#preguntas">{{ ui("Preguntas") }}</a>
           <span aria-hidden="true">/</span>
           <span>{{ pregunta.categoria.nombre }}</span>
         </nav>
 
         {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
-          <p class="question-notice{% if categoria == 'error' %} is-error{% endif %}" role="{{ 'alert' if categoria == 'error' else 'status' }}">{{ mensaje }}</p>
+          <p class="question-notice{% if categoria == 'error' %} is-error{% endif %}" role="{{ 'alert' if categoria == 'error' else 'status' }}">{{ ui(mensaje) }}</p>
         {% endfor %}
 
         <header class="question-detail-heading">
           <h1>{{ pregunta.titulo }}</h1>
           <p>
-            Preguntado el <time datetime="{{ pregunta.fecha.isoformat() }}">{{ pregunta.fecha.strftime('%d/%m/%Y') }}</time>
+            {{ ui("Preguntado el") }} {{ ui_date(pregunta.fecha) }}
             <span aria-hidden="true">·</span>
-            <a href="#respuestas" data-answer-count>{{ pregunta.respuestas|length }} {{ 'respuesta' if pregunta.respuestas|length == 1 else 'respuestas' }}</a>
+            <a href="#respuestas" data-answer-count>{{ ui('{count} respuesta' if pregunta.respuestas|length == 1 else '{count} respuestas', count=pregunta.respuestas|length) }}</a>
           </p>
         </header>
 
-        <article class="question-detail-card" aria-label="Contenido de la pregunta">
+        <article class="question-detail-card" {{ i18n_attr("aria-label", "Contenido de la pregunta") }}>
           <div class="question-full-body">{{ pregunta.cuerpo_detallado }}</div>
           {% if pregunta.adjuntos %}
             <section class="question-attachments" aria-labelledby="attachments-title">
-              <h2 id="attachments-title">Archivos adjuntos <span>{{ pregunta.adjuntos|length }}</span></h2>
+              <h2 id="attachments-title">{{ ui("Archivos adjuntos") }} <span>{{ pregunta.adjuntos|length }}</span></h2>
               <ul class="attachment-list">
                 {% for adjunto in pregunta.adjuntos %}
                   <li class="attachment-card">
@@ -48,8 +48,8 @@
                       <strong>{{ adjunto.nombre_original }}</strong>
                       <small>{% if adjunto.tamanio < 1024 %}{{ adjunto.tamanio }} B{% else %}{{ (adjunto.tamanio / 1024)|round(1) }} KB{% endif %}</small>
                       <div class="attachment-links">
-                        <a href="{{ url_for('questions.view_attachment', pregunta_id=pregunta.id, adjunto_id=adjunto.id) }}">Ver código<span class="attachment-sr-only"> de {{ adjunto.nombre_original }}</span></a>
-                        <a href="{{ url_for('questions.download_attachment', pregunta_id=pregunta.id, adjunto_id=adjunto.id) }}">Descargar<span class="attachment-sr-only"> {{ adjunto.nombre_original }}</span></a>
+                        <a href="{{ url_for('questions.view_attachment', pregunta_id=pregunta.id, adjunto_id=adjunto.id) }}">{{ ui("Ver código") }}<span class="attachment-sr-only"> {{ ui('de {name}', name=adjunto.nombre_original) }}</span></a>
+                        <a href="{{ url_for('questions.download_attachment', pregunta_id=pregunta.id, adjunto_id=adjunto.id) }}">{{ ui("Descargar") }}<span class="attachment-sr-only"> {{ adjunto.nombre_original }}</span></a>
                       </div>
                     </div>
                   </li>
@@ -58,22 +58,22 @@
             </section>
           {% endif %}
           {% if pregunta.tags %}
-            <div class="question-detail-tags" aria-label="Etiquetas">
+            <div class="question-detail-tags" {{ i18n_attr("aria-label", "Etiquetas") }}>
               {% for tag in pregunta.tags %}<span>{{ tag.nombre }}</span>{% endfor %}
             </div>
           {% endif %}
           <footer class="question-detail-footer">
             <div class="question-person">
               <span class="community-avatar" aria-hidden="true">{{ pregunta.usuario.username[0]|upper }}</span>
-              <div><small>Pregunta de</small><strong>{{ pregunta.usuario.username }}</strong></div>
+              <div><small>{{ ui("Pregunta de") }}</small><strong>{{ pregunta.usuario.username }}</strong></div>
             </div>
-            <a class="question-reply-link" href="{{ '#tu-respuesta' if usuario_actual else login_url }}">{{ icon('reply') }} Responder</a>
+            <a class="question-reply-link" href="{{ '#tu-respuesta' if usuario_actual else login_url }}">{{ icon('reply') }} {{ ui("Responder") }}</a>
           </footer>
         </article>
 
         <section class="question-answers" id="respuestas" aria-labelledby="answers-title">
           <header class="question-answers-heading">
-            <h2 id="answers-title" data-answer-count>{{ pregunta.respuestas|length }} {{ 'respuesta' if pregunta.respuestas|length == 1 else 'respuestas' }}</h2>
+            <h2 id="answers-title" data-answer-count>{{ ui('{count} respuesta' if pregunta.respuestas|length == 1 else '{count} respuestas', count=pregunta.respuestas|length) }}</h2>
           </header>
 
           <div id="answer-list">{% include 'answers/_list.html' %}</div>
@@ -81,24 +81,24 @@
 
         <section class="question-your-answer" id="tu-respuesta" aria-labelledby="your-answer-title">
           <header class="question-answer-heading">
-            <div><h2 id="your-answer-title">Tu respuesta</h2><p>Compartí una explicación clara y contá cómo llegaste a la solución.</p></div>
+            <div><h2 id="your-answer-title">{{ ui("Tu respuesta") }}</h2><p>{{ ui("Compartí una explicación clara y contá cómo llegaste a la solución.") }}</p></div>
           </header>
           {% if usuario_actual %}
             {% set respuestas_ia = respuestas|selectattr('es_ia')|list %}
             {% if respuestas_ia %}
-              <p class="question-ai-existing"><a href="#respuesta-{{ respuestas_ia[0].id }}">Ver respuesta de IA</a> · Esta pregunta ya tiene una respuesta generada.</p>
+              <p class="question-ai-existing"><a href="#respuesta-{{ respuestas_ia[0].id }}">{{ ui("Ver respuesta de IA") }}</a> {{ ui("· Esta pregunta ya tiene una respuesta generada.") }}</p>
             {% else %}
               <details class="ai-consult">
-                <summary id="btn-modo-ia">Consultar IA</summary>
+                <summary id="btn-modo-ia">{{ ui("Consultar IA") }}</summary>
                 <form id="form-consulta-ia" action="{{ url_for('ai.ask', pregunta_id=pregunta.id) }}" method="POST">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <p>Gemini puede ayudarte a analizar esta pregunta. La respuesta quedará publicada para la comunidad.</p>
-                  <p>Google puede usar las consultas del nivel gratuito para mejorar sus productos. Evitá enviar claves o datos privados.</p>
-                  <label class="ai-option"><input type="checkbox" name="confirmar_envio" value="si" required> Enviar esta pregunta a Gemini.</label>
+                  <p>{{ ui("Gemini puede ayudarte a analizar esta pregunta. La respuesta quedará publicada para la comunidad.") }}</p>
+                  <p>{{ ui("Google puede usar las consultas del nivel gratuito para mejorar sus productos. Evitá enviar claves o datos privados.") }}</p>
+                  <label class="ai-option"><input type="checkbox" name="confirmar_envio" value="si" required> {{ ui("Enviar esta pregunta a Gemini.") }}</label>
                   {% if pregunta.adjuntos %}
-                    <label class="ai-option"><input type="checkbox" name="incluir_adjuntos" value="si"> Incluir el código de los {{ pregunta.adjuntos|length }} archivos adjuntos (máximo 48 KB junto con la pregunta).</label>
+                    <label class="ai-option"><input type="checkbox" name="incluir_adjuntos" value="si"> {{ ui('Incluir el código de los {count} archivos adjuntos (máximo 48 KB junto con la pregunta).', count=pregunta.adjuntos|length) }}</label>
                   {% endif %}
-                  <button type="submit" class="answer-submit">Pedir respuesta a Gemini</button>
+                  <button type="submit" class="answer-submit">{{ ui("Pedir respuesta a Gemini") }}</button>
                   <p class="ai-status" role="status" aria-live="polite"></p>
                 </form>
               </details>
@@ -106,15 +106,15 @@
             <form id="form-respuesta-usuario" action="{{ url_for('answers.publish_answer', pregunta_id=pregunta.id) }}"
                   method="POST" class="answer-form-box" novalidate>
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <label for="cuerpo">Escribí tu respuesta</label>
-              <textarea id="cuerpo" name="cuerpo" placeholder="Explicá tu solución y agregá un ejemplo si ayuda…" minlength="3" maxlength="5000" required></textarea>
-              <small>Entre 3 y 5000 caracteres.</small>
-              <div class="answer-form-actions"><button type="submit" class="answer-submit">Publicar respuesta</button></div>
+              <label for="cuerpo">{{ ui("Escribí tu respuesta") }}</label>
+              <textarea id="cuerpo" name="cuerpo" {{ i18n_attr("placeholder", "Explicá tu solución y agregá un ejemplo si ayuda…") }} minlength="3" maxlength="5000" required></textarea>
+              <small>{{ ui("Entre 3 y 5000 caracteres.") }}</small>
+              <div class="answer-form-actions"><button type="submit" class="answer-submit">{{ ui("Publicar respuesta") }}</button></div>
             </form>
           {% else %}
             <div class="question-signin-note">
-              <p>Iniciá sesión para escribir una respuesta y participar de la conversación.</p>
-              <a href="{{ login_url }}">Iniciar sesión</a>
+              <p>{{ ui("Iniciá sesión para escribir una respuesta y participar de la conversación.") }}</p>
+              <a href="{{ login_url }}">{{ ui("Iniciar sesión") }}</a>
             </div>
           {% endif %}
         </section>
@@ -122,10 +122,10 @@
 
       {% if otras_preguntas %}
         <aside class="question-related" aria-labelledby="related-title">
-          <h2 id="related-title">Otras preguntas</h2>
+          <h2 id="related-title">{{ ui("Otras preguntas") }}</h2>
           <ul>
             {% for item in otras_preguntas[:5] %}
-              <li><a href="{{ url_for('questions.view_question', pregunta_id=item.id) }}">{{ item.titulo }}</a><small>{{ item.respuestas|length }} {{ 'respuesta' if item.respuestas|length == 1 else 'respuestas' }}</small></li>
+              <li><a href="{{ url_for('questions.view_question', pregunta_id=item.id) }}">{{ item.titulo }}</a><small>{{ ui('{count} respuesta' if item.respuestas|length == 1 else '{count} respuestas', count=item.respuestas|length) }}</small></li>
             {% endfor %}
           </ul>
         </aside>

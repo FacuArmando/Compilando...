@@ -1,21 +1,21 @@
 {% from 'system/_icons.html' import icon %}
-<aside class="community-sidebar" aria-label="Navegación de la comunidad">
-  <p class="community-nav-label">TU ESPACIO</p>
+<aside class="community-sidebar" {{ i18n_attr("aria-label", "Navegación de la comunidad") }}>
+  <p class="community-nav-label">{{ ui("TU ESPACIO") }}</p>
   <nav class="community-nav">
     <a href="{{ url_for('system.index') }}"{% if request.endpoint == 'system.index' %} class="is-current" aria-current="page"{% endif %}>
-      {{ icon('home') }} Inicio
+      {{ icon('home') }} {{ ui("Inicio") }}
     </a>
-    <a href="{{ url_for('system.index') }}#preguntas"{% if request.endpoint == 'questions.view_question' %} class="is-current" aria-current="true"{% endif %}>{{ icon('questions') }} Preguntas recientes</a>
+    <a href="{{ url_for('system.index') }}#preguntas"{% if request.endpoint == 'questions.view_question' %} class="is-current" aria-current="true"{% endif %}>{{ icon('questions') }} {{ ui("Preguntas recientes") }}</a>
     {% if usuario_actual %}
     <a href="{{ url_for('auth.account') }}"{% if request.endpoint == 'auth.account' %} class="is-current" aria-current="page"{% endif %}>
-      {{ icon('user') }} Mi cuenta
+      {{ icon('user') }} {{ ui("Mi cuenta") }}
     </a>
     {% endif %}
   </nav>
   <div class="community-sidebar-note">
     <span class="community-note-icon">{{ icon('bulb') }}</span>
-    <h2>Una pregunta puede ayudar a muchos.</h2>
-    <p>Contá qué intentaste y dónde te trabaste. El contexto hace la diferencia.</p>
+    <h2>{{ ui("Una pregunta puede ayudar a muchos.") }}</h2>
+    <p>{{ ui("Contá qué intentaste y dónde te trabaste. El contexto hace la diferencia.") }}</p>
   </div>
-  <p class="community-sidebar-footer">Hecho para aprender juntos.</p>
+  <p class="community-sidebar-footer">{{ ui("Hecho para aprender juntos.") }}</p>
 </aside>

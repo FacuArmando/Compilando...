@@ -28,7 +28,7 @@ window.iniciarAdjuntos = (root = document) => {
     };
 
     const showError = (message = "") => {
-      error.textContent = message;
+      window.I18n.setText(error, message);
       error.hidden = !message;
       input.setAttribute("aria-invalid", String(Boolean(message)));
     };
@@ -57,7 +57,7 @@ window.iniciarAdjuntos = (root = document) => {
         remove.type = "button";
         remove.className = "attachment-remove";
         remove.textContent = "×";
-        remove.setAttribute("aria-label", `Quitar ${file.name}`);
+        window.I18n.setAttribute(remove, "aria-label", "Quitar {name}", { name: file.name });
         remove.addEventListener("click", () => {
           files.splice(index, 1);
           sync();
@@ -69,9 +69,9 @@ window.iniciarAdjuntos = (root = document) => {
         card.append(symbol, info, remove);
         list.append(card);
       });
-      status.textContent = files.length
+      window.I18n.setText(status, files.length
         ? `${files.length} de ${maxFiles} archivos · ${size(files.reduce((sum, f) => sum + f.size, 0))} en total.`
-        : "Sin archivos seleccionados.";
+        : "Sin archivos seleccionados.");
     };
     const setBusy = (value) => {
       busy = value;
@@ -79,7 +79,7 @@ window.iniciarAdjuntos = (root = document) => {
       picker.setAttribute("aria-busy", String(value));
       input.disabled = value;
       list.querySelectorAll("button").forEach((button) => { button.disabled = value; });
-      if (value) status.textContent = "Revisando los archivos antes de agregarlos…";
+      if (value) window.I18n.setText(status, "Revisando los archivos antes de agregarlos…");
     };
     const add = async (incoming) => {
       if (busy) {

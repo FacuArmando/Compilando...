@@ -22,7 +22,11 @@
     );
     document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
       button.setAttribute("aria-checked", String(theme === "dark"));
-      button.title = theme === "dark" ? "Activar modo claro" : "Activar modo oscuro";
+      const label = theme === "dark" ? "Activar modo claro" : "Activar modo oscuro";
+      if (window.I18n) {
+        window.I18n.setAttribute(button, "title", label);
+        window.I18n.setAttribute(button, "aria-label", "Modo oscuro");
+      } else button.title = label;
     });
   };
   const preferred = () => preference || (system.matches ? "dark" : "light");
@@ -69,6 +73,7 @@
     }
   };
 
+  window.addEventListener("languagechange", () => apply(root.dataset.theme));
   document.addEventListener("DOMContentLoaded", () => {
     apply(preferred());
     document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
