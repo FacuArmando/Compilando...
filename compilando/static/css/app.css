@@ -197,7 +197,6 @@ button:focus-visible {
 }
 
 .auth-visual {
-  /* Este panel queda preparado para incorporar una foto como fondo más adelante. */
   display: flex;
   flex-direction: column;
   justify-content: space-between;

@@ -1,5 +1,46 @@
 <aside class="auth-visual" aria-label="La comunidad Compilando">
   <p class="auth-brand">COMPILANDO...</p>
+  <div class="auth-code-scene" data-code-scene>
+    <div class="auth-code-atmosphere" aria-hidden="true">
+      <div class="auth-code-orbit"></div>
+      <span class="auth-code-stream auth-code-stream-one">01101010 01100001<br>01110110 01100001<br>00100000 00110001<br>01101001 01100100<br>01100101 01100001</span>
+      <span class="auth-code-stream auth-code-stream-two">01001001 01100100<br>01100101 01100001<br>00100000 00110000<br>01100011 01101111<br>01100100 01100101</span>
+      <span class="auth-code-symbol auth-code-symbol-braces">{ }</span>
+      <span class="auth-code-symbol auth-code-symbol-java">.java</span>
+    </div>
+    <div class="auth-code-window" aria-hidden="true">
+      <div class="auth-code-toolbar">
+        <span class="auth-code-dots"><i></i><i></i><i></i></span>
+        <span class="auth-code-filename" data-code-filename>Idea.java</span>
+        <span class="auth-code-language">JAVA</span>
+      </div>
+      <div class="auth-code-editor">
+        <div class="auth-code-gutter">01<br>02<br>03<br>04<br>05<br>06<br>07<br>08<br>09<br>10<br>11<br>12</div>
+        <pre class="auth-code-source"><code data-code-source>interface Idea {
+    String share();
+}
+
+record Question(String text)
+        implements Idea {
+    public String share() {
+        return text;
+    }
+}</code><span class="auth-code-caret"></span></pre>
+      </div>
+      <div class="auth-code-footer">
+        <span><span class="auth-code-status-dot"></span><span data-code-status>Una idea en código</span></span>
+        <span data-code-encoding>Java · UTF-8</span>
+      </div>
+    </div>
+    <div class="auth-code-controls">
+      <span class="auth-code-caption" aria-hidden="true">IDEAS QUE TOMAN FORMA</span>
+      <button class="auth-code-pause" type="button" data-code-pause
+              aria-pressed="false" aria-label="Pausar animación de código" hidden>
+        <svg class="auth-code-pause-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.5 4v8m5-8v8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg class="auth-code-play-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 4 6 4-6 4V4Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
   <div class="auth-visual-copy">
     <p class="auth-visual-title">El conocimiento<br>se comparte.</p>
     <p class="auth-visual-description">
@@ -7,3 +48,4 @@
     </p>
   </div>
 </aside>
+<script src="{{ url_for('static', filename='js/auth-code.js') }}" defer></script>
