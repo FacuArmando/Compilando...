@@ -4,7 +4,7 @@ Plataforma de preguntas y respuestas con participación humana y respuestas de I
 
 ## Estado actual
 
-Base Flask modular, página inicial, registro, inicio y cierre de sesión desde el navegador, `/health`, conexión SQLite y herramientas de calidad. El registro valida los datos, rechaza duplicados y guarda el hash de la contraseña. El login comprueba las credenciales y muestra el usuario conectado. Los formularios están protegidos con Flask-WTF (CSRF). La plataforma permite publicar y consultar preguntas y respuestas; la integración con IA sigue pendiente.
+Base Flask modular, página inicial, registro, inicio y cierre de sesión desde el navegador, `/health`, conexión SQLite y herramientas de calidad. El registro valida los datos, rechaza duplicados y guarda el hash de la contraseña. El login comprueba las credenciales y muestra el usuario conectado. Los formularios están protegidos con Flask-WTF (CSRF). La plataforma permite publicar y consultar preguntas y respuestas; permite solicitar respuestas reales de Gemini desde una pregunta, con sesión válida y confirmación del envío.
 
 El inicio `/` es público: permite leer preguntas y respuestas, buscar y filtrar. El login `/auth/login` y el registro `/auth/register` son pantallas independientes, sin listado de preguntas debajo. Al intentar preguntar o responder, el visitante pasa por el login y luego vuelve al formulario correspondiente. Solo se admiten destinos internos conocidos para ese regreso. Publicar y modificar contenido requiere una sesión válida; «Mi cuenta» también es privada.
 
@@ -25,6 +25,8 @@ También permite cambiar el correo (#28), confirmando la contraseña actual. Val
 Las preguntas admiten archivos de código opcionales (#20), tanto desde el formulario desplegable del inicio como desde `/questions/publish`. Se pueden seleccionar o arrastrar, revisar en tarjetas y quitar antes de publicar. La pregunta muestra los adjuntos con opciones para ver el texto y descargar el original. Inicialmente se admiten `.java`, `.py`, `.js`, `.jsx` y `.txt`, hasta 10 archivos, 1 MB por archivo y 5 MB en total. Se requiere texto UTF-8; nunca se ejecuta ni compila el contenido. Los adjuntos son públicos, igual que la pregunta. Ver [adjuntos](docs/adjuntos.md) para almacenamiento, límites y migración.
 
 La validación de archivos (#21) revisa la selección en el navegador antes de enviarla y repite los controles en el servidor. Informa los límites exactos, rechaza archivos vacíos o binarios, contenido que no sea UTF-8 y nombres inválidos. Si una selección falla, conserva los adjuntos válidos que ya estaban elegidos; si el servidor rechaza una carga, no publica parcialmente la pregunta. La descarga conserva los archivos originales, incluso con acentos o saltos de línea de Windows. No se exige que el código compile.
+
+Las consultas de IA se guardan identificadas con proveedor y modelo, sin borrar el borrador de una respuesta humana. Los adjuntos se incluyen solo si se selecciona esa opción y el contexto completo no supera 48 KB. La primera versión comparte una respuesta de IA por pregunta y evita llamadas duplicadas. Para configurarla, aplicar la nueva migración y conocer los límites, ver [integración con Gemini](docs/ia.md).
 
 ## Preparación
 

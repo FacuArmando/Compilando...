@@ -1,4 +1,4 @@
-# Primera propuesta de estructura
+# Estructura de la aplicación
 
 Aplicación Flask organizada por funcionalidad, ejecutada como una unidad y con una base de datos. La fábrica `create_app` configura cada instancia y conecta sus extensiones.
 
@@ -16,9 +16,9 @@ compilando/
 │   ├── modules/
 │   │   ├── system/routes.py    # Inicio y /health: implementados
 │   │   ├── auth/               # Registro, login, logout y sesiones persistentes
-│   │   ├── questions/          # Preguntas: reservado
-│   │   ├── answers/            # Respuestas y autoría: reservado
-│   │   └── ai/                 # Solicitudes y proveedores: reservado
+│   │   ├── questions/          # Preguntas, búsquedas y adjuntos
+│   │   ├── answers/            # Respuestas, autoría y aceptación
+│   │   └── ai/                 # Consultas explícitas, reservas y proveedor Gemini
 │   ├── templates/              # HTML: base y pantallas por módulo
 │   └── static/css/             # Estilos
 ├── migrations/                 # Alembic: usuarios, sesiones y límites de intentos
@@ -33,7 +33,7 @@ compilando/
 └── README.md
 ```
 
-Los módulos reservados contienen únicamente su paquete con una descripción. No tienen funcionalidades simuladas.
+Los módulos contienen rutas, servicios y modelos de sus casos de uso. El adaptador de Gemini usa el contrato `ProveedorIA`; las pruebas inyectan un sustituto sin modificar la configuración de producción.
 
 ## Crecimiento de cada módulo
 
@@ -63,7 +63,7 @@ Las plantillas se ubicarán en `templates/questions/`, `templates/auth/`, etc. L
 
 La autenticación usa sesiones persistidas en la base, siguiendo `Sesion` del UML.
 La decisión, los controles y la configuración de producción están documentados en
-[autenticacion.md](autenticacion.md). El proveedor de IA sigue pendiente.
+[autenticacion.md](autenticacion.md). Gemini se integra con un adaptador REST; su configuración y las decisiones sobre contexto, límites y concurrencia están en [ia.md](ia.md).
 
 Se utiliza un paquete en la raíz, una disposición habitual para una aplicación Flask pequeña. Esto también permite arrancar desde el repositorio sin depender de un archivo `.pth` de instalación editable: en este equipo macOS vuelve a marcar esos archivos como ocultos y Python los omite. La estructura sigue siendo modular y el proyecto también puede construirse como paquete.
 
@@ -74,6 +74,8 @@ Se utiliza un paquete en la raíz, una disposición habitual para una aplicació
 - `check-db`: consulta real a SQLite.
 - Registro, login y logout con CSRF, sesiones revocables en la base y límites de intentos.
 - Migraciones para usuarios, sesiones y contadores de autenticación.
-- Preguntas, respuestas y llamadas a IA pendientes del siguiente hito.
+- Publicación, lectura y búsqueda de preguntas; adjuntos de código validados.
+- Respuestas humanas, edición propia y aceptación por el autor de la pregunta.
+- Respuestas reales de Gemini solicitadas mediante POST con sesión y CSRF; una respuesta compartida por pregunta.
 
 Fuentes: [Application Factories](https://flask.palletsprojects.com/en/stable/patterns/appfactories/), [Blueprints](https://flask.palletsprojects.com/en/stable/blueprints/).

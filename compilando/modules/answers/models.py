@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -55,6 +56,7 @@ class Respuesta(db.Model):
     fecha_edicion: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
     es_ia: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
     modelo_ia: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
+    proveedor_ia: Mapped[str | None] = mapped_column(String(32), nullable=True, default=None)
 
     estado: Mapped[str] = mapped_column(
         String(20),
@@ -64,10 +66,10 @@ class Respuesta(db.Model):
     )
 
     pregunta_id: Mapped[int] = mapped_column(ForeignKey("preguntas.id"), nullable=False)
-    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=False)
+    usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
 
     pregunta: Mapped["Pregunta"] = relationship("Pregunta", back_populates="respuestas")
-    usuario: Mapped["Usuario"] = relationship("Usuario")
+    usuario: Mapped["Usuario | None"] = relationship("Usuario")
 
     @property
     def autor_nombre(self) -> str:
@@ -80,6 +82,20 @@ class Respuesta(db.Model):
     def es_autor_pregunta(self) -> bool:
         """Indica si quien respondió es el mismo usuario que publicó la pregunta."""
         return not self.es_ia and self.usuario_id == self.pregunta.usuario_id
+
+    @property
+    def bloques_ia(self) -> list[tuple[str, str]]:
+        """Separar texto y código sin interpretar HTML del proveedor."""
+        bloques = []
+        for posicion, texto in enumerate(self.cuerpo.split("```")):
+            if posicion % 2:
+                lenguaje, salto, codigo = texto.partition("\n")
+                if salto and re.fullmatch(r"[\w+#.\-]{0,24}", lenguaje.strip()):
+                    texto = codigo
+                bloques.append(("codigo", texto.strip("\n")))
+            elif texto.strip():
+                bloques.append(("texto", texto.strip()))
+        return bloques
 
     @property
     def fecha_formateada(self) -> str:

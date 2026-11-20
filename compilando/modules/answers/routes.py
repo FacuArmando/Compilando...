@@ -50,7 +50,7 @@ def edit_answer(respuesta_id: int):
     if respuesta is None:
         abort(404)
 
-    if respuesta.usuario_id != g.usuario_actual.id:
+    if respuesta.es_ia or respuesta.usuario_id != g.usuario_actual.id:
         abort(403)
 
     nuevo_cuerpo = request.form.get("cuerpo", "")

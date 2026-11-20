@@ -17,6 +17,7 @@ from compilando.modules import answers as answers
 from compilando.modules import categories as categories
 from compilando.modules import questions as questions
 from compilando.modules import tags as tags
+from compilando.modules.ai.routes import bp as ai_bp
 from compilando.modules.answers.routes import bp as answers_bp
 from compilando.modules.auth.routes import bp as auth_bp
 from compilando.modules.auth.security import init_app as init_security
@@ -46,4 +47,5 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     register_commands(app)
     app.register_blueprint(questions_bp)
     app.register_blueprint(answers_bp)
+    app.register_blueprint(ai_bp)
     return app

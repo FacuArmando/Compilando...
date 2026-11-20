@@ -47,7 +47,7 @@ def editar_respuesta(respuesta_id: int, nuevo_cuerpo: str, usuario: Usuario) -> 
     if respuesta is None:
         raise ValueError("La respuesta que intentás modificar no existe.")
 
-    if respuesta.usuario_id != usuario.id:
+    if respuesta.es_ia or respuesta.usuario_id != usuario.id:
         raise PermissionError("Solo el autor de la respuesta puede modificarla.")
 
     try:

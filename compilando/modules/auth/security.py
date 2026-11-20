@@ -33,6 +33,13 @@ def limitar_intentos(accion: str, email: str = "", *, usuario_id: int | None = N
             raise ValueError("El cambio de contraseña requiere un usuario autenticado.")
         limites[0] = (limites[0][0], "AUTH_PASSWORD_IP_LIMIT")
         limites.append((f"password:usuario:{usuario_id}", "AUTH_PASSWORD_ACCOUNT_LIMIT"))
+    elif accion == "ai":
+        if usuario_id is None:
+            raise ValueError("Consultar IA requiere un usuario autenticado.")
+        limites[0] = (limites[0][0], "AI_IP_LIMIT")
+        limites.extend(
+            [(f"ai:usuario:{usuario_id}", "AI_ACCOUNT_LIMIT"), ("ai:global", "AI_GLOBAL_LIMIT")]
+        )
     else:
         limites[0] = (limites[0][0], "AUTH_REGISTER_IP_LIMIT")
 
@@ -106,7 +113,7 @@ def init_app(app) -> None:
     def proteger_solicitud():
         if production and not request.is_secure:
             abort(400, description="Este servicio requiere HTTPS.")
-        if request.blueprint == "auth":
+        if request.blueprint in {"auth", "ai"}:
             request.max_content_length = 16 * 1024
             request.max_form_memory_size = 16 * 1024
             request.max_form_parts = 8
