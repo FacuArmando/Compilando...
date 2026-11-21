@@ -275,5 +275,14 @@
   "Usá nombres de archivo de hasta {max} caracteres, sin caracteres invisibles o de control.": "Use file names up to {max} characters long, without invisible or control characters.",
   "{name}: elegí un archivo de estos tipos: {extensions}.": "{name}: choose one of these file types: {extensions}.",
   "{name}: supera el máximo de {size} por archivo.": "{name}: exceeds the maximum of {size} per file.",
-  "Los archivos juntos superan el límite total de {size}.": "The files exceed the combined size limit of {size}."
+  "Los archivos juntos superan el límite total de {size}.": "The files exceed the combined size limit of {size}.",
+  "Pie de página": "Footer",
+  "Preguntas, código y comunidad.": "Questions, code and community.",
+  "Una buena pregunta es un comienzo.": "A good question is a beginning.",
+  "Compartí lo que sabés. Descubrí lo que sigue.": "Share what you know. Discover what comes next.",
+  "Navegación del pie de página": "Footer navigation",
+  "Explorá": "Explore",
+  "Tu espacio": "Your space",
+  "El proyecto en GitHub": "The project on GitHub",
+  "Volver arriba": "Back to top"
 }

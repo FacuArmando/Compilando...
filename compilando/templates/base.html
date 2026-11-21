@@ -12,12 +12,14 @@
       {% block styles %}{% endblock %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/language.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/brand.css') }}">
   </head>
-  <body>
+  <body id="page-top" class="{% block body_class %}{% endblock %}">
     <p class="language-announcement" role="status" aria-live="polite"></p>
     {% block theme_control %}
       <div class="theme-control-floating appearance-controls">{% include 'community/_language_toggle.html' %}{% include 'community/_theme_toggle.html' %}</div>
     {% endblock %}
     <main class="{% block main_class %}{% endblock %}">{% block content %}{% endblock %}</main>
+    {% block footer %}{% endblock %}
   </body>
 </html>

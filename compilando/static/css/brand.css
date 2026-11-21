@@ -1,0 +1,53 @@
+/* Identidad compartida: proporciones originales y nombre con contraste de tema. */
+.brand-lockup {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.community-brand {
+  display: block;
+  flex: 0 1 252px;
+  width: 252px;
+  min-width: 150px;
+  color: var(--theme-heading, #1d2f4b);
+  text-decoration: none;
+}
+
+.auth-brand {
+  display: block;
+  flex: none;
+  align-self: flex-start;
+  width: min(100%, 390px);
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  color: var(--theme-auth-copy, #f2eadf);
+  text-decoration: none;
+}
+
+.community-brand:focus-visible,
+.auth-brand:focus-visible {
+  border-radius: 8px;
+  outline-offset: 7px;
+}
+
+@media (max-width: 760px) {
+  .auth-brand {
+    width: min(280px, calc(100% - 164px));
+    max-width: none;
+    padding: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .community-brand {
+    width: min(100%, 220px);
+    min-width: 0;
+  }
+
+  /* Los dos switches tienen su propia fila sobre la marca en acceso. */
+  .auth-screen .auth-visual { padding-top: 84px; }
+  .auth-screen .auth-brand { width: min(100%, 280px); max-width: none; }
+}
