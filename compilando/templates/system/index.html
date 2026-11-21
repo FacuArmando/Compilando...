@@ -72,4 +72,266 @@
   </div>
   <script src="{{ url_for('static', filename='js/attachments.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
+
+      {% if usuario_actual and es_cumpleanos %}
+    <div class="bday-theater" data-bday-theater
+         data-bday-code='{{ tr("printf(\"¡Feliz cumpleaños!\\n\");") }}'
+         data-bday-greeting="{{ tr('¡FELIZ CUMPLEAÑOS, {name}!', name=usuario_actual.username|upper) }}"
+         data-bday-age="{{ edad_cumpleanos or '' }}">
+      <div class="dev-bday-balloons" data-dev-bday-balloons aria-hidden="true"></div>
+
+      <!-- Pantalla Ubuntu completa en el centro (Boot -> Login -> Terminal -> Apagado) -->
+      <div class="bday-ubuntu-desktop" data-bday-terminal hidden aria-hidden="true">
+        <!-- 1. Pantalla de Arranque Ubuntu -->
+        <div class="ubuntu-boot-screen" data-ubuntu-boot>
+          <div class="ubuntu-circle-logo">ubuntu</div>
+          <div class="ubuntu-boot-dots"><span></span><span></span><span></span><span></span></div>
+        </div>
+
+        <!-- 2. Pantalla de Login Ubuntu -->
+        <div class="ubuntu-login-screen" data-ubuntu-login hidden>
+          <div class="ubuntu-login-card">
+            <div class="ubuntu-user-avatar">{{ usuario_actual.username[0]|upper }}</div>
+            <div class="ubuntu-user-name">{{ usuario_actual.username }}</div>
+            <div class="ubuntu-pass-box">
+              <span data-ubuntu-pass></span><span class="bday-cursor">|</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2B. Pantalla completa de Apagado Ubuntu -->
+        <div class="ubuntu-shutdown-screen" data-ubuntu-shutdown hidden>
+          <div class="ubuntu-circle-logo">ubuntu</div>
+          <div class="ubuntu-boot-dots is-powering-off"><span></span><span></span><span></span><span></span></div>
+          <p class="ubuntu-off-label">Shutting down...</p>
+        </div>
+
+
+        <!-- 3. Escritorio Ubuntu activo -->
+        <div class="ubuntu-desktop-view" data-ubuntu-desktop hidden>
+          <div class="ubuntu-top-bar">
+            <span class="ubuntu-activities">Activities</span>
+            <span class="ubuntu-clock">🎂 {{ ui("Hoy") }}</span>
+            <span class="ubuntu-tray" data-ubuntu-tray>🔊 📶 🔋 ▾</span>
+          </div>
+
+          <!-- Menú de apagado visible cuando termina -->
+          <div class="ubuntu-power-menu" data-ubuntu-power hidden>
+            <div class="power-menu-item">⚙ Settings</div>
+            <div class="power-menu-item">🔒 Lock</div>
+            <div class="power-menu-item is-selected">⏻ Power Off / Log Out...</div>
+          </div>
+
+          <div class="ubuntu-workspace">
+            <div class="ubuntu-dock">
+              <span class="ubuntu-app is-files" title="Files">📁</span>
+              <span class="ubuntu-app is-web" title="Firefox">🌐</span>
+              <span class="ubuntu-app is-code" title="VS Code">{ }</span>
+              <span class="ubuntu-app is-term is-active" title="Terminal">&gt;_</span>
+              <span class="ubuntu-apps-grid" title="Show Applications">⠿</span>
+            </div>
+
+            <div class="ubuntu-term-window">
+              <div class="ubuntu-term-bar">
+                <div class="ubuntu-win-controls">
+                  <span class="u-btn is-close">×</span>
+                  <span class="u-btn is-min">−</span>
+                  <span class="u-btn is-max">□</span>
+                </div>
+                <span class="ubuntu-term-title">{{ usuario_actual.username }}@ubuntu: ~/birthday</span>
+              </div>
+              <div class="bday-term-body">
+                <div class="bday-term-line">
+                  <span class="ubuntu-prompt">{{ usuario_actual.username }}@ubuntu</span>:<span class="ubuntu-path">~/birthday</span>$
+                  <span class="bday-typed" data-bday-typed></span><span class="bday-cursor">▋</span>
+                </div>
+
+                <div class="bday-term-party" data-bday-party hidden>
+                  <div class="bday-glow-greeting" data-bday-glow></div>
+
+                  <div class="bday-cake-stage">
+                    <svg class="bday-cake-svg" viewBox="0 0 140 120" aria-hidden="true">
+                      <ellipse cx="70" cy="108" rx="54" ry="8" fill="#334155"/>
+                      <rect x="28" y="76" width="84" height="30" rx="6" fill="#e95420"/>
+                      <path d="M 28 84 Q 42 92 56 84 T 84 84 T 112 84 L 112 76 L 28 76 Z" fill="#fbcfe8"/>
+                      <rect x="40" y="50" width="60" height="26" rx="5" fill="#77216f"/>
+                      <path d="M 40 57 Q 50 64 60 57 T 80 57 T 100 57 L 100 50 L 40 50 Z" fill="#fef08a"/>
+                      <text x="70" y="72" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="14" font-weight="800">{{ edad_cumpleanos or '🎂' }}</text>
+                      <rect x="67" y="30" width="6" height="20" rx="2" fill="#38bdf8"/>
+                      <line x1="67" y1="36" x2="73" y2="39" stroke="#ffffff" stroke-width="1.5"/>
+                      <line x1="67" y1="43" x2="73" y2="46" stroke="#ffffff" stroke-width="1.5"/>
+                      <path class="cake-flame-big" d="M 70 14 C 75 21, 75 28, 70 30 C 65 28, 65 21, 70 14 Z" fill="#facc15"/>
+                      <ellipse class="cake-flame-core" cx="70" cy="24" rx="2.2" ry="4" fill="#fef9c3"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Escenario abierto en el costado derecho inferior -->
+      <div class="bday-floor" data-bday-stage aria-hidden="true">
+        <svg class="bday-floor-svg" viewBox="0 0 600 225" preserveAspectRatio="xMaxYMax meet">
+          <line x1="20" y1="212" x2="590" y2="212" stroke="var(--community-border, #94a3b8)" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+
+          <!-- SILLA EJECUTIVA CON RUEDITAS -->
+          <g class="stage-chair">
+            <rect x="174" y="114" width="10" height="54" rx="5" fill="#1e293b"/>
+            <rect x="172" y="122" width="6" height="34" rx="3" fill="#334155"/>
+            <rect x="174" y="164" width="42" height="8" rx="4" fill="#1e293b"/>
+            <path d="M 184 148 L 204 148 L 204 164" fill="none" stroke="#475569" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="194" y1="172" x2="194" y2="202" stroke="#64748b" stroke-width="5"/>
+            <line x1="174" y1="205" x2="214" y2="205" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="176" cy="209" r="3" fill="#0f172a"/>
+            <circle cx="194" cy="209" r="3" fill="#0f172a"/>
+            <circle cx="212" cy="209" r="3" fill="#0f172a"/>
+          </g>
+
+          <!-- MESA -->
+          <g class="stage-table">
+            <rect x="228" y="156" width="146" height="9" rx="4" fill="#64748b"/>
+            <line x1="242" y1="165" x2="242" y2="211" stroke="#475569" stroke-width="5.5"/>
+            <line x1="358" y1="165" x2="358" y2="211" stroke="#475569" stroke-width="5.5"/>
+          </g>
+
+          <!-- AYUDANTE IZQUIERDO -->
+          <g class="stage-helper-left">
+            <g class="facing-left-helper">
+              <g class="walker-body">
+                <g class="leg-back">
+                  <rect x="202" y="152" width="10" height="30" rx="5" fill="#64748b"/>
+                  <g class="shin-back">
+                    <rect x="203" y="179" width="8.5" height="27" rx="4" fill="#64748b"/>
+                    <path d="M 201 204 L 217 204 Q 221 204 221 210 L 201 210 Z" fill="#78350f"/>
+                  </g>
+                </g>
+                <g class="leg-front">
+                  <rect x="202" y="152" width="10" height="30" rx="5" fill="#94a3b8"/>
+                  <g class="shin-front">
+                    <rect x="203" y="179" width="8.5" height="27" rx="4" fill="#94a3b8"/>
+                    <path d="M 201 204 L 217 204 Q 221 204 221 210 L 201 210 Z" fill="#92400e"/>
+                  </g>
+                </g>
+                <path d="M 195 110 Q 207 107 219 110 L 217 155 L 197 155 Z" fill="#e2e8f0"/>
+                <circle cx="207" cy="91" r="12.5" fill="#f3c39d"/>
+                <path d="M 194 89 C 194 73, 220 73, 220 88 C 214 80, 200 80, 194 89 Z" fill="#3f2312" stroke="#78350f" stroke-width="1"/>
+                <path d="M 197 94 Q 207 104 217 94 Q 212 98 207 98 Q 202 98 197 94 Z" fill="#3f2312"/>
+                <circle cx="213" cy="89" r="1.5" fill="#1e293b"/>
+                <g class="helper-carry-arm">
+                  <path d="M 209 118 L 224 136 L 232 156" fill="none" stroke="#f3c39d" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M 209 118 L 217 127" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>
+                </g>
+              </g>
+            </g>
+          </g>
+
+          <!-- AYUDANTE DERECHO -->
+          <g class="stage-helper-right">
+            <g class="facing-right-helper">
+              <g class="walker-body">
+                <g class="leg-back">
+                  <rect x="386" y="152" width="10" height="30" rx="5" fill="#64748b"/>
+                  <g class="shin-back">
+                    <rect x="387" y="179" width="8.5" height="27" rx="4" fill="#64748b"/>
+                    <path d="M 385 204 L 401 204 Q 405 204 405 210 L 385 210 Z" fill="#78350f"/>
+                  </g>
+                </g>
+                <g class="leg-front">
+                  <rect x="386" y="152" width="10" height="30" rx="5" fill="#94a3b8"/>
+                  <g class="shin-front">
+                    <rect x="387" y="179" width="8.5" height="27" rx="4" fill="#94a3b8"/>
+                    <path d="M 385 204 L 401 204 Q 405 204 405 210 L 385 210 Z" fill="#92400e"/>
+                  </g>
+                </g>
+                <path d="M 379 110 Q 391 107 403 110 L 401 155 L 381 155 Z" fill="#e2e8f0"/>
+                <circle cx="391" cy="91" r="12.5" fill="#ebb992"/>
+                <path d="M 378 88 C 378 73, 404 73, 404 89 C 398 80, 384 80, 378 88 Z" fill="#3f2312" stroke="#78350f" stroke-width="1"/>
+                <path d="M 381 94 Q 391 104 401 94 Q 396 98 391 98 Q 386 98 381 94 Z" fill="#3f2312"/>
+                <circle cx="397" cy="89" r="1.5" fill="#1e293b"/>
+                <g class="helper-carry-arm">
+                  <path d="M 393 118 L 408 136 L 416 156" fill="none" stroke="#ebb992" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M 393 118 L 401 127" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>
+                </g>
+              </g>
+            </g>
+          </g>
+
+          <!-- PROGRAMADOR (como en la foto: remera negra, barba, anteojos, jeans, zapatillas blancas y notebook agarrada de costado) -->
+          <g class="stage-coder">
+            <g class="facing-coder">
+              <g class="walker-body">
+                <g class="coder-legs">
+                  <g class="leg-back">
+                    <rect x="190" y="152" width="10" height="30" rx="5" fill="#1d4ed8"/>
+                    <g class="shin-back">
+                      <rect x="191" y="179" width="8.5" height="27" rx="4" fill="#1d4ed8"/>
+                      <path d="M 189 204 L 205 204 Q 209 204 209 210 L 189 210 Z" fill="#f8fafc"/>
+                    </g>
+                  </g>
+                  <g class="leg-front">
+                    <rect x="190" y="152" width="10" height="30" rx="5" fill="#2563eb"/>
+                    <g class="shin-front">
+                      <rect x="191" y="179" width="8.5" height="27" rx="4" fill="#2563eb"/>
+                      <path d="M 189 204 L 205 204 Q 209 204 209 210 L 189 210 Z" fill="#ffffff"/>
+                    </g>
+                  </g>
+                </g>
+
+                <g class="coder-upper">
+                  <!-- Remera negra -->
+                  <path d="M 183 110 Q 195 107 207 110 L 205 155 L 185 155 Z" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+                  <g class="coder-head">
+                    <circle cx="196" cy="90" r="13" fill="#f5c6a5"/>
+                    <path d="M 182 89 C 181 71, 207 69, 211 83 C 205 77, 191 78, 182 89 Z" fill="#7c2d12"/>
+                    <path d="M 185 93 Q 196 107 207 93 Q 202 98 196 98 Q 190 98 185 93 Z" fill="#7c2d12"/>
+                    <rect x="198" y="86" width="8.5" height="5.5" rx="1.5" fill="none" stroke="#18181b" stroke-width="1.8"/>
+                    <line x1="191" y1="88" x2="198" y2="88" stroke="#18181b" stroke-width="1.5"/>
+                  </g>
+
+                  <!-- Notebook agarrada vertical de costado bajo el brazo (como en la foto) -->
+                  <g class="coder-carried-laptop">
+                    <rect x="194" y="132" width="32" height="22" rx="3" fill="#94a3b8" stroke="#475569" stroke-width="1.2"/>
+                    <line x1="194" y1="134" x2="226" y2="134" stroke="#e2e8f0" stroke-width="1.5"/>
+                  </g>
+
+                  <!-- Brazo normal al caminar/llevar notebook -->
+                  <g class="coder-arm-group">
+                    <path class="coder-arm" d="M 195 118 L 204 128 L 210 135" fill="none" stroke="#f5c6a5" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M 195 118 L 200 123" fill="none" stroke="#18181b" stroke-width="8" stroke-linecap="round"/>
+                    <circle class="coder-hand" cx="210" cy="135" r="3.6" fill="#f5c6a5"/>
+                  </g>
+
+                  <!-- Brazos apoyados sobre el teclado al usar la PC (estilo GIF) -->
+                    <g class="coder-typing-arms">
+                    <path d="M 196 118 L 218 131 L 268 131" fill="none" stroke="#eab68f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle class="coder-hand-back" cx="270" cy="131" r="3.2" fill="#eab68f"/>
+                    <path d="M 195 119 L 214 132 L 264 132" fill="none" stroke="#f5c6a5" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M 195 119 L 203 125" fill="none" stroke="#18181b" stroke-width="8" stroke-linecap="round"/>
+                    <circle class="coder-hand-front" cx="266" cy="132" r="3.5" fill="#f5c6a5"/>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+
+          <!-- NOTEBOOK APOYADA ENCIMA DE LA MESA (afuera del programador) -->
+          <g class="stage-laptop">
+            <rect x="242" y="149.5" width="68" height="6" rx="2.5" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+            <g class="stage-laptop-lid">
+              <rect x="303" y="92" width="7" height="58" rx="3" fill="#94a3b8" stroke="#475569" stroke-width="1"/>
+              <rect class="mini-screen-glow" x="301" y="96" width="2.5" height="49" rx="1" fill="#e95420"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <button type="button" class="bday-replay-pill" data-bday-replay hidden>
+        🎂 {{ ui("Ver festejo otra vez") }}
+      </button>
+    </div>
+    <script src="{{ url_for('static', filename='js/birthday-egg.js') }}" defer></script>
+  {% endif %}
 {% endblock %}
+

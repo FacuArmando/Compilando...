@@ -1,12 +1,13 @@
 """Rutas iniciales disponibles en esta entrega."""
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, g, render_template, request
 from sqlalchemy import or_, select
 
 from compilando.extensions import db
 from compilando.modules.answers.models import EstadoRespuesta, Respuesta
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.models import Pregunta
+from compilando.modules.auth.services import edad_usuario_hoy, es_cumpleanos_hoy
 
 bp = Blueprint("system", __name__)
 
@@ -67,6 +68,8 @@ def index():
         categorias=categorias,
         busqueda=busqueda,
         categoria_seleccionada=categoria_id,
+        es_cumpleanos=es_cumpleanos_hoy(g.usuario_actual) if g.usuario_actual else False,
+        edad_cumpleanos=edad_usuario_hoy(g.usuario_actual) if g.usuario_actual else None,
     )
 
 

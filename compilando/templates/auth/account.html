@@ -17,6 +17,119 @@
         <p>{{ ui("Consultá tus datos y administrá la seguridad de tu cuenta.") }}</p>
       </header>
 
+        {% if es_cumpleanos %}
+        <div class="birthday-banner" data-birthday-banner role="status">
+          <div class="birthday-balloons" data-birthday-balloons aria-hidden="true"></div>
+          <div class="birthday-banner-content">
+            <span class="birthday-badge" aria-hidden="true">🎂</span>
+            <div>
+              <h2>{{ ui("¡Feliz cumpleaños, {name}!", name=usuario_actual.username) }}</h2>
+              <p>{{ ui("Todo el equipo de Compilando te desea un gran día lleno de código y buenas ideas.") }}</p>
+            </div>
+            <button type="button" class="birthday-replay" data-birthday-replay>{{ ui("Lanzar globos") }}</button>
+          </div>
+        </div>
+      {% endif %}
+
+      {% set stats = estadisticas|default({'preguntas_realizadas': 0, 'personas_respondieron': 0, 'respuestas_aceptadas': 0, 'respuestas_totales': 0, 'porcentaje_aceptadas': 0}) %}
+      <section class="account-stats" data-stats-url="{{ url_for('auth.account_stats') }}" aria-label="{{ tr('Estadísticas de actividad') }}">
+        <!-- Tarjeta 1: Curva animada de Preguntas realizadas -->
+        <article class="stat-card stat-card--cyan">
+          <span class="stat-label">{{ ui("Preguntas realizadas") }}</span>
+          <div class="stat-visual">
+            <svg class="stat-sparkline" viewBox="0 0 220 84" aria-hidden="true">
+              <defs>
+                <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#10b981"/>
+                  <stop offset="100%" stop-color="#06b6d4"/>
+                </linearGradient>
+                <linearGradient id="fill-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.28"/>
+                  <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <g class="stat-grid-lines">
+                <line x1="0" y1="20" x2="220" y2="20"/><line x1="0" y1="42" x2="220" y2="42"/><line x1="0" y1="64" x2="220" y2="64"/>
+                <line x1="44" y1="6" x2="44" y2="78"/><line x1="88" y1="6" x2="88" y2="78"/><line x1="132" y1="6" x2="132" y2="78"/><line x1="176" y1="6" x2="176" y2="78"/>
+              </g>
+              {% if stats.preguntas_realizadas > 0 %}
+                <path class="stat-area" d="M 8 64 C 36 62, 48 18, 76 24 C 102 30, 114 48, 140 44 C 166 40, 184 16, 212 14 L 212 78 L 8 78 Z" fill="url(#fill-cyan)"/>
+                <path class="stat-line" d="M 8 64 C 36 62, 48 18, 76 24 C 102 30, 114 48, 140 44 C 166 40, 184 16, 212 14" stroke="url(#grad-cyan)"/>
+              {% else %}
+                <path class="stat-line" d="M 8 66 L 212 66" stroke="url(#grad-cyan)"/>
+              {% endif %}
+            </svg>
+          </div>
+          <div class="stat-footer">
+            <span class="stat-sub">{{ ui("Comunidad") }}</span>
+            <strong class="stat-value"><span data-stat-key="preguntas_realizadas" data-count-target="{{ stats.preguntas_realizadas }}" data-prefix="+">+{{ stats.preguntas_realizadas }}</span></strong>
+          </div>
+          <span class="stat-corner" aria-hidden="true"></span>
+        </article>
+
+        <!-- Tarjeta 2: Curva animada de Personas que te respondieron -->
+        <article class="stat-card stat-card--violet">
+          <span class="stat-label">{{ ui("Personas que te respondieron") }}</span>
+          <div class="stat-visual">
+            <svg class="stat-sparkline" viewBox="0 0 220 84" aria-hidden="true">
+              <defs>
+                <linearGradient id="grad-violet" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#8b5cf6"/>
+                  <stop offset="100%" stop-color="#38bdf8"/>
+                </linearGradient>
+                <linearGradient id="fill-violet" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.28"/>
+                  <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <g class="stat-grid-lines">
+                <line x1="0" y1="20" x2="220" y2="20"/><line x1="0" y1="42" x2="220" y2="42"/><line x1="0" y1="64" x2="220" y2="64"/>
+                <line x1="44" y1="6" x2="44" y2="78"/><line x1="88" y1="6" x2="88" y2="78"/><line x1="132" y1="6" x2="132" y2="78"/><line x1="176" y1="6" x2="176" y2="78"/>
+              </g>
+              {% if stats.personas_respondieron > 0 %}
+                <path class="stat-area" d="M 8 52 C 34 50, 46 66, 72 56 C 98 46, 112 24, 140 28 C 166 32, 184 18, 212 12 L 212 78 L 8 78 Z" fill="url(#fill-violet)"/>
+                <path class="stat-line" d="M 8 52 C 34 50, 46 66, 72 56 C 98 46, 112 24, 140 28 C 166 32, 184 18, 212 12" stroke="url(#grad-violet)"/>
+              {% else %}
+                <path class="stat-line" d="M 8 66 L 212 66" stroke="url(#grad-violet)"/>
+              {% endif %}
+            </svg>
+          </div>
+          <div class="stat-footer">
+            <span class="stat-sub">{{ ui("Colaboradores") }}</span>
+            <strong class="stat-value"><span data-stat-key="personas_respondieron" data-count-target="{{ stats.personas_respondieron }}" data-prefix="+">+{{ stats.personas_respondieron }}</span></strong>
+          </div>
+          <span class="stat-corner" aria-hidden="true"></span>
+        </article>
+
+        <!-- Tarjeta 3: Anillo circular animado de Respuestas aceptadas -->
+        <article class="stat-card stat-card--ring">
+          <span class="stat-label">{{ ui("Respuestas aceptadas") }}</span>
+          <div class="stat-ring-wrap">
+            {% set circunferencia = 263.89 %}
+            {% set offset = circunferencia - (circunferencia * stats.porcentaje_aceptadas / 100) %}
+            <svg class="stat-ring" viewBox="0 0 104 104" aria-hidden="true">
+              <defs>
+                <linearGradient id="grad-ring" gradientUnits="userSpaceOnUse" x1="10" y1="10" x2="94" y2="94">
+                  <stop offset="0%" stop-color="#10b981"/>
+                  <stop offset="55%" stop-color="#06b6d4"/>
+                  <stop offset="100%" stop-color="#6366f1"/>
+                </linearGradient>
+              </defs>
+              <circle class="stat-ring-track" cx="52" cy="52" r="42"/>
+              <circle class="stat-ring-progress" data-ring-progress cx="52" cy="52" r="42"
+                      stroke="url(#grad-ring)"
+                      style="--ring-circ: {{ circunferencia }}; --ring-offset: {{ offset }};"/>
+            </svg>
+            <div class="stat-ring-center">
+              <strong data-stat-key="porcentaje_aceptadas" data-count-target="{{ stats.porcentaje_aceptadas }}" data-suffix="%">{{ stats.porcentaje_aceptadas }}%</strong>
+              <small data-stat-ratio>{{ stats.respuestas_aceptadas }}/{{ stats.respuestas_totales }}</small>
+            </div>
+          </div>
+          <span class="stat-corner" aria-hidden="true"></span>
+        </article>
+      </section>
+
+
       <section class="account-card" aria-labelledby="account-data-title">
         <header class="account-card-header">
           <span class="community-avatar account-avatar" aria-hidden="true">
@@ -40,8 +153,47 @@
             <dt>{{ ui("Correo electrónico") }}</dt>
             <dd>{{ usuario_actual.email }}</dd>
           </div>
+                    <div>
+            <dt>{{ ui("Descripción") }}</dt>
+            <dd>{{ usuario_actual.bio or ui("Todavía no agregaste una descripción.") }}</dd>
+          </div>
+          <div>
+            <dt>{{ ui("Cumpleaños") }}</dt>
+            <dd>
+              {% if usuario_actual.fecha_nacimiento %}
+                {{ ui_date(usuario_actual.fecha_nacimiento) }}
+              {% else %}
+                {{ ui("Sin fecha configurada.") }}
+              {% endif %}
+            </dd>
+          </div>
         </dl>
         <p class="account-note">{{ ui("Tu nombre de usuario aparece junto a tus preguntas y respuestas.") }}</p>
+      </section>
+
+        <section class="account-card account-settings" id="editar-perfil" aria-labelledby="profile-title">
+        <h2 id="profile-title">{{ ui("Sobre vos y cumpleaños") }}</h2>
+        <p class="account-note">{{ ui("Contale a la comunidad qué te interesa y celebrá tu día con nosotros.") }}</p>
+
+        {% if profile_error %}
+          <p class="form-error" id="profile-error" role="alert">{{ ui(profile_error) }}</p>
+        {% endif %}
+
+        <form class="account-settings-form" action="{{ url_for('auth.update_profile') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field">
+            <label for="profile-bio">{{ ui("Descripción personal") }}</label>
+            <textarea id="profile-bio" name="bio" rows="3" maxlength="280"
+                      {{ i18n_attr("placeholder", "Ej. Estudiante de Computación, fan de Python y los algoritmos...") }}>{{ bio_valor if bio_valor is defined else (usuario_actual.bio or '') }}</textarea>
+            <small>{{ ui("Máximo 280 caracteres.") }}</small>
+          </div>
+          <div class="field">
+            <label for="profile-birthday">{{ ui("Fecha de cumpleaños") }}</label>
+            <input id="profile-birthday" name="fecha_nacimiento" type="date"
+                   value="{{ fecha_nacimiento_valor if fecha_nacimiento_valor is defined else (usuario_actual.fecha_nacimiento.isoformat() if usuario_actual.fecha_nacimiento else '') }}">
+          </div>
+          <button type="submit">{{ ui("Guardar perfil") }}</button>
+        </form>
       </section>
 
 
@@ -168,4 +320,5 @@
   </div>
   <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/passwords.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/account.js') }}" defer></script>
 {% endblock %}

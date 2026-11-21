@@ -2,6 +2,7 @@
 
 import re
 import secrets
+from datetime import date
 from pathlib import Path
 from uuid import uuid4
 
@@ -285,3 +286,112 @@ def eliminar_avatar(usuario: Usuario) -> None:
         pass
 
 
+
+def actualizar_perfil(usuario: Usuario, bio: str, fecha_nacimiento_str: str) -> None:
+    """Validar y guardar la descripción personal y fecha de cumpleaños del usuario."""
+    bio_limpia = (bio or "").strip()
+    if len(bio_limpia) > 280:
+        raise ValueError("La descripción debe tener como máximo 280 caracteres.")
+
+    fecha_nac: date | None = None
+    fecha_str = (fecha_nacimiento_str or "").strip()
+    if fecha_str:
+        try:
+            fecha_nac = date.fromisoformat(fecha_str)
+        except ValueError:
+            raise ValueError("Ingresá una fecha de cumpleaños válida.") from None
+        hoy = date.today()
+        if fecha_nac > hoy or fecha_nac.year < 1900:
+            raise ValueError("Ingresá una fecha de cumpleaños válida.")
+
+    try:
+        resultado = db.session.execute(
+            update(Usuario)
+            .where(Usuario.id == usuario.id)
+            .values(bio=bio_limpia or None, fecha_nacimiento=fecha_nac)
+            .execution_options(synchronize_session=False)
+        )
+        if resultado.rowcount != 1:
+            raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def obtener_estadisticas_usuario(usuario_id: int) -> dict[str, int]:
+    """Calcular métricas de participación del usuario en la comunidad."""
+    from compilando.modules.answers.models import EstadoRespuesta, Respuesta
+    from compilando.modules.questions.models import Pregunta
+
+    preguntas_realizadas = (
+        db.session.scalar(
+            select(func.count(Pregunta.id)).where(Pregunta.usuario_id == usuario_id)
+        )
+        or 0
+    )
+
+    personas_respondieron = (
+        db.session.scalar(
+            select(func.count(func.distinct(Respuesta.usuario_id)))
+            .join(Pregunta, Respuesta.pregunta_id == Pregunta.id)
+            .where(
+                Pregunta.usuario_id == usuario_id,
+                Respuesta.es_ia.is_(False),
+                Respuesta.usuario_id.is_not(None),
+                Respuesta.usuario_id != usuario_id,
+            )
+        )
+        or 0
+    )
+
+    respuestas_totales = (
+        db.session.scalar(
+            select(func.count(Respuesta.id)).where(
+                Respuesta.usuario_id == usuario_id,
+                Respuesta.es_ia.is_(False),
+            )
+        )
+        or 0
+    )
+
+    respuestas_aceptadas = (
+        db.session.scalar(
+            select(func.count(Respuesta.id)).where(
+                Respuesta.usuario_id == usuario_id,
+                Respuesta.es_ia.is_(False),
+                Respuesta.estado == EstadoRespuesta.ACEPTADA.value,
+            )
+        )
+        or 0
+    )
+
+    porcentaje_aceptadas = (
+        round((respuestas_aceptadas / respuestas_totales) * 100)
+        if respuestas_totales > 0
+        else 0
+    )
+
+    return {
+        "preguntas_realizadas": preguntas_realizadas,
+        "personas_respondieron": personas_respondieron,
+        "respuestas_aceptadas": respuestas_aceptadas,
+        "respuestas_totales": respuestas_totales,
+        "porcentaje_aceptadas": porcentaje_aceptadas,
+    }
+def es_cumpleanos_hoy(usuario: Usuario) -> bool:
+    """Comprobar si hoy coincide con el día y mes de nacimiento del usuario."""
+    fecha_nac = getattr(usuario, "fecha_nacimiento", None)
+    if fecha_nac is None:
+        return False
+    hoy = date.today()
+    return fecha_nac.month == hoy.month and fecha_nac.day == hoy.day
+
+def edad_usuario_hoy(usuario: Usuario) -> int | None:
+    """Calcular los años que cumple el usuario según su fecha de nacimiento."""
+    fecha_nac = getattr(usuario, "fecha_nacimiento", None)
+    if fecha_nac is None:
+        return None
+    hoy = date.today()
+    edad = hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
+    return max(edad, 1)

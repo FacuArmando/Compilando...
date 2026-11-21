@@ -7,6 +7,7 @@ from flask import (
     current_app,
     flash,
     g,
+    jsonify,
     make_response,
     redirect,
     render_template,
@@ -20,12 +21,15 @@ from werkzeug.exceptions import HTTPException
 
 from compilando.modules.auth.security import DemasiadosIntentos, limitar_intentos
 from compilando.modules.auth.services import (
+    actualizar_perfil,
     autenticar_usuario,
     cambiar_avatar,
     cambiar_contrasena,
     cambiar_email,
     cambiar_username,
     eliminar_avatar,
+    es_cumpleanos_hoy,
+    obtener_estadisticas_usuario,
     registrar_usuario,
     ruta_avatar,
 )
@@ -84,11 +88,62 @@ def login():
     ), 401 if error else 200
 
 
+def _render_account(status: int = 200, **contexto):
+    usuario = g.usuario_actual
+    datos = {
+        "estadisticas": obtener_estadisticas_usuario(usuario.id),
+        "es_cumpleanos": es_cumpleanos_hoy(usuario),
+        **contexto,
+    }
+    return render_template("auth/account.html", **datos), status
+
+
 @bp.get("/account")
 @requiere_sesion
 def account():
     """Consultar únicamente los datos del usuario de la sesión validada."""
-    return render_template("auth/account.html")
+    return _render_account()
+
+@bp.get("/account/stats")
+@requiere_sesion
+def account_stats():
+    """Devolver estadísticas actualizadas en JSON para refrescar la vista en vivo."""
+    return jsonify(obtener_estadisticas_usuario(g.usuario_actual.id))
+
+
+
+@bp.post("/account/profile")
+@requiere_sesion
+def update_profile():
+    """Actualizar la descripción personal y el cumpleaños de la cuenta."""
+    bio = request.form.get("bio", "")
+    fecha_nacimiento = request.form.get("fecha_nacimiento", "")
+    try:
+        limitar_intentos("profile", usuario_id=g.usuario_actual.id)
+        actualizar_perfil(g.usuario_actual, bio, fecha_nacimiento)
+    except DemasiadosIntentos as exc:
+        body, _ = _render_account(
+            429,
+            bio_valor=bio[:280],
+            fecha_nacimiento_valor=fecha_nacimiento[:10],
+            profile_error=(
+                "Hubo demasiados intentos. Esperá unos minutos antes de volver a probar."
+            ),
+        )
+        response = make_response(body, 429)
+        response.headers["Retry-After"] = str(exc.segundos)
+        return response
+    except ValueError as exc:
+        return _render_account(
+            400,
+            bio_valor=bio[:280],
+            fecha_nacimiento_valor=fecha_nacimiento[:10],
+            profile_error=str(exc),
+        )
+
+    flash("Tu perfil se actualizó.", "success")
+    return redirect(url_for("auth.account"), code=303)
+
 
 @bp.post("/account/username")
 @requiere_sesion
@@ -294,6 +349,7 @@ def formulario_invalido(error):
         "auth.change_username": "username_error",
         "auth.change_avatar": "avatar_error",
         "auth.delete_avatar": "avatar_error",
+        "auth.update_profile": "profile_error",
     }
     if request.endpoint in errores_cuenta:
         if g.usuario_actual is None:

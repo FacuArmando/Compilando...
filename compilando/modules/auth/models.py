@@ -1,8 +1,8 @@
 """Cuentas, sesiones revocables y contadores de acceso. Fechas guardadas en UTC."""
 
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from compilando.extensions import db
@@ -18,6 +18,8 @@ class Usuario(db.Model):
     email: Mapped[str] = mapped_column(String(254), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     avatar_filename: Mapped[str | None] = mapped_column(String(120), nullable=True, deferred=True)
+    bio: Mapped[str | None] = mapped_column(String(280), nullable=True, deferred=True)
+    fecha_nacimiento: Mapped[date | None] = mapped_column(Date, nullable=True, deferred=True)
 
 
 
