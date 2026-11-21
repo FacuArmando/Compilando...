@@ -8,25 +8,7 @@
     <span class="community-feed-order">{{ icon('clock') }} Más recientes</span>
   </header>
 
-  <form class="community-search" action="{{ url_for('system.index') }}#preguntas" method="get" role="search" aria-label="Buscar preguntas">
-    <div class="community-search-field">
-      <label for="feed-search">Buscar preguntas</label>
-      <input id="feed-search" type="search" name="q" value="{{ busqueda }}" placeholder="Escribí una palabra o frase…">
-    </div>
-    <div class="community-search-field">
-      <label for="feed-category">Categoría</label>
-      <select id="feed-category" name="categoria">
-        <option value="">Todas las categorías</option>
-        {% for categoria in categorias %}
-          <option value="{{ categoria.id }}"{% if categoria.id == categoria_seleccionada %} selected{% endif %}>{{ categoria.nombre }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="community-search-actions">
-      <button type="submit">Buscar</button>
-      <a href="{{ url_for('system.index') }}#preguntas">Limpiar filtros</a>
-    </div>
-  </form>
+
 
   {% if preguntas %}
     <div class="community-questions">
