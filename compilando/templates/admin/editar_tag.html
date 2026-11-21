@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar etiqueta · COMPILANDO...{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block main_class %}community-main{% endblock %}
+
+{% block theme_control %}{% endblock %}
+
+{% block content %}
+{% include 'community/_header.html' %}
+
+<div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <section class="community-content account-content">
+        <header class="account-heading">
+            <h1>Editar etiqueta</h1>
+            <p>Modificá el nombre de esta etiqueta.</p>
+        </header>
+
+        <div class="account-card">
+            <form class="account-settings-form" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="admin-form-field">
+                    <label for="nombre">Nombre</label>
+                    <input type="text"
+                           id="nombre"
+                           name="nombre"
+                           maxlength="50"
+                           value="{{ tag.nombre }}"
+                           required>
+                </div>
+
+                <div class="admin-form-actions">
+                    <button type="submit">Guardar cambios</button>
+                    <a class="account-back" href="{{ url_for('admin.index') }}">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

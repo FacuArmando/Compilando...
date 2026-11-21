@@ -6,7 +6,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from functools import wraps
 
-from flask import current_app, g, redirect, request, session, url_for
+from flask import abort, current_app, g, redirect, request, session, url_for
 from sqlalchemy import delete, select, update
 
 from compilando.extensions import db
@@ -25,6 +25,22 @@ def requiere_sesion(vista):
 
     return vista_protegida
 
+def requiere_admin(vista):
+    """Permitir la vista únicamente a usuarios administradores."""
+
+    @wraps(vista)
+    def vista_protegida(*args, **kwargs):
+        usuario = g.get("usuario_actual")
+
+        if usuario is None:
+            return redirect(url_for("auth.login"), code=303)
+
+        if not usuario.es_admin:
+            abort(403)
+
+        return vista(*args, **kwargs)
+
+    return vista_protegida
 
 def ahora_utc() -> datetime:
     """Usar UTC sin zona en la base para mantener compatibilidad con SQLite."""

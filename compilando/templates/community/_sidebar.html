@@ -11,6 +11,17 @@
       {{ icon('user') }} Mi cuenta
     </a>
     {% endif %}
+    {% if usuario_actual and usuario_actual.es_admin %}
+      <a href="{{ url_for('admin.index') }}"
+         class="{% if request.endpoint == 'admin.index' %}is-current{% endif %}"
+         {% if request.endpoint == 'admin.index' %}aria-current="page"{% endif %}>
+      <span class="admin-nav-icon" aria-hidden="true">
+      {{ icon('settings') }}
+      <span class="admin-nav-crown">👑</span>
+    </span>
+      Administración
+      </a>
+    {% endif %}
   </nav>
   <div class="community-sidebar-note">
     <span class="community-note-icon">{{ icon('bulb') }}</span>

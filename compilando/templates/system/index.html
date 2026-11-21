@@ -19,7 +19,24 @@
         <p class="notice" role="status">{{ message }}</p>
       {% endfor %}
 
-      <section class="community-welcome" aria-labelledby="community-title">
+        {% if usuario_actual and usuario_actual.es_admin %}
+        <section class="admin-unlocked" aria-label="Cuenta administradora">
+          <span class="admin-crown-badge" aria-hidden="true">
+            <span class="admin-crown">👑</span>
+          </span>
+            <div class="admin-body">
+                <div class="admin-header">
+                    <h2>¡Modo administrador activo!</h2>
+                </div>
+                <p class="account-note">
+                    Tenés permisos especiales para moderar y gestionar la comunidad COMPILANDO...
+                </p>
+            </div>
+        </section>
+        {% endif %}
+
+
+        <section class="community-welcome" aria-labelledby="community-title">
         <h1 id="community-title">¿Qué querés aprender hoy?</h1>
         <p>Una duda, una idea, otra forma de resolverlo.<br>La próxima conversación empieza con vos.</p>
       </section>

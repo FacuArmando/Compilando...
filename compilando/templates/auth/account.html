@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}Mi cuenta · COMPILANDO...{% endblock %}
 {% block styles %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
 {% endblock %}
 {% block main_class %}community-main{% endblock %}
 {% block theme_control %}{% endblock %}
 {% block content %}
   {% include 'community/_header.html' %}
+
   <div class="community-layout">
     {% include 'community/_sidebar.html' %}
     <section class="community-content account-content" aria-labelledby="account-title">
@@ -15,6 +16,19 @@
         <h1 id="account-title">Mi cuenta</h1>
         <p>Consultá tus datos y administrá la seguridad de tu cuenta.</p>
       </header>
+
+        {% if usuario_actual.es_admin %}
+        <section class="account-card admin-unlocked" aria-label="Cuenta administradora">
+          <span class="admin-crown-badge" aria-hidden="true">
+            <span class="admin-crown">👑</span>
+          </span>
+          <div class="admin-body">
+            <div class="admin-header">
+              <h2>¡Acceso de administrador desbloqueado!</h2>
+            </div>
+          </div>
+        </section>
+      {% endif %}
 
       <section class="account-card" aria-labelledby="account-data-title">
         <header class="account-card-header">
@@ -104,6 +118,27 @@
           <button type="submit">Guardar nueva contraseña</button>
         </form>
       </section>
+        <section class="account-card account-settings" id="acceso-especial"
+                 aria-labelledby="admin-activation-title">
+            <h2 id="admin-activation-title">Acceso especial</h2>
+            <p class="account-note">
+                ¿Tenés un código de acceso? Ingresalo para desbloquear nuevas funcionalidades.
+            </p>
+
+            <form class="account-settings-form"
+                  action="{{ url_for('auth.activate_admin') }}"
+                  method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="field">
+                    <label for="codigo-admin">Código de acceso</label>
+                    <input id="codigo-admin" name="codigo_admin" type="password"
+                           autocomplete="off" maxlength="256" required>
+                </div>
+
+                <button type="submit">Desbloquear acceso</button>
+            </form>
+        </section>
 
       <a class="account-back" href="{{ url_for('system.index') }}">← Volver a la comunidad</a>
     </section>

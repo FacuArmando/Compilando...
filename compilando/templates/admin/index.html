@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Administración · COMPILANDO...{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block main_class %}community-main{% endblock %}
+
+{% block theme_control %}{% endblock %}
+
+{% block content %}
+{% include 'community/_header.html' %}
+
+<div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <section class="community-content account-content">
+        <header class="account-heading">
+            <h1>Administración</h1>
+            <p>Gestioná las categorías y etiquetas de la comunidad.</p>
+        </header>
+
+        <div class="account-card admin-section-card">
+            <h2>Gestión de categorías</h2>
+
+            {% if categorias %}
+            <div class="admin-category-list">
+                {% for categoria in categorias %}
+                <article class="admin-category-item">
+                    <div>
+                        <h3>{{ categoria.nombre }}</h3>
+                        <p>{{ categoria.descripcion or 'Sin descripción.' }}</p>
+                    </div>
+
+                    <a class="admin-action-edit"
+                       href="{{ url_for('admin.editar_categoria', categoria_id=categoria.id) }}">
+                        Editar
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="admin-empty-msg">Todavía no hay categorías registradas.</p>
+            {% endif %}
+        </div>
+
+        <div class="account-card admin-section-card">
+            <h2>Gestión de etiquetas</h2>
+
+            <div class="account-card admin-section-card">
+                <h2>Gestión de etiquetas</h2>
+
+                <div class="admin-minecraft-warning" role="note">
+                    <span class="admin-mc-icon" aria-hidden="true">🧱</span>
+                    <p>
+                        <strong>¡Se borrará para siempre! (¡Es muchísimo tiempo!)</strong>
+                        Si eliminás una etiqueta, desaparecerá del mundo para siempre y no hay botón de respawn.
+                    </p>
+                </div>
+
+            {% if tags %}
+            <div class="admin-tag-list">
+                {% for tag in tags %}
+                <article class="admin-tag-item">
+                    <span>{{ tag.nombre }}</span>
+
+                    <div class="admin-tag-actions">
+                        <a class="admin-action-edit"
+                           href="{{ url_for('admin.editar_tag', tag_id=tag.id) }}">
+                            Editar
+                        </a>
+
+                        <form method="POST"
+                              action="{{ url_for('admin.eliminar_tag', tag_id=tag.id) }}"
+                              data-confirm="¿Estás seguro de que querés eliminar esta etiqueta?">
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token() }}">
+
+                            <button class="admin-action-delete" type="submit">
+                                Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="admin-empty-msg">Todavía no hay etiquetas registradas.</p>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,19 +1,34 @@
 <!doctype html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}COMPILANDO...{% endblock %}</title>
     <meta name="theme-color" content="#f6f8fc">
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-      {% block styles %}{% endblock %}
+    {% block styles %}{% endblock %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-  </head>
-  <body>
-    {% block theme_control %}
-      <div class="theme-control-floating">{% include 'community/_theme_toggle.html' %}</div>
-    {% endblock %}
-    <main class="{% block main_class %}{% endblock %}">{% block content %}{% endblock %}</main>
+</head>
+<body>
+{% block theme_control %}
+<div class="theme-control-floating">{% include 'community/_theme_toggle.html' %}</div>
+{% endblock %}
+<main class="{% block main_class %}{% endblock %}">
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+    {% if mensajes %}
+    <div class="flash-messages" role="status">
+        {% for categoria, mensaje in mensajes %}
+        <div class="flash-message flash-{{ categoria or 'info' }}">
+            {{ mensaje }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+    <script src="{{ url_for('static', filename='js/flash.js') }}"></script>
   </body>
 </html>

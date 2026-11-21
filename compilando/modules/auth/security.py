@@ -33,6 +33,11 @@ def limitar_intentos(accion: str, email: str = "", *, usuario_id: int | None = N
             raise ValueError("El cambio de contraseña requiere un usuario autenticado.")
         limites[0] = (limites[0][0], "AUTH_PASSWORD_IP_LIMIT")
         limites.append((f"password:usuario:{usuario_id}", "AUTH_PASSWORD_ACCOUNT_LIMIT"))
+    elif accion == "admin":
+        if usuario_id is None:
+            raise ValueError("La activación administrativa requiere un usuario autenticado.")
+        limites[0] = (limites[0][0], "ADMIN_ACTIVATION_IP_LIMIT")
+        limites.append((f"admin:usuario:{usuario_id}", "ADMIN_ACTIVATION_ACCOUNT_LIMIT"))
     elif accion == "ai":
         if usuario_id is None:
             raise ValueError("Consultar IA requiere un usuario autenticado.")

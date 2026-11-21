@@ -51,6 +51,9 @@ def load_config() -> dict:
         "AUTH_REGISTER_IP_LIMIT": 10,
         "AUTH_PASSWORD_IP_LIMIT": 30,
         "AUTH_PASSWORD_ACCOUNT_LIMIT": 5,
+        "ADMIN_ACTIVATION_CODE": os.environ.get("ADMIN_ACTIVATION_CODE", ""),
+        "ADMIN_ACTIVATION_IP_LIMIT": 5,
+        "ADMIN_ACTIVATION_ACCOUNT_LIMIT": 5,
         "TRUSTED_HOSTS": [host.strip() for host in trusted_hosts.split(",") if host.strip()]
         or None,
     }

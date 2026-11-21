@@ -25,6 +25,8 @@ from compilando.modules.auth.services import (
     registrar_usuario,
 )
 from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion, requiere_sesion
+import hmac
+from compilando.extensions import db
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -84,6 +86,48 @@ def login():
 def account():
     """Consultar únicamente los datos del usuario de la sesión validada."""
     return render_template("auth/account.html")
+
+@bp.post("/account/activate-admin")
+@requiere_sesion
+def activate_admin():
+    """Activar permanentemente el rol administrador mediante el código secreto."""
+
+    usuario = g.usuario_actual
+
+    if usuario.es_admin:
+        flash("Tu cuenta ya tiene permisos de administrador.", "success")
+        return redirect(url_for("auth.account"), code=303)
+
+    codigo_configurado = current_app.config.get("ADMIN_ACTIVATION_CODE", "")
+
+    if not codigo_configurado:
+        flash("La activación de administradores no está disponible.", "error")
+        return redirect(url_for("auth.account"), code=303)
+
+    try:
+        limitar_intentos("admin", usuario_id=usuario.id)
+    except DemasiadosIntentos as exc:
+        response = make_response(
+            redirect(url_for("auth.account"), code=303)
+        )
+        response.headers["Retry-After"] = str(exc.segundos)
+        flash("Demasiados intentos. Esperá unos minutos antes de volver a probar.", "error")
+        return response
+
+    codigo_ingresado = request.form.get("codigo_admin", "")
+
+    if not hmac.compare_digest(
+            codigo_ingresado.encode("utf-8"),
+            codigo_configurado.encode("utf-8"),
+    ):
+        flash("El código ingresado no es válido.", "error")
+        return redirect(url_for("auth.account"), code=303)
+
+    usuario.es_admin = True
+    db.session.commit()
+
+    flash("¡Felicitaciones! Tu cuenta ahora es administradora.", "success")
+    return redirect(url_for("auth.account"), code=303)
 
 
 @bp.post("/account/password")
