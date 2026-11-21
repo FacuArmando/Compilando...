@@ -46,6 +46,20 @@ def app_login(tmp_path):
         db.engine.dispose()
 
 
+class TextoVisible(HTMLParser):
+    def __init__(self, html):
+        super().__init__()
+        self.partes = []
+        self.feed(html)
+
+    def handle_data(self, data):
+        self.partes.append(data)
+
+    @property
+    def texto(self):
+        return "".join(self.partes)
+
+
 class Formulario(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -322,7 +336,7 @@ def test_abrir_pregunta_desde_inicio_conserva_la_sesion(app_login, pregunta_con_
     for ruta in [f"/questions/{pregunta_con_sesion}", "/auth/account", "/"]:
         response = cliente.get(ruta)
         assert response.status_code == 200
-        assert "Sesión iniciada como <strong>Mati</strong>" in response.get_data(as_text=True)
+        assert "Sesión iniciada como Mati" in TextoVisible(response.get_data(as_text=True)).texto
         with cliente.session_transaction() as estado:
             assert estado["auth_token"] == token_original
 
@@ -344,7 +358,7 @@ def test_responder_desde_detalle_no_pide_otro_login(app_login, pregunta_con_sesi
     html = cliente.get(ruta).get_data(as_text=True)
     assert "Tu respuesta fue publicada correctamente." in html
     assert "Respuesta nueva sin volver a ingresar." in html
-    assert "Sesión iniciada como <strong>Mati</strong>" in html
+    assert "Sesión iniciada como Mati" in TextoVisible(html).texto
 
 
 @pytest.mark.parametrize("motivo", ["vencimiento", "inactividad"])
@@ -429,7 +443,7 @@ def test_login_lee_cuenta_crea_sesion_y_muestra_nombre(app_login):
         assert sesion.fecha_vencimiento > sesion.fecha_inicio
         assert len(db.session.scalars(select(Usuario)).all()) == 1
     inicio = cliente.get("/")
-    assert "Sesión iniciada como <strong>Mati</strong>" in inicio.get_data(as_text=True)
+    assert "Sesión iniciada como Mati" in TextoVisible(inicio.get_data(as_text=True)).texto
     assert "Cerrar sesión" in inicio.get_data(as_text=True)
     assert PASSWORD not in inicio.get_data(as_text=True)
     assert cliente.get("/auth/login").status_code == 302
@@ -939,7 +953,8 @@ def test_migracion_de_sesiones_se_puede_revertir_sin_borrar_usuarios(app_login):
         downgrade(revision="bb57280189ce")
         assert "sesiones" not in inspect(db.engine).get_table_names()
         assert "limites_autenticacion" not in inspect(db.engine).get_table_names()
-        assert db.session.scalar(select(Usuario)).email == EMAIL
+        email = db.session.execute(db.text("SELECT email FROM usuarios")).scalar_one()
+        assert email == EMAIL
         db.session.remove()
         upgrade()
         assert "sesiones" in inspect(db.engine).get_table_names()

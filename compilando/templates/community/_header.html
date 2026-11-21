@@ -1,63 +1,114 @@
 {% from 'system/_icons.html' import icon %}
+
 <header class="community-topbar">
     <div class="community-topbar-inner">
-        <a class="community-brand" href="{{ url_for('system.index') }}" aria-label="Compilando, inicio">
-            <span class="community-brand-mark">{{ icon('code') }}</span>
-            <span>COMPILANDO<span class="community-brand-dots">...</span></span>
+
+        <a class="community-brand"
+           href="{{ url_for('system.index') }}"
+           {{ i18n_attr("aria-label", "Compilando, inicio") }}>
+        <span class="community-brand-mark">{{ icon('code') }}</span>
+        <span>COMPILANDO<span class="community-brand-dots">...</span></span>
         </a>
 
-        <form class="community-navbar-search"
+        <form class="community-search"
               action="{{ url_for('system.index') }}#preguntas"
               method="get"
               role="search"
-              aria-label="Buscar preguntas">
-            <label class="sr-only" for="navbar-search-q">Buscar preguntas</label>
-            <input id="navbar-search-q"
-                   type="search"
-                   name="q"
-                   value="{{ busqueda|default('') }}"
-                   placeholder="Buscar preguntas…">
+              {{ i18n_attr("aria-label", "Buscar preguntas") }}>
 
-            <label class="sr-only" for="navbar-search-category">Categoría</label>
-            <select id="navbar-search-category" name="categoria" aria-label="Categoría">
-                <option value="">Todas las categorías</option>
-                {% for categoria in categorias|default([]) %}
-                <option value="{{ categoria.id }}"{% if categoria.id == categoria_seleccionada|default('') %} selected{% endif %}>
-                {{ categoria.nombre }}
-                </option>
-                {% endfor %}
-            </select>
+        <label class="sr-only" for="navbar-search-q">
+            {{ ui("Buscar preguntas") }}
+        </label>
 
-            <button type="submit">Buscar</button>
-            {% if busqueda|default('') or categoria_seleccionada|default('') %}
-            <a class="community-navbar-clear" href="{{ url_for('system.index') }}#preguntas">Limpiar</a>
-            {% endif %}
+        <input id="navbar-search-q"
+               type="search"
+               name="q"
+               value="{{ busqueda|default('') }}"
+               placeholder="{{ ui('Buscar preguntas…') }}">
+
+        <label class="sr-only" for="navbar-search-category">
+            {{ ui("Categoría") }}
+        </label>
+
+        <select id="navbar-search-category"
+                name="categoria"
+                aria-label="{{ ui('Categoría') }}">
+            <option value="">{{ ui("Todas las categorías") }}</option>
+
+            {% for categoria in categorias|default([]) %}
+            <option value="{{ categoria.id }}"
+                    {% if categoria.id == categoria_seleccionada|default('') %}selected{% endif %}>
+            {{ categoria.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">{{ ui("Buscar") }}</button>
+
+        {% if busqueda|default('') or categoria_seleccionada|default('') %}
+        <a class="community-navbar-clear"
+           href="{{ url_for('system.index') }}#preguntas">
+            {{ ui("Limpiar") }}
+        </a>
+        {% endif %}
         </form>
 
         <div class="community-topbar-actions">
-            {% include 'community/_theme_toggle.html' %}
+
+            <div class="appearance-controls">
+                {% include 'community/_language_toggle.html' %}
+                {% include 'community/_theme_toggle.html' %}
+            </div>
+
             {% if usuario_actual %}
             <details class="community-account">
-                <summary aria-label="Menú de {{ usuario_actual.username }}">
-                    <span class="community-avatar">{{ usuario_actual.username[0]|upper }}</span>
-                    <span class="community-account-name">{{ usuario_actual.username }}</span>
-                    {{ icon('chevron') }}
+                <summary {{ i18n_attr('aria-label', 'Menú de {name}', name=usuario_actual.username) }}>
+                <span class="community-avatar">
+              {% if usuario_actual.avatar_filename %}
+                <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}" alt="">
+              {% else %}
+                {{ usuario_actual.username[0]|upper }}
+              {% endif %}
+            </span>
+
+                <span class="community-account-name">
+              {{ usuario_actual.username }}
+            </span>
+
+                {{ icon('chevron') }}
                 </summary>
+
                 <div class="community-account-menu">
-                    <p class="account-session">Sesión iniciada como <strong>{{ usuario_actual.username }}</strong>.</p>
-                    <a href="{{ url_for('auth.account') }}">{{ icon('user') }} Mi cuenta</a>
+                    <p class="account-session">
+                        {{ ui("Sesión iniciada como") }} {{ usuario_actual.username }}.
+                    </p>
+
+                    <a href="{{ url_for('auth.account') }}">
+                        {{ icon('user') }} {{ ui("Mi cuenta") }}
+                    </a>
+
                     <form action="{{ url_for('auth.logout') }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit">{{ icon('logout') }} Cerrar sesión</button>
+                        <button type="submit">
+                            {{ icon('logout') }} {{ ui("Cerrar sesión") }}
+                        </button>
                     </form>
                 </div>
             </details>
+
             {% else %}
-            <nav class="community-auth-links" aria-label="Acceso a la comunidad">
-                <a href="{{ login_url|default(url_for('auth.login')) }}">Ingresar</a>
-                <a class="community-register" href="{{ url_for('auth.register') }}">Crear cuenta</a>
+            <nav class="community-auth-links"
+                 {{ i18n_attr("aria-label", "Acceso a la comunidad") }}>
+            <a href="{{ login_url|default(url_for('auth.login')) }}">
+                {{ ui("Ingresar") }}
+            </a>
+
+            <a class="community-register" href="{{ url_for('auth.register') }}">
+                {{ ui("Crear cuenta") }}
+            </a>
             </nav>
             {% endif %}
+
         </div>
     </div>
 </header>

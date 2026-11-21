@@ -3,16 +3,16 @@
 
   <section class="auth-panel" aria-labelledby="login-title">
     <div class="auth-content">
-      <a class="back-link" href="{{ url_for('system.index') }}">← Volver al inicio</a>
-      <h1 id="login-title">Iniciar sesión</h1>
-      <p class="auth-intro">Ingresá con tu cuenta y sumate a la conversación.</p>
+      <a class="back-link" href="{{ url_for('system.index') }}">{{ ui("← Volver al inicio") }}</a>
+      <h1 id="login-title">{{ ui("Iniciar sesión") }}</h1>
+      <p class="auth-intro">{{ ui("Ingresá con tu cuenta y sumate a la conversación.") }}</p>
 
       {% for message in get_flashed_messages(category_filter=['success']) %}
-        <p class="notice" role="status">{{ message }}</p>
+        <p class="notice" role="status">{{ ui(message) }}</p>
       {% endfor %}
 
       {% if error %}
-        <p class="form-error" role="alert">{{ error }}</p>
+        <p class="form-error" role="alert">{{ ui(error) }}</p>
       {% endif %}
 
       <form class="auth-form" action="{{ url_for('auth.login') }}" method="post">
@@ -20,25 +20,25 @@
         <input type="hidden" name="next" value="{{ next_url|default(url_for('system.index')) }}">
 
         <div class="field">
-          <label for="email">Correo electrónico</label>
+          <label for="email">{{ ui("Correo electrónico") }}</label>
           <input id="email" name="email" type="email" autocomplete="username"
-                 maxlength="254" placeholder="nombre@ejemplo.com"
+                 maxlength="254" {{ i18n_attr("placeholder", "nombre@ejemplo.com") }}
                  value="{{ email|default('') }}" required>
         </div>
 
         <div class="field">
-          <label for="password">Contraseña</label>
+          <label for="password">{{ ui("Contraseña") }}</label>
           <input id="password" name="password" type="password"
                  autocomplete="current-password" maxlength="128" required>
           <button class="password-toggle" type="button" data-password-toggle="password"
-                  aria-controls="password" aria-pressed="false" hidden>Mostrar contraseña</button>
+                  aria-controls="password" aria-pressed="false" hidden>{{ ui("Mostrar contraseña") }}</button>
         </div>
 
-        <button class="button button-primary" type="submit">Ingresar</button>
+        <button class="button button-primary" type="submit">{{ ui("Ingresar") }}</button>
       </form>
 
       <p class="auth-switch">
-        ¿No tenés cuenta? <a href="{{ url_for('auth.register', next=next_url if next_url|default('/') != '/' else none) }}">Registrate</a>
+        {{ ui("¿No tenés cuenta?") }} <a href="{{ url_for('auth.register', next=next_url if next_url|default('/') != '/' else none) }}">{{ ui("Registrate") }}</a>
       </p>
     </div>
   </section>

@@ -79,6 +79,13 @@ class Respuesta(db.Model):
         return self.usuario.username
 
     @property
+    def autor_avatar(self) -> str | None:
+        """Devuelve el nombre de archivo de la foto de perfil del autor si tiene."""
+        if self.es_ia or self.usuario is None:
+            return None
+        return self.usuario.avatar_filename
+
+    @property
     def es_autor_pregunta(self) -> bool:
         """Indica si quien respondió es el mismo usuario que publicó la pregunta."""
         return not self.es_ia and self.usuario_id == self.pregunta.usuario_id

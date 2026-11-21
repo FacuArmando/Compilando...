@@ -91,7 +91,7 @@
       cursor = snippets[index].code.length;
       setMode('java');
       filename.textContent = snippets[index].file;
-      status.textContent = 'Una idea en código';
+      window.I18n.setText(status, 'Una idea en código');
       paint(source, snippets[index].code, false);
     }
 
@@ -101,9 +101,9 @@
       lastPaint = 0;
       if (next === 'morph') {
         setMode('binary');
-        status.textContent = 'Cada carácter, una secuencia';
+        window.I18n.setText(status, 'Cada carácter, una secuencia');
       } else if (next === 'erase') {
-        status.textContent = 'Otra forma de pensarlo';
+        window.I18n.setText(status, 'Otra forma de pensarlo');
       } else if (next === 'typing') {
         index = (index + 1 + Math.floor(Math.random() * (snippets.length - 1))) % snippets.length;
         binary = toBinary(snippets[index].code);
@@ -111,7 +111,7 @@
         nextCharacter = 0;
         setMode('java');
         filename.textContent = snippets[index].file;
-        status.textContent = 'Una idea en código';
+        window.I18n.setText(status, 'Una idea en código');
       }
     }
 
@@ -133,7 +133,7 @@
         if (elapsed > 1600) {
           paint(source, binary, true);
           changePhase('binary');
-          status.textContent = 'La misma idea, en binario';
+          window.I18n.setText(status, 'La misma idea, en binario');
         } else if (elapsed - lastPaint > 65) {
           const progress = elapsed / 1600;
           const target = binary.split('\n');
@@ -176,7 +176,7 @@
     pause.addEventListener('click', () => {
       manuallyPaused = !manuallyPaused;
       pause.setAttribute('aria-pressed', String(manuallyPaused));
-      pause.setAttribute('aria-label', manuallyPaused ? 'Reanudar animación de código' : 'Pausar animación de código');
+      window.I18n.setAttribute(pause, 'aria-label', manuallyPaused ? 'Reanudar animación de código' : 'Pausar animación de código');
       sync();
     });
     reducedMotion.addEventListener('change', sync);

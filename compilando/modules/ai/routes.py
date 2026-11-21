@@ -15,6 +15,7 @@ from flask_wtf.csrf import CSRFError
 from sqlalchemy.exc import SQLAlchemyError
 
 from compilando.extensions import db
+from compilando.i18n import tr
 from compilando.modules.ai.providers import ErrorIA
 from compilando.modules.ai.services import consultar_ia
 from compilando.modules.auth.security import DemasiadosIntentos
@@ -28,7 +29,7 @@ def quiere_json():
 
 def error_consulta(mensaje, status, pregunta_id=None, segundos=None):
     if quiere_json():
-        response = jsonify(error=mensaje)
+        response = jsonify(error=tr(mensaje))
         response.status_code = status
     else:
         flash(mensaje, "error")
@@ -43,7 +44,8 @@ def csrf_vencido(error):
     if g.get("usuario_actual") is None:
         return pedir_login(request.view_args["pregunta_id"])
     if quiere_json():
-        return jsonify(error="El formulario venció. Recargá la página y volvé a intentarlo."), 400
+        message = tr("El formulario venció. Recargá la página y volvé a intentarlo.")
+        return jsonify(error=message), 400
     return error.get_response()
 
 
@@ -53,7 +55,7 @@ def pedir_login(pregunta_id):
         next=url_for("questions.view_question", pregunta_id=pregunta_id, _anchor="tu-respuesta"),
     )
     if quiere_json():
-        return jsonify(error="Iniciá sesión para consultar IA.", login_url=login_url), 401
+        return jsonify(error=tr("Iniciá sesión para consultar IA."), login_url=login_url), 401
     return redirect(login_url, code=303)
 
 

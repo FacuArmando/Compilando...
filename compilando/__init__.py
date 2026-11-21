@@ -13,6 +13,7 @@ from flask import Flask
 from compilando.commands import register_commands
 from compilando.config import load_config
 from compilando.extensions import csrf, db, migrate
+from compilando.i18n import init_app as init_i18n
 from compilando.modules import answers as answers
 from compilando.modules import categories as categories
 from compilando.modules import questions as questions
@@ -39,6 +40,7 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     db.init_app(app)
     migrate.init_app(app, db, directory=str(project_root / "migrations"))
+    init_i18n(app)
     init_security(app)
     init_auth(app)
     init_attachments(app)

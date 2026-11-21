@@ -8,6 +8,7 @@ from unittest.mock import Mock
 import pytest
 from flask_migrate import downgrade, upgrade
 from sqlalchemy import inspect, select
+from sqlalchemy.orm import make_transient_to_detached
 from werkzeug.datastructures import FileStorage
 
 from compilando import create_app
@@ -15,6 +16,7 @@ from compilando.extensions import db
 from compilando.modules.auth.services import registrar_usuario
 from compilando.modules.questions.models import AdjuntoPregunta, Pregunta
 from compilando.modules.questions.services import publicar_pregunta
+from compilando.modules.auth.models import Usuario
 
 
 @pytest.fixture
@@ -282,7 +284,33 @@ def test_migracion_nueva_conserva_preguntas_y_se_puede_revertir_en_base_temporal
     )
     with app.app_context():
         upgrade(revision="4b2e88c7eeba")
-        usuario = registrar_usuario("Mati", "mati@example.test", "clave-prueba")
+        db.session.execute(
+            db.text(
+                """
+                INSERT INTO usuarios (username, email, password_hash)
+                VALUES (:username, :email, :password_hash)
+                """
+            ),
+            {
+                "username": "Mati",
+                "email": "mati@example.test",
+                "password_hash": "hash-historico",
+            },
+        )
+
+        usuario_id = db.session.execute(
+            db.text("SELECT id FROM usuarios WHERE email = :email"),
+            {"email": "mati@example.test"},
+        ).scalar_one()
+
+        usuario = Usuario(
+            id=usuario_id,
+            username="Mati",
+            email="mati@example.test",
+            password_hash="hash-historico",
+        )
+
+        make_transient_to_detached(usuario)
         pregunta = publicar_pregunta("Pregunta previa", "Mi código", "Java", [], usuario)
         pregunta_id = pregunta.id
         db.session.remove()

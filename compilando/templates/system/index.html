@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% from 'system/_icons.html' import icon %}
-{% block title %}Comunidad · COMPILANDO...{% endblock %}
+{% block title %}{{ tr("Comunidad · COMPILANDO...") }}{% endblock %}
+{% block title_key %}Comunidad · COMPILANDO...{% endblock %}
 {% block styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
@@ -16,7 +17,7 @@
 
     <div class="community-content">
       {% for message in get_flashed_messages(category_filter=['success']) %}
-        <p class="notice" role="status">{{ message }}</p>
+        <p class="notice" role="status">{{ ui(message) }}</p>
       {% endfor %}
 
         {% if usuario_actual and usuario_actual.es_admin %}
@@ -26,19 +27,19 @@
           </span>
             <div class="admin-body">
                 <div class="admin-header">
-                    <h2>¡Modo administrador activo!</h2>
+                    <h2>{{ ui("¡Modo administrador activo!") }}</h2>
                 </div>
                 <p class="account-note">
-                    Tenés permisos especiales para moderar y gestionar la comunidad COMPILANDO...
+                    {{ ui("Tenés permisos especiales para moderar y gestionar la comunidad COMPILANDO...") }}
                 </p>
             </div>
         </section>
         {% endif %}
 
-
         <section class="community-welcome" aria-labelledby="community-title">
-        <h1 id="community-title">¿Qué querés aprender hoy?</h1>
-        <p>Una duda, una idea, otra forma de resolverlo.<br>La próxima conversación empieza con vos.</p>
+            <h1 id="community-title">{{ ui("¿Qué querés aprender hoy?") }}</h1>
+            <p>{{ ui("Una duda, una idea, otra forma de resolverlo.") }}<br>{{ ui("La próxima conversación empieza con vos.") }}</p>
+        </section>
       </section>
 
       {% if usuario_actual %}
@@ -46,35 +47,42 @@
                data-form-url="{{ url_for('questions.publish_question') }}"
                data-login-url="{{ url_for('auth.login', next=url_for('system.index', _anchor='question-composer')) }}">
         <summary>
-          <span class="community-avatar composer-avatar">{{ usuario_actual.username[0]|upper }}</span>
-          <span class="composer-prompt">¿Qué querés preguntar?</span>
+          <span class="community-avatar composer-avatar">
+            {% if usuario_actual.avatar_filename %}
+              <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}" alt="">
+            {% else %}
+              {{ usuario_actual.username[0]|upper }}
+            {% endif %}
+          </span>
+
+          <span class="composer-prompt">{{ ui("¿Qué querés preguntar?") }}</span>
           <span class="composer-open-icon">{{ icon('plus') }}</span>
         </summary>
         <div class="composer-expanded">
           <div class="composer-heading">
             <div>
-              <h2>Compartí tu pregunta</h2>
-              <p>Un poco de contexto ayuda a encontrar una buena respuesta.</p>
+              <h2>{{ ui("Compartí tu pregunta") }}</h2>
+              <p>{{ ui("Un poco de contexto ayuda a encontrar una buena respuesta.") }}</p>
             </div>
-            <button class="composer-close" type="button" aria-label="Cerrar el formulario" data-close-composer>×</button>
+            <button class="composer-close" type="button" {{ i18n_attr("aria-label", "Cerrar el formulario") }} data-close-composer>×</button>
           </div>
           <p class="composer-status" role="status" data-composer-status></p>
           <div data-question-form-host></div>
           <a class="composer-fallback" href="{{ url_for('questions.publish_question') }}" data-composer-fallback>
-            Abrir el formulario en su página
+            {{ ui("Abrir el formulario en su página") }}
           </a>
         </div>
       </details>
       {% else %}
       <a class="community-composer composer-guest"
          href="{{ url_for('auth.login', next=url_for('system.index', _anchor='question-composer')) }}"
-         aria-label="Iniciar sesión para publicar una pregunta">
+         {{ i18n_attr("aria-label", "Iniciar sesión para publicar una pregunta") }}>
         <span class="community-avatar composer-avatar" aria-hidden="true">{{ icon('user') }}</span>
-        <span class="composer-prompt">¿Qué querés preguntar?</span>
+        <span class="composer-prompt">{{ ui("¿Qué querés preguntar?") }}</span>
         <span class="composer-open-icon">{{ icon('plus') }}</span>
       </a>
       {% endif %}
-      <p class="composer-caption">Las preguntas se construyen entre todos. Compartí la tuya.</p>
+      <p class="composer-caption">{{ ui("Las preguntas se construyen entre todos. Compartí la tuya.") }}</p>
 
       {% include 'system/_question_feed.html' %}
     </div>

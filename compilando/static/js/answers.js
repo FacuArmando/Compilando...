@@ -16,10 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (enviando || !consulta.reportValidity()) return;
             enviando = true;
             boton.disabled = true;
-            boton.textContent = "Gemini está preparando la respuesta…";
+            window.I18n.setText(boton, "Gemini está preparando la respuesta…");
             consulta.setAttribute("aria-busy", "true");
             estado.replaceChildren();
-            estado.textContent = "Podés seguir escribiendo tu respuesta mientras esperás.";
+            window.I18n.setText(estado, "Podés seguir escribiendo tu respuesta mientras esperás.");
             let completada = false;
             const controlador = new AbortController();
             const esperaMaxima = setTimeout(() => controlador.abort(), 65000);
@@ -36,14 +36,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 const data = await response.json();
                 if (!response.ok) {
-                    estado.textContent = data.error || "No se pudo consultar IA. Volvé a intentarlo.";
+                    window.I18n.setText(estado, data.error || "No se pudo consultar IA. Volvé a intentarlo.");
                     if (data.login_url) {
                         const link = document.createElement("a");
                         const destino = new URL(data.login_url, window.location.origin);
                         if (destino.origin === window.location.origin) {
                             link.href = destino.href;
-                            link.textContent = " Iniciar sesión";
-                            estado.append(link);
+                            window.I18n.setText(link, "Iniciar sesión");
+                            estado.append(" ", link);
                         }
                     }
                     return;
@@ -58,21 +58,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     document.getElementById("answer-list").append(nuevaRespuesta);
                 }
                 document.querySelectorAll("[data-answer-count]").forEach((item) => {
-                    item.textContent = `${data.cantidad} ${data.cantidad === 1 ? "respuesta" : "respuestas"}`;
+                    window.I18n.setText(item, data.cantidad === 1 ? "{count} respuesta" : "{count} respuestas", { count: data.cantidad });
                 });
-                estado.textContent = "La respuesta de Gemini está publicada. ";
+                window.I18n.setText(estado, "La respuesta de Gemini está publicada.");
                 const enlace = document.createElement("a");
                 enlace.href = `#respuesta-${data.respuesta_id}`;
-                enlace.textContent = "Ver respuesta";
-                estado.append(enlace);
+                window.I18n.setText(enlace, "Ver respuesta");
+                estado.append(" ", enlace);
                 completada = true;
             } catch (error) {
-                estado.textContent = "No pudimos confirmar el resultado. Recargá la pregunta antes de volver a intentar; tu texto sigue en este formulario.";
+                window.I18n.setText(estado, "No pudimos confirmar el resultado. Recargá la pregunta antes de volver a intentar; tu texto sigue en este formulario.");
             } finally {
                 clearTimeout(esperaMaxima);
                 consulta.removeAttribute("aria-busy");
                 boton.disabled = completada;
-                boton.textContent = completada ? "Respuesta de IA publicada" : "Volver a intentar";
+                window.I18n.setText(boton, completada ? "Respuesta de IA publicada" : "Volver a intentar");
                 enviando = completada;
             }
         });

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Iniciar sesión · COMPILANDO...{% endblock %}
+{% block title %}{{ tr("Iniciar sesión · COMPILANDO...") }}{% endblock %}
+{% block title_key %}Iniciar sesión · COMPILANDO...{% endblock %}
 {% block main_class %}auth-main{% endblock %}
 {% block styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-code.css') }}">

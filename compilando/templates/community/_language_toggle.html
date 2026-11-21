@@ -1,0 +1,11 @@
+<button class="language-toggle" type="button" role="switch"
+        aria-checked="{{ 'true' if current_language == 'en' else 'false' }}"
+        aria-label="{{ tr('Idioma inglés') }}"
+        title="{{ tr('Cambiar idioma a castellano' if current_language == 'en' else 'Cambiar idioma a inglés') }}"
+        data-language-toggle hidden>
+  <span class="language-toggle-track" aria-hidden="true">
+    <span class="language-toggle-thumb"></span>
+    <span class="language-toggle-label" lang="es">ES</span>
+    <span class="language-toggle-label" lang="en">EN</span>
+  </span>
+</button>

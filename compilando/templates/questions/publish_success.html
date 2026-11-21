@@ -1,7 +1,8 @@
 
 {% extends "base.html" %}
 
-{% block title %}Pregunta publicada | COMPILANDO...{% endblock %}
+{% block title %}{{ tr("Pregunta publicada | COMPILANDO...") }}{% endblock %}
+{% block title_key %}Pregunta publicada | COMPILANDO...{% endblock %}
 
 {% block main_class %}publish-question{% endblock %}
 
@@ -13,19 +14,18 @@
     </div>
 
     <header class="question-header">
-        <span class="question-eyebrow">COMUNIDAD COMPILANDO</span>
+        <span class="question-eyebrow">{{ ui("COMUNIDAD COMPILANDO") }}</span>
 
-        <h1>¡Pregunta publicada!</h1>
+        <h1>{{ ui("¡Pregunta publicada!") }}</h1>
 
         <p>
-            Tu pregunta se publicó correctamente.
-            Ahora la comunidad puede leerla y responderla.
+            {{ ui("Tu pregunta se publicó correctamente. Ahora la comunidad puede leerla y responderla.") }}
         </p>
     </header>
 
     <div class="form-actions">
         <a href="{{ url_for('system.index') }}" class="success-button">
-            Volver al inicio
+            {{ ui("Volver al inicio") }}
         </a>
     </div>
 

@@ -2,9 +2,13 @@
 
 import re
 import secrets
+from pathlib import Path
+from uuid import uuid4
 
-from sqlalchemy import func, select, update
+from flask import current_app
+from sqlalchemy import func, insert, select, update
 from sqlalchemy.exc import IntegrityError
+from werkzeug.datastructures import FileStorage
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from compilando.extensions import db
@@ -132,14 +136,16 @@ def registrar_usuario(username: str, email: str, password: str) -> Usuario:
     if not 8 <= len(password) <= 18:
         raise ValueError("La contraseña debe tener entre 8 y 18 caracteres.")
 
-    usuario = Usuario(
-        username=username,
-        email=email,
-        password_hash=generate_password_hash(password),
-    )
-    db.session.add(usuario)
-
     try:
+        usuario = db.session.scalar(
+            insert(Usuario)
+            .values(
+                username=username,
+                email=email,
+                password_hash=generate_password_hash(password),
+            )
+            .returning(Usuario)
+        )
         db.session.commit()
     except IntegrityError:
         # La base garantiza la unicidad, incluso si dos registros llegan a la vez.
@@ -151,3 +157,129 @@ def registrar_usuario(username: str, email: str, password: str) -> Usuario:
         raise
 
     return usuario
+
+def cambiar_username(usuario: Usuario, nuevo: str) -> None:
+    """Cambiar el nombre de usuario de la cuenta autenticada."""
+    nuevo = nuevo.strip()
+    if not nuevo:
+        raise ValueError("Completá el nuevo nombre de usuario.")
+    if len(nuevo) > 80:
+        raise ValueError("El nombre de usuario debe tener como máximo 80 caracteres.")
+
+    actual = db.session.scalar(select(Usuario.username).where(Usuario.id == usuario.id))
+    if actual is None:
+        raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
+    if nuevo == actual:
+        raise ValueError("Elegí un nombre de usuario diferente del actual.")
+    if db.session.scalar(select(Usuario.id).where(Usuario.username == nuevo)) is not None:
+        raise ValueError("Ese nombre de usuario ya está registrado.")
+
+    try:
+        resultado = db.session.execute(
+            update(Usuario)
+            .where(Usuario.id == usuario.id, Usuario.username == actual)
+            .values(username=nuevo)
+            .execution_options(synchronize_session=False)
+        )
+        if resultado.rowcount != 1:
+            raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        if db.session.scalar(select(Usuario.id).where(Usuario.username == nuevo)) is not None:
+            raise ValueError("Ese nombre de usuario ya está registrado.") from None
+        raise
+    except Exception:
+        db.session.rollback()
+        raise
+
+def _extension_imagen_valida(contenido: bytes) -> str | None:
+    """Verificar la firma binaria real de la imagen sin confiar en el navegador."""
+    if contenido.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png"
+    if contenido.startswith(b"\xff\xd8\xff"):
+        return ".jpg"
+    if len(contenido) >= 12 and contenido[:4] == b"RIFF" and contenido[8:12] == b"WEBP":
+        return ".webp"
+    return None
+
+
+def ruta_avatar(nombre_archivo: str) -> Path:
+    carpeta = Path(current_app.config["AVATAR_UPLOAD_FOLDER"]).resolve()
+    ruta = (carpeta / nombre_archivo).resolve()
+    if ruta.parent != carpeta:
+        raise ValueError("Ruta de avatar inválida.")
+    return ruta
+
+
+def cambiar_avatar(usuario: Usuario, archivo: FileStorage | None) -> None:
+    """Validar y guardar la foto de perfil del usuario autenticado."""
+    if archivo is None or not archivo.filename:
+        raise ValueError("Seleccioná una imagen para tu foto de perfil.")
+
+    max_bytes = current_app.config["AVATAR_MAX_BYTES"]
+    contenido = archivo.stream.read(max_bytes + 1)
+    if not contenido:
+        raise ValueError("El archivo de imagen está vacío.")
+    if len(contenido) > max_bytes:
+        raise ValueError("La imagen no puede superar los 2 MB.")
+
+    extension = _extension_imagen_valida(contenido)
+    if extension is None:
+        raise ValueError("Elegí una imagen válida en formato JPG, PNG o WebP.")
+
+    nuevo_nombre = f"{uuid4().hex}{extension}"
+    destino = ruta_avatar(nuevo_nombre)
+    destino.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+
+    anterior = db.session.scalar(
+        select(Usuario.avatar_filename).where(Usuario.id == usuario.id)
+    )
+
+    try:
+        with destino.open("xb") as f:
+            destino.chmod(0o600)
+            f.write(contenido)
+
+        resultado = db.session.execute(
+            update(Usuario)
+            .where(Usuario.id == usuario.id)
+            .values(avatar_filename=nuevo_nombre)
+            .execution_options(synchronize_session=False)
+        )
+        if resultado.rowcount != 1:
+            destino.unlink(missing_ok=True)
+            raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
+        db.session.commit()
+    except Exception:
+        destino.unlink(missing_ok=True)
+        db.session.rollback()
+        raise
+
+    if anterior:
+        try:
+            ruta_avatar(anterior).unlink(missing_ok=True)
+        except ValueError:
+            pass
+
+
+def eliminar_avatar(usuario: Usuario) -> None:
+    """Quitar la foto de perfil actual y volver al avatar con inicial."""
+    anterior = db.session.scalar(
+        select(Usuario.avatar_filename).where(Usuario.id == usuario.id)
+    )
+    if not anterior:
+        raise ValueError("No tenés una foto de perfil cargada.")
+
+    db.session.execute(
+        update(Usuario)
+        .where(Usuario.id == usuario.id)
+        .values(avatar_filename=None)
+        .execution_options(synchronize_session=False)
+    )
+    db.session.commit()
+
+    try:
+        ruta_avatar(anterior).unlink(missing_ok=True)
+    except ValueError:
+        pass

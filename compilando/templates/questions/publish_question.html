@@ -1,7 +1,8 @@
 
 {% extends "base.html" %}
 
-{% block title %}Publicar pregunta | COMPILANDO...{% endblock %}
+{% block title %}{{ tr("Publicar pregunta | COMPILANDO...") }}{% endblock %}
+{% block title_key %}Publicar pregunta | COMPILANDO...{% endblock %}
 
 {% block styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">
@@ -16,7 +17,7 @@
     {% if mensajes %}
         {% for categoria, mensaje in mensajes %}
             <div class="flash-message flash-{{ categoria }}" role="alert">
-                {{ mensaje }}
+                {{ ui(mensaje) }}
             </div>
         {% endfor %}
     {% endif %}
@@ -25,13 +26,12 @@
 <section class="question-container">
 
     <header class="question-header">
-        <span class="question-eyebrow">COMUNIDAD COMPILANDO</span>
+        <span class="question-eyebrow">{{ ui("COMUNIDAD COMPILANDO") }}</span>
 
-        <h1>Compartí tu pregunta</h1>
+        <h1>{{ ui("Compartí tu pregunta") }}</h1>
 
         <p>
-            ¿Tenés una duda? Este es el lugar para compartirla
-            y encontrar respuestas de la comunidad.
+            {{ ui("¿Tenés una duda? Este es el lugar para compartirla y encontrar respuestas de la comunidad.") }}
         </p>
     </header>
 
@@ -44,34 +44,34 @@
         >
 
         <div class="form-field">
-            <label for="titulo">Título de la pregunta</label>
+            <label for="titulo">{{ ui("Título de la pregunta") }}</label>
 
             <input
                     type="text"
                     id="titulo"
                     name="titulo"
                     value="{{ titulo }}"
-                    placeholder="Ej. ¿Cómo funcionan los árboles AVL?"
+                    {{ i18n_attr("placeholder", "Ej. ¿Cómo funcionan los árboles AVL?") }}
                     class="{% if error_titulo %}input-error{% endif %}"
                     required
             >
 
             {% if error_titulo %}
                 <p class="field-error">
-                    Revisá el título: debe tener entre 10 y 150 caracteres.
+                    {{ ui("Revisá el título: debe tener entre 10 y 150 caracteres.") }}
                 </p>
             {% endif %}
 
-            <small>Entre 10 y 150 caracteres.</small>
+            <small>{{ ui("Entre 10 y 150 caracteres.") }}</small>
         </div>
 
         <div class="form-field">
-            <label for="cuerpo">Descripción detallada</label>
+            <label for="cuerpo">{{ ui("Descripción detallada") }}</label>
 
             <textarea
                     id="cuerpo"
                     name="cuerpo"
-                    placeholder="Contanos qué necesitás saber..."
+                    {{ i18n_attr("placeholder", "Contanos qué necesitás saber...") }}
                     class="{% if error_cuerpo %}input-error{% endif %}"
                     minlength="3"
                     maxlength="5000"
@@ -80,15 +80,15 @@
 
             {% if error_cuerpo %}
             <p class="field-error">
-                Revisá el cuerpo: debe tener entre 3 y 5000 caracteres.
+                {{ ui("Revisá el cuerpo: debe tener entre 3 y 5000 caracteres.") }}
             </p>
             {% endif %}
 
-            <small>Entre 3 y 5000 caracteres.</small>
+            <small>{{ ui("Entre 3 y 5000 caracteres.") }}</small>
         </div>
 
         <div class="form-field">
-            <label for="categoria">Categoría</label>
+            <label for="categoria">{{ ui("Categoría") }}</label>
 
             <input
                     type="text"
@@ -96,14 +96,14 @@
                     name="categoria"
                     list="categorias-disponibles"
                     value="{{ categoria_nombre }}"
-                    placeholder="Ej. Programación"
+                    {{ i18n_attr("placeholder", "Ej. Programación") }}
                     class="{% if error_categoria %}input-error{% endif %}"
                     required
             >
 
             {% if error_categoria %}
             <p class="field-error">
-                Ingresá una categoría para publicar tu pregunta.
+                {{ ui("Ingresá una categoría para publicar tu pregunta.") }}
             </p>
             {% endif %}
 
@@ -113,32 +113,32 @@
                     {% endfor %}
             </datalist>
 
-            <small>Seleccioná una categoría existente o proponé una nueva.</small>
+            <small>{{ ui("Seleccioná una categoría existente o proponé una nueva.") }}</small>
         </div>
 
         <div class="form-field">
-            <label for="tags">Etiquetas <span>(opcional)</span></label>
+            <label for="tags">{{ ui("Etiquetas") }} <span>{{ ui("(opcional)") }}</span></label>
 
             <input
                     type="text"
                     id="tags"
                     name="tags"
                     value="{{ tags_texto }}"
-                    placeholder="Java, Árboles, Recursividad..."
+                    {{ i18n_attr("placeholder", "Java, Árboles, Recursividad...") }}
             >
 
-            <small>Separá las etiquetas con comas.</small>
+            <small>{{ ui("Separá las etiquetas con comas.") }}</small>
         </div>
 
         {% include 'questions/_attachment_picker.html' %}
 
         <div class="form-actions">
             <button type="submit">
-                Publicar pregunta
+                {{ ui("Publicar pregunta") }}
                 <span aria-hidden="true">→</span>
             </button>
 
-            <p>Revisá tu pregunta antes de publicarla.</p>
+            <p>{{ ui("Revisá tu pregunta antes de publicarla.") }}</p>
         </div>
 
     </form>
