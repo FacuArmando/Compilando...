@@ -151,3 +151,39 @@ def registrar_usuario(username: str, email: str, password: str) -> Usuario:
         raise
 
     return usuario
+
+def cambiar_username(usuario: Usuario, nuevo: str) -> None:
+    """Cambiar el nombre de usuario de la cuenta autenticada."""
+    nuevo = nuevo.strip()
+    if not nuevo:
+        raise ValueError("Completá el nuevo nombre de usuario.")
+    if len(nuevo) > 80:
+        raise ValueError("El nombre de usuario debe tener como máximo 80 caracteres.")
+
+    actual = db.session.scalar(select(Usuario.username).where(Usuario.id == usuario.id))
+    if actual is None:
+        raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
+    if nuevo == actual:
+        raise ValueError("Elegí un nombre de usuario diferente del actual.")
+    if db.session.scalar(select(Usuario.id).where(Usuario.username == nuevo)) is not None:
+        raise ValueError("Ese nombre de usuario ya está registrado.")
+
+    try:
+        resultado = db.session.execute(
+            update(Usuario)
+            .where(Usuario.id == usuario.id, Usuario.username == actual)
+            .values(username=nuevo)
+            .execution_options(synchronize_session=False)
+        )
+        if resultado.rowcount != 1:
+            raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        if db.session.scalar(select(Usuario.id).where(Usuario.username == nuevo)) is not None:
+            raise ValueError("Ese nombre de usuario ya está registrado.") from None
+        raise
+    except Exception:
+        db.session.rollback()
+        raise
+

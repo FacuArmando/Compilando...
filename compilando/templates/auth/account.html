@@ -38,6 +38,28 @@
         <p class="account-note">{{ ui("Tu nombre de usuario aparece junto a tus preguntas y respuestas.") }}</p>
       </section>
 
+        <section class="account-card account-settings" id="cambiar-username" aria-labelledby="username-title">
+        <h2 id="username-title">{{ ui("Cambiar nombre de usuario") }}</h2>
+        <p class="account-note">{{ ui("Elegí cómo te van a ver los demás en la comunidad.") }}</p>
+
+        {% if username_error %}
+          <p class="form-error" id="username-error" role="alert">{{ ui(username_error) }}</p>
+        {% endif %}
+
+        <form class="account-settings-form account-username-form" action="{{ url_for('auth.change_username') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field">
+            <label for="username-nuevo">{{ ui("Nombre de usuario nuevo") }}</label>
+            <input id="username-nuevo" name="username_nuevo" type="text" autocomplete="username"
+                   maxlength="80" value="{{ username_nuevo|default(usuario_actual.username) }}"
+                   required{% if username_error %} autofocus{% endif %}>
+          </div>
+          <p class="account-note">{{ ui("Tu nombre de usuario se actualizará en todas tus preguntas y respuestas.") }}</p>
+          <button type="submit">{{ ui("Guardar nuevo nombre") }}</button>
+        </form>
+      </section>
+
+
       <section class="account-card account-settings" id="cambiar-correo" aria-labelledby="email-title">
         <h2 id="email-title">{{ ui("Cambiar correo electrónico") }}</h2>
         <p class="account-note">{{ ui("Elegí el correo que vas a usar para ingresar a tu cuenta.") }}</p>

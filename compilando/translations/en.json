@@ -275,5 +275,17 @@
   "Usá nombres de archivo de hasta {max} caracteres, sin caracteres invisibles o de control.": "Use file names up to {max} characters long, without invisible or control characters.",
   "{name}: elegí un archivo de estos tipos: {extensions}.": "{name}: choose one of these file types: {extensions}.",
   "{name}: supera el máximo de {size} por archivo.": "{name}: exceeds the maximum of {size} per file.",
-  "Los archivos juntos superan el límite total de {size}.": "The files exceed the combined size limit of {size}."
+  "Los archivos juntos superan el límite total de {size}.": "The files exceed the combined size limit of {size}.",
+  "Cambiar nombre de usuario": "Change username",
+  "Completá el nuevo nombre de usuario.": "Please enter the new username.",
+  "El nombre de usuario debe tener como máximo 80 caracteres.": "Username must be at most 80 characters.",
+  "Elegí cómo te van a ver los demás en la comunidad.": "Choose how others will see you in the community.",
+  "Elegí un nombre de usuario diferente del actual.": "Choose a username different from your current one.",
+  "Ese nombre de usuario ya está registrado.": "That username is already registered.",
+  "Guardar nuevo nombre": "Save new username",
+  "Hubo demasiados intentos. Esperá unos minutos antes de volver a probar.": "Too many attempts. Wait a few minutes before trying again.",
+  "Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.": "Your account details changed. Sign in again.",
+  "Nombre de usuario nuevo": "New username",
+  "Tu nombre de usuario se actualizará en todas tus preguntas y respuestas.": "Your username will be updated across all your questions and answers.",
+  "Tu nombre de usuario se actualizó.": "Your username has been updated."
 }

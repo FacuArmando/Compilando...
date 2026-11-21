@@ -22,6 +22,7 @@ from compilando.modules.auth.services import (
     autenticar_usuario,
     cambiar_contrasena,
     cambiar_email,
+    cambiar_username,
     registrar_usuario,
 )
 from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion, requiere_sesion
@@ -84,6 +85,35 @@ def login():
 def account():
     """Consultar únicamente los datos del usuario de la sesión validada."""
     return render_template("auth/account.html")
+
+@bp.post("/account/username")
+@requiere_sesion
+def change_username():
+    """Actualizar el nombre de usuario de la cuenta validada por la sesión."""
+    nuevo = request.form.get("username_nuevo", "")
+    try:
+        limitar_intentos("username", usuario_id=g.usuario_actual.id)
+        cambiar_username(g.usuario_actual, nuevo)
+    except DemasiadosIntentos as exc:
+        response = make_response(
+            render_template(
+                "auth/account.html",
+                username_nuevo=nuevo[:80],
+                username_error=(
+                    "Hubo demasiados intentos. Esperá unos minutos antes de volver a probar."
+                ),
+            ),
+            429,
+        )
+        response.headers["Retry-After"] = str(exc.segundos)
+        return response
+    except ValueError as exc:
+        return render_template(
+            "auth/account.html", username_nuevo=nuevo[:80], username_error=str(exc)
+        ), 400
+
+    flash("Tu nombre de usuario se actualizó.", "success")
+    return redirect(url_for("auth.account"), code=303)
 
 
 @bp.post("/account/password")
@@ -203,6 +233,7 @@ def formulario_invalido(error):
     errores_cuenta = {
         "auth.change_password": "password_error",
         "auth.change_email": "email_error",
+        "auth.change_username": "username_error",
     }
     if request.endpoint in errores_cuenta:
         if g.usuario_actual is None:
@@ -211,6 +242,8 @@ def formulario_invalido(error):
         datos = {campo_error: "El formulario venció o no es válido. Volvé a completar los campos."}
         if request.endpoint == "auth.change_email":
             datos["email_nuevo"] = request.form.get("email_nuevo", "")[:254]
+        if request.endpoint == "auth.change_username":
+            datos["username_nuevo"] = request.form.get("username_nuevo", "")[:80]
         return render_template("auth/account.html", **datos), 400
     template = "auth/register.html" if request.endpoint == "auth.register" else "auth/login.html"
     return render_template(
