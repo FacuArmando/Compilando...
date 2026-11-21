@@ -6,19 +6,36 @@ if (theater) {
   const terminal = theater.querySelector("[data-bday-terminal]");
   const bootScreen = theater.querySelector("[data-ubuntu-boot]");
   const loginScreen = theater.querySelector("[data-ubuntu-login]");
-  const shutdownScreen = theater.querySelector("[data-ubuntu-shutdown]");
   const passEl = theater.querySelector("[data-ubuntu-pass]");
   const desktopView = theater.querySelector("[data-ubuntu-desktop]");
   const powerMenu = theater.querySelector("[data-ubuntu-power]");
+  const shutdownScreen = theater.querySelector("[data-ubuntu-shutdown]");
   const partyBox = theater.querySelector("[data-bday-party]");
-  const shutdownBox = theater.querySelector("[data-bday-shutdown]");
   const balloonLayer = theater.querySelector("[data-dev-bday-balloons]");
   const replayBtn = theater.querySelector("[data-bday-replay]");
   const typedEl = theater.querySelector("[data-bday-typed]");
   const glowEl = theater.querySelector("[data-bday-glow]");
-  const codeLine = theater.dataset.bdayCode || 'printf("¡Feliz cumpleaños!\\n");';
-  const greetingText = theater.dataset.bdayGreeting || "¡FELIZ CUMPLEAÑOS!";
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+  function getActiveLang() {
+    const htmlLang = (document.documentElement.lang || "").toLowerCase();
+    const stored = (localStorage.getItem("lang") || localStorage.getItem("locale") || "").toLowerCase();
+    return htmlLang.startsWith("en") || stored.startsWith("en") ? "en" : "es";
+  }
+
+  function getCodeLine() {
+    if (getActiveLang() === "en") {
+      return theater.dataset.bdayCodeEn || theater.dataset.bdayCode || 'printf("Happy birthday!\\n");';
+    }
+    return theater.dataset.bdayCodeEs || theater.dataset.bdayCode || 'printf("¡Feliz cumpleaños!\\n");';
+  }
+
+  function getGreetingText() {
+    if (getActiveLang() === "en") {
+      return theater.dataset.bdayGreetingEn || theater.dataset.bdayGreeting || "HAPPY BIRTHDAY!";
+    }
+    return theater.dataset.bdayGreetingEs || theater.dataset.bdayGreeting || "¡FELIZ CUMPLEAÑOS!";
+  }
 
   const balloonShapes = [
     `<svg viewBox="0 0 64 78"><ellipse cx="32" cy="36" rx="22" ry="28" fill="#1e293b"/><ellipse cx="32" cy="41" rx="14" ry="19" fill="#f8fafc"/><circle cx="26" cy="24" r="3" fill="#fff"/><circle cx="38" cy="24" r="3" fill="#fff"/><circle cx="27" cy="24" r="1.5" fill="#0f172a"/><circle cx="37" cy="24" r="1.5" fill="#0f172a"/><polygon points="27,30 37,30 32,36" fill="#f59e0b"/><ellipse cx="22" cy="62" rx="7" ry="4" fill="#f59e0b"/><ellipse cx="42" cy="62" rx="7" ry="4" fill="#f59e0b"/><line x1="32" y1="64" x2="32" y2="78" stroke="#94a3b8" stroke-width="1.5"/></svg>`,
@@ -53,7 +70,7 @@ if (theater) {
   function lightUpGreetingInTerminal() {
     if (!glowEl) return;
     glowEl.replaceChildren();
-    [...greetingText].forEach((char, i) => {
+    [...getGreetingText()].forEach((char, i) => {
       const span = document.createElement("span");
       span.textContent = char === " " ? "\u00A0" : char;
       span.className = "glow-char";
@@ -94,36 +111,30 @@ if (theater) {
     }
     if (bootScreen) bootScreen.hidden = false;
     if (loginScreen) loginScreen.hidden = true;
-    if (shutdownScreen) shutdownScreen.hidden = true;
     if (desktopView) desktopView.hidden = true;
     if (powerMenu) powerMenu.hidden = true;
+    if (shutdownScreen) shutdownScreen.hidden = true;
     if (partyBox) partyBox.hidden = true;
-    if (shutdownBox) shutdownBox.hidden = true;
     if (replayBtn) replayBtn.hidden = true;
     if (typedEl) typedEl.textContent = "";
     if (passEl) passEl.textContent = "";
     glowEl?.replaceChildren();
     balloonLayer?.replaceChildren();
 
-    // Escena 1 (0.0s): 2 personas traen la mesa
     stage.className = "bday-floor phase-scene-1";
 
-    // Escena 2 (4.2s): 1 ayudante trae la silla ejecutiva con rueditas al extremo izquierdo de la mesa
     timers.push(setTimeout(() => {
       stage.className = "bday-floor phase-scene-2";
     }, 4200));
 
-    // Escena 3 (8.0s): Llega el programador con su notebook bajo el brazo, se sienta y la apoya
     timers.push(setTimeout(() => {
       stage.className = "bday-floor phase-scene-3";
     }, 8000));
 
-    // Escena 4A (11.4s): Con su mano abre la tapa de la PC y presiona el botón de encendido
     timers.push(setTimeout(() => {
       stage.className = "bday-floor phase-scene-4-open";
     }, 11400));
 
-    // Escena 4B (12.7s): Aparece el arranque de Ubuntu en el centro y apoya las manos sobre el teclado
     timers.push(setTimeout(() => {
       stage.className = "bday-floor phase-scene-4";
       if (terminal) {
@@ -135,21 +146,18 @@ if (theater) {
       if (desktopView) desktopView.hidden = true;
     }, 12700));
 
-    // Escena 4C (14.2s): Pantalla de Login Ubuntu y escribe contraseña
     timers.push(setTimeout(() => {
       if (bootScreen) bootScreen.hidden = true;
       if (loginScreen) loginScreen.hidden = false;
       typeText(passEl, "••••••••", 120);
     }, 14200));
 
-    // Escena 4D (15.8s): Entra al escritorio Ubuntu, abre Terminal y teclea printf(...) sobre el teclado
     timers.push(setTimeout(() => {
       if (loginScreen) loginScreen.hidden = true;
       if (desktopView) desktopView.hidden = false;
-      typeText(typedEl, codeLine, 80);
+      typeText(typedEl, getCodeLine(), 70);
     }, 15800));
 
-    // Escena 4E (18.6s): Enter -> frase iluminándose + pastel con edad + globos tech
     timers.push(setTimeout(() => {
       stage.className = "bday-floor phase-party";
       if (partyBox) partyBox.hidden = false;
@@ -157,38 +165,31 @@ if (theater) {
       spawnBalloons();
     }, 18600));
 
-    // Escena 4F (23.0s): Abre menú de apagado de Ubuntu (Power Off)
     timers.push(setTimeout(() => {
       if (powerMenu) powerMenu.hidden = false;
     }, 23000));
 
-    // Escena 4G (24.2s): Pantalla completa de apagado de Ubuntu
-     timers.push(setTimeout(() => {
-     stage.className = "bday-floor phase-shutdown";
-     if (powerMenu) powerMenu.hidden = true;
-     if (desktopView) desktopView.hidden = true;
-     if (shutdownScreen) shutdownScreen.hidden = false;
-     terminal?.classList.add("is-shutting-down");
+    timers.push(setTimeout(() => {
+      stage.className = "bday-floor phase-shutdown";
+      if (powerMenu) powerMenu.hidden = true;
+      if (desktopView) desktopView.hidden = true;
+      if (shutdownScreen) shutdownScreen.hidden = false;
+      terminal?.classList.add("is-shutting-down");
     }, 24200));
 
-
-    // Escena 5 (26.0s): Cierra su notebook con la mano, se levanta real, agarra notebook y se va (mesa y silla quedan)
     timers.push(setTimeout(() => {
       if (terminal) terminal.hidden = true;
       stage.className = "bday-floor phase-scene-5";
     }, 26000));
 
-    // Escena 6A (29.8s): Vuelve 1 ayudante, agarra la silla ejecutiva que seguía ahí y se la lleva
     timers.push(setTimeout(() => {
       stage.className = "bday-floor phase-scene-6a";
     }, 29800));
 
-    // Escena 6B (33.8s): Vuelven las 2 personas a los extremos de la mesa que seguía ahí y se la llevan
     timers.push(setTimeout(() => {
       stage.className = "bday-floor phase-scene-6b";
     }, 33800));
 
-    // Fin (38.0s)
     timers.push(setTimeout(() => {
       stage.hidden = true;
       balloonLayer?.replaceChildren();

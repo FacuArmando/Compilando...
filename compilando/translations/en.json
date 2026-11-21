@@ -337,6 +337,6 @@
   "Ver festejo otra vez": "Replay celebration",
   "print('¡Feliz cumpleaños!')": "print('Happy birthday!')",
   "¡FELIZ CUMPLEAÑOS, {name}!": "HAPPY BIRTHDAY, {name}!",
-  "printf(\"¡Feliz cumpleaños!\\n\");": "printf(\"Happy birthday!\\n\");",
+  "printf(\"¡Feliz cumpleaños, {name}!\\n\");": "printf(\"Happy birthday, {name}!\\n\");",
   "Hoy": "Today"
 }
