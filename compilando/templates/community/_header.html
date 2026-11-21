@@ -13,7 +13,13 @@
       {% if usuario_actual %}
       <details class="community-account">
         <summary {{ i18n_attr('aria-label', 'Menú de {name}', name=usuario_actual.username) }}>
-          <span class="community-avatar">{{ usuario_actual.username[0]|upper }}</span>
+            <span class="community-avatar">
+            {% if usuario_actual.avatar_filename %}
+              <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}" alt="">
+            {% else %}
+              {{ usuario_actual.username[0]|upper }}
+            {% endif %}
+            </span>
           <span class="community-account-name">{{ usuario_actual.username }}</span>
           {{ icon('chevron') }}
         </summary>

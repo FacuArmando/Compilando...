@@ -287,5 +287,20 @@
   "Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.": "Your account details changed. Sign in again.",
   "Nombre de usuario nuevo": "New username",
   "Tu nombre de usuario se actualizará en todas tus preguntas y respuestas.": "Your username will be updated across all your questions and answers.",
-  "Tu nombre de usuario se actualizó.": "Your username has been updated."
+  "Tu nombre de usuario se actualizó.": "Your username has been updated.",
+  "Foto de perfil": "Profile picture",
+  "Subí una imagen JPG, PNG o WebP de hasta 2 MB.": "Upload a JPG, PNG, or WebP image up to 2 MB.",
+  "Seleccionar imagen": "Select image",
+  "Guardar foto de perfil": "Save profile picture",
+  "Quitar foto actual": "Remove current picture",
+  "Seleccioná una imagen para tu foto de perfil.": "Select an image for your profile picture.",
+  "El archivo de imagen está vacío.": "The image file is empty.",
+  "La imagen no puede superar los 2 MB.": "The image cannot exceed 2 MB.",
+  "Elegí una imagen válida en formato JPG, PNG o WebP.": "Choose a valid JPG, PNG, or WebP image.",
+  "Tu foto de perfil se actualizó.": "Your profile picture has been updated.",
+  "No tenés una foto de perfil cargada.": "You don't have a profile picture uploaded.",
+  "Tu foto de perfil se eliminó.": "Your profile picture has been removed.",
+  "Elegí una imagen para identificar tu perfil en la comunidad.": "Choose an image to identify your profile in the community.",
+  "Formatos permitidos: JPG, PNG o WebP. Tamaño máximo: 5 MB.": "Allowed formats: JPG, PNG, or WebP. Maximum size: 5 MB.",
+  "La imagen no puede superar los 5 MB.": "The image cannot exceed 5 MB."
 }

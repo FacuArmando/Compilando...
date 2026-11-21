@@ -11,6 +11,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     session,
     url_for,
 )
@@ -20,10 +21,13 @@ from werkzeug.exceptions import HTTPException
 from compilando.modules.auth.security import DemasiadosIntentos, limitar_intentos
 from compilando.modules.auth.services import (
     autenticar_usuario,
+    cambiar_avatar,
     cambiar_contrasena,
     cambiar_email,
     cambiar_username,
+    eliminar_avatar,
     registrar_usuario,
+    ruta_avatar,
 )
 from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion, requiere_sesion
 
@@ -114,6 +118,60 @@ def change_username():
 
     flash("Tu nombre de usuario se actualizó.", "success")
     return redirect(url_for("auth.account"), code=303)
+
+
+@bp.get("/avatar/<nombre>")
+def avatar(nombre: str):
+    """Servir la foto de perfil almacenada de forma segura."""
+    if not nombre or "/" in nombre or "\\" in nombre or ".." in nombre:
+        return "", 404
+    try:
+        ruta = ruta_avatar(nombre)
+    except ValueError:
+        return "", 404
+    if not ruta.is_file():
+        return "", 404
+    return send_file(ruta, conditional=True, max_age=3600)
+
+
+@bp.post("/account/avatar")
+@requiere_sesion
+def change_avatar():
+    """Subir o actualizar la foto de perfil de la cuenta autenticada."""
+    try:
+        limitar_intentos("avatar", usuario_id=g.usuario_actual.id)
+        cambiar_avatar(g.usuario_actual, request.files.get("avatar"))
+    except DemasiadosIntentos as exc:
+        response = make_response(
+            render_template(
+                "auth/account.html",
+                avatar_error=(
+                    "Hubo demasiados intentos. Esperá unos minutos antes de volver a probar."
+                ),
+            ),
+            429,
+        )
+        response.headers["Retry-After"] = str(exc.segundos)
+        return response
+    except ValueError as exc:
+        return render_template("auth/account.html", avatar_error=str(exc)), 400
+
+    flash("Tu foto de perfil se actualizó.", "success")
+    return redirect(url_for("auth.account"), code=303)
+
+
+@bp.post("/account/avatar/delete")
+@requiere_sesion
+def delete_avatar():
+    """Eliminar la foto de perfil actual del usuario."""
+    try:
+        eliminar_avatar(g.usuario_actual)
+    except ValueError as exc:
+        return render_template("auth/account.html", avatar_error=str(exc)), 400
+
+    flash("Tu foto de perfil se eliminó.", "success")
+    return redirect(url_for("auth.account"), code=303)
+
 
 
 @bp.post("/account/password")
@@ -234,6 +292,8 @@ def formulario_invalido(error):
         "auth.change_password": "password_error",
         "auth.change_email": "email_error",
         "auth.change_username": "username_error",
+        "auth.change_avatar": "avatar_error",
+        "auth.delete_avatar": "avatar_error",
     }
     if request.endpoint in errores_cuenta:
         if g.usuario_actual is None:
@@ -266,3 +326,16 @@ def formulario_con_limite(template, error, **campos):
     )
     response.headers["Retry-After"] = str(error.segundos)
     return response
+
+@bp.errorhandler(413)
+def archivo_demasiado_grande(error):
+    """Mostrar mensaje claro si la foto supera el límite máximo permitido."""
+    if request.endpoint == "auth.change_avatar":
+        if g.usuario_actual is None:
+            return redirect(url_for("auth.login"), code=303)
+        return render_template(
+            "auth/account.html",
+            avatar_error="La imagen no puede superar los 5 MB.",
+        ), 413
+    return error
+

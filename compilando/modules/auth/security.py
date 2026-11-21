@@ -113,7 +113,11 @@ def init_app(app) -> None:
     def proteger_solicitud():
         if production and not request.is_secure:
             abort(400, description="Este servicio requiere HTTPS.")
-        if request.blueprint in {"auth", "ai"}:
+        if request.endpoint == "auth.change_avatar":
+            request.max_content_length = app.config["AVATAR_MAX_BYTES"] + 64 * 1024
+            request.max_form_memory_size = 64 * 1024
+            request.max_form_parts = 4
+        elif request.blueprint in {"auth", "ai"}:
             request.max_content_length = 16 * 1024
             request.max_form_memory_size = 16 * 1024
             request.max_form_parts = 8

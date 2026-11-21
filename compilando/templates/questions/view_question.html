@@ -64,7 +64,15 @@
           {% endif %}
           <footer class="question-detail-footer">
             <div class="question-person">
-              <span class="community-avatar" aria-hidden="true">{{ pregunta.usuario.username[0]|upper }}</span>
+                <span class="community-avatar" aria-hidden="true">
+                {% if pregunta.usuario.avatar_filename %}
+                  <img src="{{ url_for('auth.avatar', nombre=pregunta.usuario.avatar_filename) }}" alt="">
+                {% else %}
+                  {{ pregunta.usuario.username[0]|upper }}
+                {% endif %}
+              </span>
+
+              
               <div><small>{{ ui("Pregunta de") }}</small><strong>{{ pregunta.usuario.username }}</strong></div>
             </div>
             <a class="question-reply-link" href="{{ '#tu-respuesta' if usuario_actual else login_url }}">{{ icon('reply') }} {{ ui("Responder") }}</a>

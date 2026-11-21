@@ -30,7 +30,14 @@
                data-form-url="{{ url_for('questions.publish_question') }}"
                data-login-url="{{ url_for('auth.login', next=url_for('system.index', _anchor='question-composer')) }}">
         <summary>
-          <span class="community-avatar composer-avatar">{{ usuario_actual.username[0]|upper }}</span>
+          <span class="community-avatar composer-avatar">
+            {% if usuario_actual.avatar_filename %}
+              <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}" alt="">
+            {% else %}
+              {{ usuario_actual.username[0]|upper }}
+            {% endif %}
+          </span>
+
           <span class="composer-prompt">{{ ui("¿Qué querés preguntar?") }}</span>
           <span class="composer-open-icon">{{ icon('plus') }}</span>
         </summary>

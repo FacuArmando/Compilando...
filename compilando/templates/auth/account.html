@@ -19,7 +19,13 @@
 
       <section class="account-card" aria-labelledby="account-data-title">
         <header class="account-card-header">
-          <span class="community-avatar account-avatar" aria-hidden="true">{{ usuario_actual.username[0]|upper }}</span>
+          <span class="community-avatar account-avatar" aria-hidden="true">
+         {% if usuario_actual.avatar_filename %}
+           <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}" alt="">
+         {% else %}
+           {{ usuario_actual.username[0]|upper }}
+         {% endif %}
+         </span> 
           <div>
             <h2 id="account-data-title">{{ ui("Tus datos personales") }}</h2>
             <p>{{ ui("Tu perfil en la comunidad de Compilando.") }}</p>
@@ -37,6 +43,35 @@
         </dl>
         <p class="account-note">{{ ui("Tu nombre de usuario aparece junto a tus preguntas y respuestas.") }}</p>
       </section>
+
+
+      <section class="account-card account-settings" id="cambiar-avatar" aria-labelledby="avatar-title">
+        <h2 id="avatar-title">{{ ui("Foto de perfil") }}</h2>
+        <p class="account-note">{{ ui("Elegí una imagen para identificar tu perfil en la comunidad.") }}</p>
+
+        {% if avatar_error %}
+          <p class="form-error" id="avatar-error" role="alert">{{ ui(avatar_error) }}</p>
+        {% endif %}
+
+        <form class="account-settings-form" action="{{ url_for('auth.change_avatar') }}" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field">
+            <label for="avatar-file">{{ ui("Seleccionar imagen") }}</label>
+            <input id="avatar-file" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-rules" required>
+            <small id="avatar-rules">{{ ui("Formatos permitidos: JPG, PNG o WebP. Tamaño máximo: 5 MB.") }}</small>
+          </div>
+          <button type="submit">{{ ui("Guardar foto de perfil") }}</button>
+        </form>
+
+        {% if usuario_actual.avatar_filename %}
+          <form class="account-settings-form" action="{{ url_for('auth.delete_avatar') }}" method="post" style="margin-top: 0.75rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">{{ ui("Quitar foto actual") }}</button>
+          </form>
+        {% endif %}
+      </section>
+
+
 
         <section class="account-card account-settings" id="cambiar-username" aria-labelledby="username-title">
         <h2 id="username-title">{{ ui("Cambiar nombre de usuario") }}</h2>

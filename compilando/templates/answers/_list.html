@@ -4,7 +4,14 @@
                 <div id="contenido-respuesta-{{ respuesta.id }}">
                     <header class="answer-person-row">
                         <div class="question-person">
-                            <span class="community-avatar answer-avatar" aria-hidden="true">{{ respuesta.autor_nombre[0]|upper }}</span>
+                            <span class="community-avatar answer-avatar" aria-hidden="true">
+                              {% if respuesta.autor_avatar %}
+                                <img src="{{ url_for('auth.avatar', nombre=respuesta.autor_avatar) }}" alt="">
+                              {% else %}
+                                {{ respuesta.autor_nombre[0]|upper }}
+                              {% endif %}
+                            </span>
+
                             <div>
                                 <strong>{{ respuesta.autor_nombre }}</strong>
                                 <small>{{ ui_date(respuesta.fecha, detailed=true) }}</small>

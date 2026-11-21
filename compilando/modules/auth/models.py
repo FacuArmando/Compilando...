@@ -17,6 +17,8 @@ class Usuario(db.Model):
     username: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(254), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    avatar_filename: Mapped[str | None] = mapped_column(String(120), nullable=True, deferred=True)
+
 
 
 class Sesion(db.Model):
