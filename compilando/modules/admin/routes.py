@@ -12,13 +12,9 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 @bp.get("/")
 @requiere_admin
 def index():
-    categorias = db.session.scalars(
-        db.select(Categoria).order_by(Categoria.nombre)
-    ).all()
+    categorias = db.session.scalars(db.select(Categoria).order_by(Categoria.nombre)).all()
 
-    tags = db.session.scalars(
-        db.select(Tag).order_by(Tag.nombre)
-    ).all()
+    tags = db.session.scalars(db.select(Tag).order_by(Tag.nombre)).all()
 
     return render_template(
         "admin/index.html",
@@ -81,6 +77,7 @@ def editar_categoria(categoria_id):
         categoria=categoria,
     )
 
+
 @bp.route("/etiquetas/<int:tag_id>/editar", methods=["GET", "POST"])
 @requiere_admin
 def editar_tag(tag_id):
@@ -107,9 +104,7 @@ def editar_tag(tag_id):
                 tag=tag,
             )
 
-        tags_existentes = db.session.scalars(
-            db.select(Tag).where(Tag.id != tag.id)
-        ).all()
+        tags_existentes = db.session.scalars(db.select(Tag).where(Tag.id != tag.id)).all()
 
         nombre_normalizado = normalizar_nombre(nombre)
 
@@ -132,6 +127,7 @@ def editar_tag(tag_id):
         "admin/editar_tag.html",
         tag=tag,
     )
+
 
 @bp.post("/etiquetas/<int:tag_id>/eliminar")
 @requiere_admin

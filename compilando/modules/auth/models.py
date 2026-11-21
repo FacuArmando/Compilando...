@@ -17,11 +17,7 @@ class Usuario(db.Model):
     username: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(254), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
-    es_admin: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=False
-    )
+    es_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class Sesion(db.Model):

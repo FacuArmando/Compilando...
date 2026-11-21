@@ -1,5 +1,6 @@
 """Pantallas de acceso, registro y consulta de la cuenta."""
 
+import hmac
 from urllib.parse import urlsplit
 
 from flask import (
@@ -17,6 +18,7 @@ from flask import (
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import HTTPException
 
+from compilando.extensions import db
 from compilando.modules.auth.security import DemasiadosIntentos, limitar_intentos
 from compilando.modules.auth.services import (
     autenticar_usuario,
@@ -25,8 +27,6 @@ from compilando.modules.auth.services import (
     registrar_usuario,
 )
 from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion, requiere_sesion
-import hmac
-from compilando.extensions import db
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -87,6 +87,7 @@ def account():
     """Consultar únicamente los datos del usuario de la sesión validada."""
     return render_template("auth/account.html")
 
+
 @bp.post("/account/activate-admin")
 @requiere_sesion
 def activate_admin():
@@ -107,9 +108,7 @@ def activate_admin():
     try:
         limitar_intentos("admin", usuario_id=usuario.id)
     except DemasiadosIntentos as exc:
-        response = make_response(
-            redirect(url_for("auth.account"), code=303)
-        )
+        response = make_response(redirect(url_for("auth.account"), code=303))
         response.headers["Retry-After"] = str(exc.segundos)
         flash("Demasiados intentos. Esperá unos minutos antes de volver a probar.", "error")
         return response
@@ -117,8 +116,8 @@ def activate_admin():
     codigo_ingresado = request.form.get("codigo_admin", "")
 
     if not hmac.compare_digest(
-            codigo_ingresado.encode("utf-8"),
-            codigo_configurado.encode("utf-8"),
+        codigo_ingresado.encode("utf-8"),
+        codigo_configurado.encode("utf-8"),
     ):
         flash("El código ingresado no es válido.", "error")
         return redirect(url_for("auth.account"), code=303)

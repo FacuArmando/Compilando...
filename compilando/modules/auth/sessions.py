@@ -25,6 +25,7 @@ def requiere_sesion(vista):
 
     return vista_protegida
 
+
 def requiere_admin(vista):
     """Permitir la vista únicamente a usuarios administradores."""
 
@@ -41,6 +42,7 @@ def requiere_admin(vista):
         return vista(*args, **kwargs)
 
     return vista_protegida
+
 
 def ahora_utc() -> datetime:
     """Usar UTC sin zona en la base para mantener compatibilidad con SQLite."""

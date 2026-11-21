@@ -17,6 +17,7 @@ from compilando.modules import answers as answers
 from compilando.modules import categories as categories
 from compilando.modules import questions as questions
 from compilando.modules import tags as tags
+from compilando.modules.admin.routes import bp as admin_bp
 from compilando.modules.ai.routes import bp as ai_bp
 from compilando.modules.answers.routes import bp as answers_bp
 from compilando.modules.auth.routes import bp as auth_bp
@@ -25,7 +26,6 @@ from compilando.modules.auth.sessions import init_app as init_auth
 from compilando.modules.questions.attachments import init_app as init_attachments
 from compilando.modules.questions.routes import bp as questions_bp
 from compilando.modules.system.routes import bp as system_bp
-from compilando.modules.admin.routes import bp as admin_bp
 
 
 def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
