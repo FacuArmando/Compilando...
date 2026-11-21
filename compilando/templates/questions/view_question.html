@@ -1,13 +1,10 @@
-{% extends 'base.html' %}
+{% extends 'community/base.html' %}
 {% from 'system/_icons.html' import icon %}
 {% block title %}{{ pregunta.titulo }} · COMPILANDO...{% endblock %}
-{% block styles %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% block community_styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/answers.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/attachments.css') }}">
 {% endblock %}
-{% block main_class %}community-main{% endblock %}
-{% block theme_control %}{% endblock %}
 {% block content %}
   {% set login_url = url_for('auth.login', next=url_for('questions.view_question', pregunta_id=pregunta.id, _anchor='tu-respuesta')) %}
   {% include 'community/_header.html' %}

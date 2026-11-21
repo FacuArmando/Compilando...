@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block body_attributes %}id="page-top"{% endblock %}
+{% block body_class %}community-page{% endblock %}
+{% block main_class %}community-main{% endblock %}
+{% block theme_control %}{% endblock %}
+{% block styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+  {% block community_styles %}{% endblock %}
+{% endblock %}
+{% block footer %}
+  {% include 'community/_footer.html' %}
+  <script src="{{ url_for('static', filename='js/footer.js') }}" defer></script>
+{% endblock %}

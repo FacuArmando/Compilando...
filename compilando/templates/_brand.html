@@ -1,0 +1,25 @@
+{% macro brand(identifier) -%}
+{# El archivo original se conserva: el filtro separa el grafito al renderizar.
+   La mascota mantiene su color y el nombre toma el contraste del tema. #}
+<svg class="brand-lockup" viewBox="80 160 2020 400" width="2020" height="400"
+     xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="{{ identifier }}-brand-alpha" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  .85 2.86 .29 0 -.8"/>
+    </filter>
+    <filter id="{{ identifier }}-brand-text" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  .85 2.86 .29 0 -.8" result="letters"/>
+      <feFlood flood-color="currentColor"/>
+      <feComposite operator="in" in2="letters"/>
+    </filter>
+    <clipPath id="{{ identifier }}-brand-mascot"><rect x="0" y="0" width="710" height="724"/></clipPath>
+    <clipPath id="{{ identifier }}-brand-wordmark"><rect x="710" y="0" width="1462" height="724"/></clipPath>
+  </defs>
+  <image href="{{ url_for('static', filename='img/brand/compilando-original.png') }}"
+         width="2172" height="724" filter="url(#{{ identifier }}-brand-alpha)"
+         clip-path="url(#{{ identifier }}-brand-mascot)"/>
+  <image href="{{ url_for('static', filename='img/brand/compilando-original.png') }}"
+         width="2172" height="724" filter="url(#{{ identifier }}-brand-text)"
+         clip-path="url(#{{ identifier }}-brand-wordmark)"/>
+</svg>
+{%- endmacro %}

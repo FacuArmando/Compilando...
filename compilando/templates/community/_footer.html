@@ -1,0 +1,41 @@
+{% from '_brand.html' import brand %}
+{% from 'system/_icons.html' import icon %}
+<footer class="site-footer" {{ i18n_attr('aria-label', 'Pie de página') }}>
+  <div class="site-footer-main">
+    <div class="site-footer-identity">
+      <a class="site-footer-brand" href="{{ url_for('system.index') }}" {{ i18n_attr('aria-label', 'Compilando, inicio') }}>
+        {{ brand('footer') }}
+      </a>
+      <p class="site-footer-caption">{{ ui("Preguntas, código y comunidad.") }}</p>
+    </div>
+
+    <div class="site-footer-content">
+      <p class="site-footer-heading">{{ ui("Una buena pregunta es un comienzo.") }}</p>
+      <p class="site-footer-description">{{ ui("Compartí lo que sabés. Descubrí lo que sigue.") }}</p>
+      <nav class="site-footer-nav" {{ i18n_attr('aria-label', 'Navegación del pie de página') }}>
+        <div>
+          <h2>{{ ui("Explorá") }}</h2>
+          <a href="{{ url_for('system.index') }}">{{ ui("Inicio") }}</a>
+          <a href="{{ url_for('system.index') }}#preguntas">{{ ui("Preguntas recientes") }}</a>
+        </div>
+        <div>
+          <h2>{{ ui("Tu espacio") }}</h2>
+          {% if usuario_actual %}
+            <a href="{{ url_for('auth.account') }}">{{ ui("Mi cuenta") }}</a>
+          {% else %}
+            <a href="{{ login_url|default(url_for('auth.login')) }}">{{ ui("Ingresar") }}</a>
+            <a href="{{ url_for('auth.register') }}">{{ ui("Crear cuenta") }}</a>
+          {% endif %}
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <div class="site-footer-bottom">
+    <p>© Compilando <span aria-hidden="true">·</span> {{ ui("Hecho para aprender juntos.") }}</p>
+    <a class="site-footer-project" href="https://github.com/FacuArmando/Compilando..." target="_blank" rel="noopener noreferrer">
+      {{ icon('code') }} {{ ui("El proyecto en GitHub") }} {{ icon('external') }}
+    </a>
+    <a class="site-footer-top" href="#page-top" data-footer-top>{{ ui("Volver arriba") }} {{ icon('arrow-up') }}</a>
+  </div>
+</footer>

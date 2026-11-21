@@ -22,6 +22,37 @@ antes de cargar los estilos para evitar un destello claro al navegar.
 
 Esta función no necesita dependencias nuevas ni migraciones de base de datos.
 
+## Marca de Compilando
+
+La cabecera de la comunidad y las pantallas de login y registro comparten el logo
+con el ajolote. La marca enlaza al inicio y conserva su nombre al cambiar el idioma.
+En celular se ajusta al espacio disponible, sin superponerse con los switches.
+
+El archivo original está en `compilando/static/img/brand/compilando-original.png`.
+El parcial `_brand.html` usa filtros SVG para separar su fondo grafito al mostrarlo,
+conservar el color de la mascota y adaptar las letras al contraste de cada tema.
+El recorte y los estilos están centralizados en ese parcial y en `css/brand.css`;
+no se modifican los píxeles del original ni se usan servicios externos para mostrarlo.
+
+## Pie de página de la comunidad
+
+El inicio, las preguntas, el visor de adjuntos y «Mi cuenta» comparten un footer
+con la marca en gran formato, navegación a la derecha y una franja inferior con
+el repositorio del proyecto y el enlace «Volver arriba». Los accesos muestran
+«Mi cuenta» si hay sesión, o «Ingresar» y «Crear cuenta» para visitantes.
+En celular, el contenido se organiza en una sola columna.
+
+El footer queda después del contenido y llega al borde inferior en páginas
+cortas; no es fijo ni tapa formularios. Login y registro conservan sus pantallas
+independientes. La marca mantiene sus proporciones y el color original del ajolote,
+con letras que se adaptan al tema claro u oscuro. Los textos se traducen con ES / EN.
+
+La plantilla `community/base.html` incluye `community/_footer.html` fuera del
+contenido principal. `footer.css` define la presentación y `footer.js` agrega una
+entrada suave al llegar al pie y el regreso al inicio con desplazamiento suave.
+Ambos efectos respetan el movimiento reducido. Sin JavaScript, todo el contenido
+y los enlaces siguen visibles y disponibles. No requiere cambios de base de datos.
+
 ## Castellano e inglés
 
 El control ES / EN está junto al switch de apariencia. Cambia el idioma de la

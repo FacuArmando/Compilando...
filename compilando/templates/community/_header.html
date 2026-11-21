@@ -1,9 +1,9 @@
 {% from 'system/_icons.html' import icon %}
+{% from '_brand.html' import brand %}
 <header class="community-topbar">
   <div class="community-topbar-inner">
     <a class="community-brand" href="{{ url_for('system.index') }}" {{ i18n_attr("aria-label", "Compilando, inicio") }}>
-      <span class="community-brand-mark">{{ icon('code') }}</span>
-      <span>COMPILANDO<span class="community-brand-dots">...</span></span>
+      {{ brand('header') }}
     </a>
     <div class="community-topbar-actions">
       <div class="appearance-controls">

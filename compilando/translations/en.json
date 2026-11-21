@@ -199,12 +199,8 @@
   "Ingresá un correo electrónico válido.": "Enter a valid email address.",
   "Ingresá un correo diferente del actual.": "Enter an email address different from your current one.",
   "Ese correo electrónico ya está registrado.": "That email address is already registered.",
-  "Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.": "Your account details changed. Please sign in again.",
   "Completá el nombre de usuario, el correo y la contraseña.": "Enter your username, email address and password.",
-  "El nombre de usuario debe tener como máximo 80 caracteres.": "Your username must be no longer than 80 characters.",
   "La contraseña debe tener entre 8 y 18 caracteres.": "Your password must contain between 8 and 18 characters.",
-  "Ese nombre de usuario ya está registrado.": "That username is already registered.",
-  "Hubo demasiados intentos. Esperá unos minutos antes de volver a probar.": "Too many attempts. Wait a few minutes before trying again.",
   "El formulario venció. Recargá la página y volvé a intentarlo.": "The form expired. Reload the page and try again.",
   "La IA todavía no está configurada. Avisale al equipo.": "AI is not configured yet. Please let the team know.",
   "Gemini alcanzó su límite de uso. Probá más tarde.": "Gemini has reached its usage limit. Try again later.",
@@ -302,5 +298,14 @@
   "Tu foto de perfil se eliminó.": "Your profile picture has been removed.",
   "Elegí una imagen para identificar tu perfil en la comunidad.": "Choose an image to identify your profile in the community.",
   "Formatos permitidos: JPG, PNG o WebP. Tamaño máximo: 5 MB.": "Allowed formats: JPG, PNG, or WebP. Maximum size: 5 MB.",
-  "La imagen no puede superar los 5 MB.": "The image cannot exceed 5 MB."
+  "La imagen no puede superar los 5 MB.": "The image cannot exceed 5 MB.",
+  "Pie de página": "Footer",
+  "Preguntas, código y comunidad.": "Questions, code and community.",
+  "Una buena pregunta es un comienzo.": "A good question is a beginning.",
+  "Compartí lo que sabés. Descubrí lo que sigue.": "Share what you know. Discover what comes next.",
+  "Navegación del pie de página": "Footer navigation",
+  "Explorá": "Explore",
+  "Tu espacio": "Your space",
+  "El proyecto en GitHub": "The project on GitHub",
+  "Volver arriba": "Back to top"
 }

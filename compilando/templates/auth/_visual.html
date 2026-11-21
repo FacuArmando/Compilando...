@@ -1,5 +1,8 @@
+{% from '_brand.html' import brand %}
 <aside class="auth-visual" {{ i18n_attr("aria-label", "La comunidad Compilando") }}>
-  <p class="auth-brand">COMPILANDO...</p>
+  <a class="auth-brand" href="{{ url_for('system.index') }}" {{ i18n_attr("aria-label", "Compilando, inicio") }}>
+    {{ brand('access') }}
+  </a>
   <div class="auth-code-scene" data-code-scene>
     <div class="auth-code-atmosphere" aria-hidden="true">
       <div class="auth-code-orbit"></div>
