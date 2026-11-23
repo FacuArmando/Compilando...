@@ -8,7 +8,9 @@ from pathlib import Path
 from flask import Response, has_request_context, request
 from markupsafe import Markup, escape
 
-CATALOG = json.loads(Path(__file__).with_name("translations").joinpath("en.json").read_text())
+CATALOG = json.loads(
+    Path(__file__).with_name("translations").joinpath("en.json").read_text(encoding="utf-8")
+)
 COOKIE = "compilando-language"
 
 
