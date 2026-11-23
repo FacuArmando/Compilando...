@@ -73,26 +73,86 @@ if (statsSection) {
 
 // Globos festivos cuando es el cumpleaños del usuario
 const balloonContainer = document.querySelector("[data-birthday-balloons]");
-const colors = ["#2563eb", "#f59e0b", "#10b981", "#ec4899", "#8b5cf6", "#06b6d4"];
+const balloonPalettes = [
+  ["#c9d6ff", "#7695eb", "#344f9e"],
+  ["#eadcff", "#b598e2", "#705194"],
+  ["#b9efe6", "#61bdaf", "#286f72"],
+  ["#fff1cf", "#e0bb79", "#9b703d"],
+  ["#f9ddeb", "#d79bb8", "#935772"],
+];
+let balloonLaunch = 0;
+
+function createBalloonArt(id, [light, color, shade]) {
+  // Solo formas y colores locales: no se inserta contenido del usuario.
+  return `<svg viewBox="0 0 100 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id="${id}-body" cx="32%" cy="26%" r="76%">
+        <stop stop-color="${light}"/>
+        <stop offset=".48" stop-color="${color}"/>
+        <stop offset="1" stop-color="${shade}"/>
+      </radialGradient>
+      <radialGradient id="${id}-shine" cx="30%" cy="24%" r="65%">
+        <stop stop-color="#fff" stop-opacity=".75"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="${id}-ribbon" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="${light}" stop-opacity=".85"/>
+        <stop offset="1" stop-color="${color}" stop-opacity=".18"/>
+      </linearGradient>
+    </defs>
+    <path class="balloon-ribbon" d="M50 113 C31 137 69 144 51 166 S35 192 47 205"
+      fill="none" stroke="url(#${id}-ribbon)" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M47 106 L43 115 Q50 112 57 115 L53 106Z" fill="${shade}"/>
+    <path d="M50 8 C27 8 11 27 11 51 C11 77 32 100 50 109 C68 100 89 77 89 51 C89 27 73 8 50 8Z"
+      fill="url(#${id}-body)" stroke="${light}" stroke-opacity=".32" stroke-width=".7"/>
+    <ellipse cx="32" cy="33" rx="10" ry="17" transform="rotate(28 32 33)" fill="url(#${id}-shine)"/>
+    <path d="M21 55 C18 36 28 19 43 16" fill="none" stroke="#fff" stroke-opacity=".48" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M66 88 C77 77 83 65 83 53" fill="none" stroke="${light}" stroke-opacity=".23" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M46 108 Q50 110 54 108" fill="none" stroke="${light}" stroke-opacity=".65" stroke-width="1.2"/>
+  </svg>`;
+}
 
 function launchBalloons() {
-  if (!balloonContainer || reducedMotion.matches) return;
+  if (!balloonContainer) return;
   balloonContainer.replaceChildren();
-  for (let i = 0; i < 24; i++) {
+  if (reducedMotion.matches) return;
+
+  const count = window.innerWidth < 720 ? 8 : 15;
+  const launch = ++balloonLaunch;
+  const balloons = document.createDocumentFragment();
+  for (let i = 0; i < count; i++) {
     const balloon = document.createElement("span");
     balloon.className = "balloon";
-    const color = colors[i % colors.length];
-    balloon.style.background = color;
-    balloon.style.color = color;
-    balloon.style.left = `${4 + Math.random() * 92}%`;
-    balloon.style.setProperty("--dur", `${4.2 + Math.random() * 2.5}s`);
-    balloon.style.setProperty("--sway", `${(Math.random() - 0.5) * 60}px`);
-    balloon.style.animationDelay = `${Math.random() * 1.4}s`;
-    balloonContainer.appendChild(balloon);
+    const depth = i % 3;
+    // Distribución por franjas para que no se amontonen al azar.
+    balloon.style.left = `${5 + ((i + Math.random() * .55) / count) * 90}%`;
+    balloon.style.setProperty("--balloon-width", `${48 + depth * 10 + Math.random() * 8}px`);
+    balloon.style.setProperty("--balloon-opacity", String(.7 + depth * .12));
+    balloon.style.setProperty("--balloon-duration", `${8.5 + (2 - depth) * 1.1 + Math.random() * 1.5}s`);
+    balloon.style.setProperty("--balloon-delay", `${Math.random() * 1.8}s`);
+    balloon.style.setProperty("--balloon-drift", `${(Math.random() - .5) * 100}px`);
+    balloon.style.setProperty("--balloon-sway", `${3.5 + Math.random() * 1.5}s`);
+    balloon.style.setProperty("--balloon-phase", `${-Math.random() * 4}s`);
+    balloon.style.zIndex = String(depth);
+    const art = document.createElement("span");
+    art.className = "balloon-art";
+    art.innerHTML = createBalloonArt(`birthday-${launch}-${i}`, balloonPalettes[i % balloonPalettes.length]);
+    balloon.appendChild(art);
+    balloon.addEventListener("animationend", (event) => {
+      if (event.target === balloon) balloon.remove();
+    });
+    balloons.appendChild(balloon);
   }
+  balloonContainer.appendChild(balloons);
 }
 
 if (balloonContainer) {
   launchBalloons();
   document.querySelector("[data-birthday-replay]")?.addEventListener("click", launchBalloons);
+  reducedMotion.addEventListener("change", () => {
+    if (reducedMotion.matches) balloonContainer.replaceChildren();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) balloonContainer.replaceChildren();
+  });
 }

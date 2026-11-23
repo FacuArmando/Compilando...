@@ -386,12 +386,3 @@ def es_cumpleanos_hoy(usuario: Usuario) -> bool:
         return False
     hoy = date.today()
     return fecha_nac.month == hoy.month and fecha_nac.day == hoy.day
-
-def edad_usuario_hoy(usuario: Usuario) -> int | None:
-    """Calcular los años que cumple el usuario según su fecha de nacimiento."""
-    fecha_nac = getattr(usuario, "fecha_nacimiento", None)
-    if fecha_nac is None:
-        return None
-    hoy = date.today()
-    edad = hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
-    return max(edad, 1)

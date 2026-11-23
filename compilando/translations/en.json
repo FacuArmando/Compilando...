@@ -330,13 +330,12 @@
   "Ingresá una fecha de cumpleaños válida.": "Enter a valid birthday date.",
   "Tu perfil se actualizó.": "Your profile has been updated.",
   "Colaboradores": "Contributors",
-  "Que hoy todos tus builds compilen a la primera.": "May all your builds compile on the first try today.",
-  "Cerrar festejo": "Close celebration",
-  "Celebrar cumpleaños": "Celebrate birthday",
-  "Presioná Enter": "Press Enter",
-  "Ver festejo otra vez": "Replay celebration",
-  "print('¡Feliz cumpleaños!')": "print('Happy birthday!')",
-  "¡FELIZ CUMPLEAÑOS, {name}!": "HAPPY BIRTHDAY, {name}!",
-  "printf(\"¡Feliz cumpleaños, {name}!\\n\");": "printf(\"Happy birthday, {name}!\\n\");",
-  "Hoy": "Today"
+  "Hoy": "Today",
+  "404 · Página no encontrada · Compilando": "404 · Page not found · Compilando",
+  "Compilando · Volver al inicio": "Compilando · Back to home",
+  "No encontramos esta página.": "We couldn't find this page.",
+  "Puede que el enlace haya cambiado o que la dirección no sea correcta.": "The link may have changed, or the address may be incorrect.",
+  "Opciones para continuar": "Ways to continue",
+  "Ver preguntas recientes": "Browse recent questions",
+  "Todavía hay mucho por descubrir en la comunidad.": "There's still plenty to discover in the community."
 }
