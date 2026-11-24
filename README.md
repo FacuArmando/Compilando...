@@ -80,7 +80,7 @@ Si la variable ya existe, reemplazá su valor.
 
 #### 3. Activar el modo administrador
 
-Iniciá la aplicación, ingresá a tu cuenta y utilizá el código de activación configurado para habilitar los permisos de administrador.
+Iniciá la aplicación, ingresá a tu cuenta y dirígete al apartado "Mi cuenta", al final, utilizá el código de activación configurado para habilitar los permisos de administrador.
 
 **Importante:** cada desarrollador debe generar su propio código de activación. El archivo `.env` contiene información privada y no debe subirse al repositorio ni compartirse con otras personas.
 
