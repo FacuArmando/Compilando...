@@ -1,0 +1,131 @@
+{% extends 'community/base.html' %}
+
+{% block title %}{{ tr("Etiquetas · Administración") }}{% endblock %}
+{% block title_key %}Etiquetas · Administración{% endblock %}
+
+{% block content %}
+{% include 'community/_header.html' %}
+
+<div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <main class="community-content">
+
+        <div class="admin-footer-actions">
+            <a class="account-back" href="{{ url_for('admin.index') }}">
+                ← {{ ui("Volver a administración") }}
+            </a>
+        </div>
+
+        <section class="community-welcome">
+            <h1>{{ ui("Gestión de etiquetas") }}</h1>
+            <p>{{ ui("Consultá y administrá las etiquetas de la comunidad.") }}</p>
+        </section>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+            {% for tipo, mensaje in mensajes %}
+            <div class="{{ 'notice' if tipo == 'success' else 'form-error' }}" role="alert">
+                {{ ui(mensaje) }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <section class="account-card admin-section-card admin-search-card">
+            <form class="question-form admin-filter-form" method="GET" action="{{ url_for('admin.tags') }}">
+                <div class="form-field">
+                    <label for="busqueda-etiqueta">{{ ui("Buscar etiqueta") }}</label>
+
+                    <div class="admin-search-row">
+                        <input
+                                type="search"
+                                id="busqueda-etiqueta"
+                                name="busqueda_etiqueta"
+                                value="{{ busqueda_etiqueta|default('') }}"
+                                {{ i18n_attr("placeholder", "Escribí el nombre de una etiqueta...") }}
+                        >
+                        <button type="submit" class="answer-submit admin-btn-primary">
+                            {{ ui("Buscar") }}
+                        </button>
+                    </div>
+
+                    {% if busqueda_etiqueta %}
+                    <a class="account-back" href="{{ url_for('admin.tags') }}">
+                        {{ ui("Limpiar búsqueda") }}
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </section>
+
+        <section class="account-card admin-section-card">
+            <header class="admin-card-header">
+                <h2>{{ ui("Etiquetas disponibles") }}</h2>
+
+                <a class="admin-btn-primary admin-create-btn"
+                   href="{{ url_for('admin.create_tag') }}">
+                    + {{ ui("Crear etiqueta") }}
+                </a>
+            </header>
+
+            {% if etiquetas %}
+            <ul class="admin-category-list">
+                {% for etiqueta in etiquetas %}
+                <li class="admin-category-item">
+                    <div class="admin-category-info">
+                        <h3>{{ etiqueta.nombre }}</h3>
+                    </div>
+
+                    <div class="admin-tag-actions">
+                        <form
+                                class="admin-delete-form"
+                                method="POST"
+                                action="{{ url_for('admin.delete_tag', tag_id=etiqueta.id) }}"
+                                onsubmit="return confirm({{ tr('¿Estás seguro de que querés eliminar esta etiqueta?')|tojson }});"
+                        >
+                            <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                            >
+                            <button type="submit" class="admin-btn-danger">
+                                {{ ui("Eliminar") }}
+                            </button>
+                        </form>
+
+                        <a class="admin-btn-secondary"
+                           href="{{ url_for('admin.edit_tag', tag_id=etiqueta.id) }}">
+                            {{ ui("Editar") }}
+                        </a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="admin-empty-msg">{{ ui("No se encontraron etiquetas.") }}</p>
+            {% endif %}
+
+            {% if total_paginas > 1 %}
+            <nav class="admin-pagination" aria-label="{{ tr('Paginación') }}">
+                {% if pagina > 1 %}
+                <a href="{{ url_for('admin.tags', pagina=pagina - 1, busqueda_etiqueta=busqueda_etiqueta) }}">
+                    ← {{ ui("Anterior") }}
+                </a>
+                {% endif %}
+
+                <span>
+                    {{ ui("Página") }} {{ pagina }} {{ ui("de") }} {{ total_paginas }}
+                </span>
+
+                {% if pagina < total_paginas %}
+                <a href="{{ url_for('admin.tags', pagina=pagina + 1, busqueda_etiqueta=busqueda_etiqueta) }}">
+                    {{ ui("Siguiente") }} →
+                </a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        </section>
+    </main>
+</div>
+{% endblock %}

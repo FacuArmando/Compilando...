@@ -19,6 +19,7 @@ def load_config() -> dict:
     return {
         "APP_ENV": "production" if production else "development",
         "SECRET_KEY": os.environ.get("SECRET_KEY"),
+        "ADMIN_ACTIVATION_CODE": os.environ.get("ADMIN_ACTIVATION_CODE", ""),
         "SQLALCHEMY_DATABASE_URI": os.environ.get("DATABASE_URL")
         or f"sqlite:///{database_path.as_posix()}",
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
@@ -52,6 +53,8 @@ def load_config() -> dict:
         "AUTH_LOGIN_EMAIL_LIMIT": 5,
         "AUTH_LOGIN_IP_LIMIT": 30,
         "AUTH_REGISTER_IP_LIMIT": 10,
+        "ADMIN_ACTIVATION_IP_LIMIT": 5,
+        "ADMIN_ACTIVATION_ACCOUNT_LIMIT": 5,
         "AUTH_PASSWORD_IP_LIMIT": 30,
         "AUTH_PASSWORD_ACCOUNT_LIMIT": 5,
         "TRUSTED_HOSTS": [host.strip() for host in trusted_hosts.split(",") if host.strip()]

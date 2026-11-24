@@ -1,0 +1,45 @@
+<section class="account-card admin-section-card admin-form-card">
+    <form method="POST" class="question-form admin-edit-form">
+        <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+        >
+
+        <div class="form-field">
+            <label for="nombre">{{ ui(nombre_label) }}</label>
+            <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    maxlength="{{ nombre_maxlength }}"
+                    value="{{ request.form.get('nombre', '') }}"
+                    required
+                    {{ i18n_attr("placeholder", nombre_placeholder) }}
+            >
+        </div>
+
+        {% if mostrar_descripcion %}
+        <div class="form-field">
+            <label for="descripcion">{{ ui("Descripción") }}</label>
+            <textarea
+                    id="descripcion"
+                    name="descripcion"
+                    rows="4"
+                    required
+                    {{ i18n_attr("placeholder", "Describí brevemente esta categoría...") }}
+            >{{ request.form.get('descripcion', '') }}</textarea>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit">
+                {{ ui(boton_texto) }}
+            </button>
+
+            <a class="account-back" href="{{ cancelar_url }}">
+                {{ ui("Cancelar") }}
+            </a>
+        </div>
+    </form>
+</section>

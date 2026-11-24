@@ -20,7 +20,7 @@ class Usuario(db.Model):
     avatar_filename: Mapped[str | None] = mapped_column(String(120), nullable=True, deferred=True)
     bio: Mapped[str | None] = mapped_column(String(280), nullable=True, deferred=True)
     fecha_nacimiento: Mapped[date | None] = mapped_column(Date, nullable=True, deferred=True)
-
+    es_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class Sesion(db.Model):

@@ -1,0 +1,126 @@
+{% extends 'community/base.html' %}
+
+{% block title %}{{ tr("Categorías · Administración") }}{% endblock %}
+{% block title_key %}Categorías · Administración{% endblock %}
+
+{% block content %}
+{% include 'community/_header.html' %}
+
+<div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <main class="community-content">
+
+        <div class="admin-footer-actions">
+            <a class="account-back" href="{{ url_for('admin.index') }}">
+                ← {{ ui("Volver a administración") }}
+            </a>
+        </div>
+
+        <section class="community-welcome" aria-labelledby="admin-categories-title">
+            <p class="community-eyebrow">{{ ui("ADMINISTRACIÓN") }}</p>
+            <h1 id="admin-categories-title">{{ ui("Gestión de categorías") }}</h1>
+            <p>{{ ui("Consultá y administrá las categorías de la comunidad.") }}</p>
+        </section>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+        <div class="admin-flash-stack">
+            {% for tipo, mensaje in mensajes %}
+            <div class="{{ 'notice' if tipo == 'success' else 'form-error' }}" role="alert">
+                {{ ui(mensaje) }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <section class="account-card admin-section-card" aria-labelledby="admin-search-title">
+            <form class="question-form admin-filter-form" method="GET" action="{{ url_for('admin.categories') }}">
+                <div class="form-field">
+                    <label id="admin-search-title" for="busqueda">{{ ui("Buscar categoría") }}</label>
+
+                    <div class="admin-search-row">
+                        <input
+                                type="search"
+                                id="busqueda"
+                                name="busqueda_categoria"
+                                value="{{ busqueda|default('') }}"
+                                {{ i18n_attr("placeholder", "Escribí el nombre de una categoría...") }}
+                        >
+                        <button type="submit" class="answer-submit admin-btn-primary">
+                            {{ ui("Buscar") }}
+                        </button>
+                    </div>
+
+                    {% if busqueda %}
+                    <div class="admin-filter-meta">
+                        <a class="account-back admin-clear-link" href="{{ url_for('admin.categories') }}">
+                            {{ ui("Limpiar búsqueda") }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+        </section>
+
+        <section class="account-card admin-section-card" aria-labelledby="admin-list-title">
+            <header class="admin-card-header">
+                <div>
+                    <h2 id="admin-list-title">{{ ui("Categorías disponibles") }}</h2>
+                </div>
+
+                <a class="admin-btn-primary admin-create-btn" href="{{ url_for('admin.create_category') }}">
+                    + {{ ui("Crear categoría") }}
+                </a>
+            </header>
+
+            {% if categorias %}
+            <ul class="admin-category-list">
+                {% for categoria in categorias %}
+                <li class="admin-category-item">
+                    <div class="admin-category-info">
+                        <h3>{{ categoria.nombre }}</h3>
+                        {% if categoria.descripcion %}
+                        <p>{{ categoria.descripcion }}</p>
+                        {% endif %}
+                    </div>
+
+                    <a class="admin-btn-secondary" href="{{ url_for('admin.edit_category', categoria_id=categoria.id) }}">
+                        {{ ui("Editar") }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="community-empty admin-empty-box">
+                <h3>{{ ui("No se encontraron categorías.") }}</h3>
+                {% if busqueda %}
+                <p>{{ ui("Probá con otro nombre o limpiá la búsqueda para ver todas.") }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if total_paginas > 1 %}
+            <nav class="admin-pagination" aria-label="{{ tr('Paginación') }}">
+                {% if pagina > 1 %}
+                <a href="{{ url_for('admin.categories', pagina=pagina - 1, busqueda_categoria=busqueda) }}">
+                    ← {{ ui("Anterior") }}
+                </a>
+                {% endif %}
+
+                <span>
+                    {{ ui("Página") }} {{ pagina }} {{ ui("de") }} {{ total_paginas }}
+                </span>
+
+                {% if pagina < total_paginas %}
+                <a href="{{ url_for('admin.categories', pagina=pagina + 1, busqueda_categoria=busqueda) }}">
+                    {{ ui("Siguiente") }} →
+                </a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        </section>
+    </main>
+</div>
+{% endblock %}

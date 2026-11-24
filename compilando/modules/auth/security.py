@@ -40,6 +40,13 @@ def limitar_intentos(accion: str, email: str = "", *, usuario_id: int | None = N
         limites.extend(
             [(f"ai:usuario:{usuario_id}", "AI_ACCOUNT_LIMIT"), ("ai:global", "AI_GLOBAL_LIMIT")]
         )
+    elif accion == "admin_activation":
+        if usuario_id is None:
+            raise ValueError("La activación de administrador requiere un usuario autenticado.")
+        limites[0] = (limites[0][0], "ADMIN_ACTIVATION_IP_LIMIT")
+        limites.append(
+            (f"admin_activation:usuario:{usuario_id}", "ADMIN_ACTIVATION_ACCOUNT_LIMIT")
+        )
     else:
         limites[0] = (limites[0][0], "AUTH_REGISTER_IP_LIMIT")
 

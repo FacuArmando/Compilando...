@@ -1,0 +1,62 @@
+{% extends 'community/base.html' %}
+
+{% block title %}{{ tr("Editar etiqueta · Administración") }}{% endblock %}
+{% block title_key %}Editar etiqueta · Administración{% endblock %}
+
+{% block content %}
+{% include 'community/_header.html' %}
+
+<div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <main class="community-content">
+        <section class="community-welcome">
+            <h1>{{ ui("Editar etiqueta") }}</h1>
+            <p>{{ ui("Modificá el nombre de esta etiqueta.") }}</p>
+        </section>
+
+        <section class="account-card admin-section-card admin-form-card">
+            {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+            {% for categoria, mensaje in mensajes %}
+            <div class="{{ 'notice' if categoria == 'success' else 'form-error' }}" role="alert">
+                {{ ui(mensaje) }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form class="question-form admin-edit-form" method="POST">
+                <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                >
+
+                <div class="form-field">
+                    <label for="nombre">{{ ui("Nombre de la etiqueta") }}</label>
+                    <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            value="{{ request.form.get('nombre', tag.nombre) }}"
+                            maxlength="50"
+                            required
+                            {{ i18n_attr("placeholder", "Escribí el nombre de la etiqueta...") }}
+                    >
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="answer-submit">
+                        {{ ui("Guardar cambios") }}
+                    </button>
+
+                    <a class="account-back" href="{{ url_for('admin.tags') }}">
+                        {{ ui("Cancelar") }}
+                    </a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}

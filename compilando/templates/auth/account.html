@@ -12,6 +12,14 @@
         <p>{{ ui("Consultá tus datos y administrá la seguridad de tu cuenta.") }}</p>
       </header>
 
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% for categoria, mensaje in mensajes %}
+                <p class="notice" role="{{ 'alert' if categoria == 'error' else 'status' }}">
+                    {{ ui(mensaje) }}
+                </p>
+            {% endfor %}
+        {% endwith %}
+
         {% if es_cumpleanos %}
         <div class="birthday-banner" data-birthday-banner role="status">
           <div class="birthday-balloons" data-birthday-balloons aria-hidden="true"></div>
@@ -310,7 +318,45 @@
         </form>
       </section>
 
-      <a class="account-back" href="{{ url_for('system.index') }}">{{ ui("← Volver a la comunidad") }}</a>
+        {% if not usuario_actual.es_admin %}
+        <section class="account-card account-settings"
+                 id="activar-administrador"
+                 aria-labelledby="admin-activation-title">
+
+            <h2 id="admin-activation-title">
+                {{ ui("Acceso de administrador") }}
+            </h2>
+
+            <p class="account-note">
+                {{ ui("Si tenés un código de activación, podés utilizarlo para habilitar las herramientas de administración.") }}
+            </p>
+
+            <form class="account-settings-form"
+                  action="{{ url_for('admin.activate') }}"
+                  method="post">
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="field">
+                    <label for="admin-activation-code">
+                        {{ ui("Código de activación") }}
+                    </label>
+
+                    <input id="admin-activation-code"
+                           name="codigo_activacion"
+                           type="password"
+                           autocomplete="off"
+                           required>
+                </div>
+
+                <button type="submit">
+                    {{ ui("Activar acceso de administrador") }}
+                </button>
+            </form>
+        </section>
+        {% endif %}
+
+        <a class="account-back" href="{{ url_for('system.index') }}">{{ ui("← Volver a la comunidad") }}</a>
     </section>
   </div>
   <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>

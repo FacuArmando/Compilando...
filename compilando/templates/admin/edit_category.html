@@ -1,0 +1,71 @@
+
+{% extends 'community/base.html' %}
+
+{% block title %}{{ tr("Editar categoría · Administración") }}{% endblock %}
+{% block title_key %}Editar categoría · Administración{% endblock %}
+
+{% block content %}
+{% include 'community/_header.html' %}
+
+<div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <main class="community-content">
+        <section class="community-welcome">
+            <h1>{{ ui("Editar categoría") }}</h1>
+            <p>{{ ui("Modificá el nombre o la descripción de esta categoría.") }}</p>
+        </section>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+        {% for tipo, mensaje in mensajes %}
+        <div class="{{ 'notice' if tipo == 'success' else 'form-error' }}" role="alert">
+            {{ ui(mensaje) }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <section class="account-card admin-section-card admin-form-card">
+            <form method="POST" class="question-form admin-edit-form">
+                <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                >
+
+                <div class="form-field">
+                    <label for="nombre">{{ ui("Nombre de la categoría") }}</label>
+                    <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            maxlength="100"
+                            value="{{ request.form.get('nombre', categoria.nombre) }}"
+                            {{ i18n_attr("placeholder", "Ej. Programación") }}
+                    required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="descripcion">{{ ui("Descripción") }}</label>
+                    <textarea
+                            id="descripcion"
+                            name="descripcion"
+                            rows="4"
+                            {{ i18n_attr("placeholder", "Describí brevemente esta categoría...") }}
+                    required
+                    >{{ request.form.get('descripcion', categoria.descripcion) }}</textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit">{{ ui("Guardar cambios") }}</button>
+                    <a class="account-back" href="{{ url_for('admin.categories') }}">
+                        {{ ui("Cancelar") }}
+                    </a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}

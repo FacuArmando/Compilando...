@@ -1,0 +1,32 @@
+
+{% extends 'community/base.html' %}
+
+{% block title %}{{ tr("Crear etiqueta · Administración") }}{% endblock %}
+{% block title_key %}Crear etiqueta · Administración{% endblock %}
+
+{% block content %}
+{% include 'community/_header.html' %}
+
+<div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <main class="community-content">
+        <section class="community-welcome">
+            <h1>{{ ui("Crear etiqueta") }}</h1>
+            <p>{{ ui("Agregá una nueva etiqueta a la comunidad.") }}</p>
+        </section>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+            {% for categoria, mensaje in mensajes %}
+            <div class="{{ 'notice' if categoria == 'success' else 'form-error' }}" role="alert">
+                {{ ui(mensaje) }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% include 'admin/_form.html' %}
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+
+{% extends 'community/base.html' %}
+
+{% block title %}{{ tr("Administración · COMPILANDO...") }}{% endblock %}
+{% block title_key %}Administración · COMPILANDO...{% endblock %}
+
+{% block content %}
+{% include 'community/_header.html' %}
+
+<div class="community-layout">
+    {% include 'community/_sidebar.html' %}
+
+    <div class="community-content">
+        <section class="community-welcome"
+                 aria-labelledby="admin-title">
+            <h1 id="admin-title">{{ ui("Administración") }}</h1>
+            <p>
+                {{ ui("Desde aquí podrás gestionar y supervisar la comunidad.") }}
+            </p>
+        </section>
+
+        <section class="admin-management">
+
+            <article class="account-card">
+                <h2>{{ ui("Categorías") }}</h2>
+
+                <p>
+                    {{ ui("Total de categorías:") }}
+                    <strong>{{ total_categorias }}</strong>
+                </p>
+
+                {% if categorias %}
+                <ul>
+                    {% for categoria in categorias %}
+                    <li>
+                        <strong>{{ categoria.nombre }}</strong>
+                        {% if categoria.descripcion %}
+                        <p>{{ categoria.descripcion }}</p>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>{{ ui("Todavía no hay categorías.") }}</p>
+                {% endif %}
+
+                <a href="{{ url_for('admin.categories') }}">
+                    {{ ui("Ver todas las categorías") }}
+                </a>
+            </article>
+
+            <article class="account-card">
+                <h2>{{ ui("Etiquetas") }}</h2>
+
+                <p>
+                    {{ ui("Total de etiquetas:") }}
+                    <strong>{{ total_etiquetas }}</strong>
+                </p>
+
+                {% if etiquetas %}
+                <ul>
+                    {% for etiqueta in etiquetas %}
+                    <li>{{ etiqueta.nombre }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>{{ ui("Todavía no hay etiquetas.") }}</p>
+                {% endif %}
+
+                <a href="{{ url_for('admin.tags') }}">
+                    {{ ui("Ver todas las etiquetas") }}
+                </a>
+            </article>
+
+        </section>
+    </div>
+</div>
+{% endblock %}
