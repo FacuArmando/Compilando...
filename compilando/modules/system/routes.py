@@ -5,9 +5,9 @@ from sqlalchemy import or_, select
 
 from compilando.extensions import db
 from compilando.modules.answers.models import EstadoRespuesta, Respuesta
+from compilando.modules.auth.services import edad_usuario_hoy, es_cumpleanos_hoy
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.models import Pregunta
-from compilando.modules.auth.services import edad_usuario_hoy, es_cumpleanos_hoy
 
 bp = Blueprint("system", __name__)
 

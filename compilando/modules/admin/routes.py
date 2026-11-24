@@ -7,39 +7,31 @@ from flask import (
     request,
     url_for,
 )
-
-from compilando.modules.auth.security import DemasiadosIntentos, limitar_intentos
-from compilando.modules.auth.sessions import requiere_admin, requiere_sesion
 from sqlalchemy import select
 
 from compilando.extensions import db
 from compilando.modules.admin.services import (
     activar_administrador,
     crear_categoria,
-    editar_categoria,
-    eliminar_tag,
     crear_tag,
+    editar_categoria,
     editar_tag,
+    eliminar_tag,
 )
+from compilando.modules.auth.security import DemasiadosIntentos, limitar_intentos
+from compilando.modules.auth.sessions import requiere_admin, requiere_sesion
 from compilando.modules.categories.models import Categoria
 from compilando.modules.tags.models import Tag
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
+
 @bp.get("/")
 @requiere_admin
 def index():
-    categorias = db.session.scalars(
-        select(Categoria)
-        .order_by(Categoria.nombre)
-        .limit(5)
-    ).all()
+    categorias = db.session.scalars(select(Categoria).order_by(Categoria.nombre).limit(5)).all()
 
-    etiquetas = db.session.scalars(
-        select(Tag)
-        .order_by(Tag.nombre)
-        .limit(5)
-    ).all()
+    etiquetas = db.session.scalars(select(Tag).order_by(Tag.nombre).limit(5)).all()
 
     total_categorias = db.session.query(Categoria).count()
     total_etiquetas = db.session.query(Tag).count()
@@ -57,9 +49,7 @@ def index():
 @requiere_admin
 def categories():
     """Mostrar las categorías disponibles con paginación."""
-    busqueda_categoria = request.args.get(
-        "busqueda_categoria", ""
-    ).strip()
+    busqueda_categoria = request.args.get("busqueda_categoria", "").strip()
 
     pagina = max(1, request.args.get("pagina", 1, type=int))
     por_pagina = 10
@@ -67,22 +57,15 @@ def categories():
     consulta = select(Categoria)
 
     if busqueda_categoria:
-        consulta = consulta.where(
-            Categoria.nombre.ilike(f"%{busqueda_categoria}%")
-        )
+        consulta = consulta.where(Categoria.nombre.ilike(f"%{busqueda_categoria}%"))
 
-    total = db.session.scalar(
-        select(db.func.count()).select_from(consulta.subquery())
-    )
+    total = db.session.scalar(select(db.func.count()).select_from(consulta.subquery()))
 
     total_paginas = max(1, (total + por_pagina - 1) // por_pagina)
     pagina = min(pagina, total_paginas)
 
     categorias = db.session.scalars(
-        consulta
-        .order_by(Categoria.nombre)
-        .limit(por_pagina)
-        .offset((pagina - 1) * por_pagina)
+        consulta.order_by(Categoria.nombre).limit(por_pagina).offset((pagina - 1) * por_pagina)
     ).all()
 
     return render_template(
@@ -154,9 +137,7 @@ def edit_category(categoria_id):
 @requiere_admin
 def tags():
     """Mostrar las etiquetas disponibles con paginación."""
-    busqueda_etiqueta = request.args.get(
-        "busqueda_etiqueta", ""
-    ).strip()
+    busqueda_etiqueta = request.args.get("busqueda_etiqueta", "").strip()
 
     pagina = max(1, request.args.get("pagina", 1, type=int))
     por_pagina = 10
@@ -164,22 +145,15 @@ def tags():
     consulta = select(Tag)
 
     if busqueda_etiqueta:
-        consulta = consulta.where(
-            Tag.nombre.ilike(f"%{busqueda_etiqueta}%")
-        )
+        consulta = consulta.where(Tag.nombre.ilike(f"%{busqueda_etiqueta}%"))
 
-    total = db.session.scalar(
-        select(db.func.count()).select_from(consulta.subquery())
-    )
+    total = db.session.scalar(select(db.func.count()).select_from(consulta.subquery()))
 
     total_paginas = max(1, (total + por_pagina - 1) // por_pagina)
     pagina = min(pagina, total_paginas)
 
     etiquetas = db.session.scalars(
-        consulta
-        .order_by(Tag.nombre)
-        .limit(por_pagina)
-        .offset((pagina - 1) * por_pagina)
+        consulta.order_by(Tag.nombre).limit(por_pagina).offset((pagina - 1) * por_pagina)
     ).all()
 
     return render_template(
@@ -189,6 +163,7 @@ def tags():
         pagina=pagina,
         total_paginas=total_paginas,
     )
+
 
 @bp.post("/tags/<int:tag_id>/delete")
 @requiere_admin
@@ -202,6 +177,7 @@ def delete_tag(tag_id):
         flash("La etiqueta se eliminó correctamente.", "success")
 
     return redirect(url_for("admin.tags"), code=303)
+
 
 @bp.route("/tags/new", methods=["GET", "POST"])
 @requiere_admin
@@ -228,6 +204,7 @@ def create_tag():
         cancelar_url=url_for("admin.tags"),
     )
 
+
 @bp.route("/tags/<int:tag_id>/edit", methods=["GET", "POST"])
 @requiere_admin
 def edit_tag(tag_id):
@@ -251,6 +228,7 @@ def edit_tag(tag_id):
 
     return render_template("admin/edit_tag.html", tag=tag)
 
+
 @bp.post("/activate")
 @requiere_sesion
 def activate():
@@ -265,16 +243,10 @@ def activate():
     try:
         limitar_intentos("admin_activation", usuario_id=usuario.id)
 
-        activar_administrador(
-            usuario,
-            request.form.get("codigo_activacion", "")
-        )
+        activar_administrador(usuario, request.form.get("codigo_activacion", ""))
 
     except DemasiadosIntentos as exc:
-        flash(
-            "Hubo demasiados intentos. Esperá unos minutos antes de volver a probar.",
-            "error"
-        )
+        flash("Hubo demasiados intentos. Esperá unos minutos antes de volver a probar.", "error")
         respuesta = redirect(url_for("auth.account"), code=303)
         respuesta.headers["Retry-After"] = str(exc.segundos)
         return respuesta

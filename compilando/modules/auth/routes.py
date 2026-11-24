@@ -104,12 +104,12 @@ def account():
     """Consultar únicamente los datos del usuario de la sesión validada."""
     return _render_account()
 
+
 @bp.get("/account/stats")
 @requiere_sesion
 def account_stats():
     """Devolver estadísticas actualizadas en JSON para refrescar la vista en vivo."""
     return jsonify(obtener_estadisticas_usuario(g.usuario_actual.id))
-
 
 
 @bp.post("/account/profile")
@@ -226,7 +226,6 @@ def delete_avatar():
 
     flash("Tu foto de perfil se eliminó.", "success")
     return redirect(url_for("auth.account"), code=303)
-
 
 
 @bp.post("/account/password")
@@ -383,6 +382,7 @@ def formulario_con_limite(template, error, **campos):
     response.headers["Retry-After"] = str(error.segundos)
     return response
 
+
 @bp.errorhandler(413)
 def archivo_demasiado_grande(error):
     """Mostrar mensaje claro si la foto supera el límite máximo permitido."""
@@ -394,4 +394,3 @@ def archivo_demasiado_grande(error):
             avatar_error="La imagen no puede superar los 5 MB.",
         ), 413
     return error
-

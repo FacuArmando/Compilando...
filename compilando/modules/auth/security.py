@@ -44,9 +44,7 @@ def limitar_intentos(accion: str, email: str = "", *, usuario_id: int | None = N
         if usuario_id is None:
             raise ValueError("La activación de administrador requiere un usuario autenticado.")
         limites[0] = (limites[0][0], "ADMIN_ACTIVATION_IP_LIMIT")
-        limites.append(
-            (f"admin_activation:usuario:{usuario_id}", "ADMIN_ACTIVATION_ACCOUNT_LIMIT")
-        )
+        limites.append((f"admin_activation:usuario:{usuario_id}", "ADMIN_ACTIVATION_ACCOUNT_LIMIT"))
     else:
         limites[0] = (limites[0][0], "AUTH_REGISTER_IP_LIMIT")
 

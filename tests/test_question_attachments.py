@@ -348,19 +348,25 @@ def test_migracion_nueva_conserva_preguntas_y_se_puede_revertir_en_base_temporal
         upgrade()
 
         assert "adjuntos_pregunta" in inspect(db.engine).get_table_names()
-        assert db.session.execute(
-            text("SELECT titulo FROM preguntas WHERE id = :id"),
-            {"id": pregunta_id},
-        ).scalar_one() == "Pregunta previa"
+        assert (
+            db.session.execute(
+                text("SELECT titulo FROM preguntas WHERE id = :id"),
+                {"id": pregunta_id},
+            ).scalar_one()
+            == "Pregunta previa"
+        )
 
         db.session.remove()
         downgrade(revision="4b2e88c7eeba")
 
         assert "adjuntos_pregunta" not in inspect(db.engine).get_table_names()
-        assert db.session.execute(
-            text("SELECT titulo FROM preguntas WHERE id = :id"),
-            {"id": pregunta_id},
-        ).scalar_one() == "Pregunta previa"
+        assert (
+            db.session.execute(
+                text("SELECT titulo FROM preguntas WHERE id = :id"),
+                {"id": pregunta_id},
+            ).scalar_one()
+            == "Pregunta previa"
+        )
 
         db.session.remove()
         db.engine.dispose()

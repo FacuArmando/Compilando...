@@ -159,6 +159,7 @@ def registrar_usuario(username: str, email: str, password: str) -> Usuario:
 
     return usuario
 
+
 def cambiar_username(usuario: Usuario, nuevo: str) -> None:
     """Cambiar el nombre de usuario de la cuenta autenticada."""
     nuevo = nuevo.strip()
@@ -193,6 +194,7 @@ def cambiar_username(usuario: Usuario, nuevo: str) -> None:
     except Exception:
         db.session.rollback()
         raise
+
 
 def _extension_imagen_valida(contenido: bytes) -> str | None:
     """Verificar la firma binaria real de la imagen sin confiar en el navegador."""
@@ -233,9 +235,7 @@ def cambiar_avatar(usuario: Usuario, archivo: FileStorage | None) -> None:
     destino = ruta_avatar(nuevo_nombre)
     destino.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
-    anterior = db.session.scalar(
-        select(Usuario.avatar_filename).where(Usuario.id == usuario.id)
-    )
+    anterior = db.session.scalar(select(Usuario.avatar_filename).where(Usuario.id == usuario.id))
 
     try:
         with destino.open("xb") as f:
@@ -266,9 +266,7 @@ def cambiar_avatar(usuario: Usuario, archivo: FileStorage | None) -> None:
 
 def eliminar_avatar(usuario: Usuario) -> None:
     """Quitar la foto de perfil actual y volver al avatar con inicial."""
-    anterior = db.session.scalar(
-        select(Usuario.avatar_filename).where(Usuario.id == usuario.id)
-    )
+    anterior = db.session.scalar(select(Usuario.avatar_filename).where(Usuario.id == usuario.id))
     if not anterior:
         raise ValueError("No tenés una foto de perfil cargada.")
 
@@ -284,7 +282,6 @@ def eliminar_avatar(usuario: Usuario) -> None:
         ruta_avatar(anterior).unlink(missing_ok=True)
     except ValueError:
         pass
-
 
 
 def actualizar_perfil(usuario: Usuario, bio: str, fecha_nacimiento_str: str) -> None:
@@ -325,9 +322,7 @@ def obtener_estadisticas_usuario(usuario_id: int) -> dict[str, int]:
     from compilando.modules.questions.models import Pregunta
 
     preguntas_realizadas = (
-        db.session.scalar(
-            select(func.count(Pregunta.id)).where(Pregunta.usuario_id == usuario_id)
-        )
+        db.session.scalar(select(func.count(Pregunta.id)).where(Pregunta.usuario_id == usuario_id))
         or 0
     )
 
@@ -367,9 +362,7 @@ def obtener_estadisticas_usuario(usuario_id: int) -> dict[str, int]:
     )
 
     porcentaje_aceptadas = (
-        round((respuestas_aceptadas / respuestas_totales) * 100)
-        if respuestas_totales > 0
-        else 0
+        round((respuestas_aceptadas / respuestas_totales) * 100) if respuestas_totales > 0 else 0
     )
 
     return {
@@ -379,6 +372,8 @@ def obtener_estadisticas_usuario(usuario_id: int) -> dict[str, int]:
         "respuestas_totales": respuestas_totales,
         "porcentaje_aceptadas": porcentaje_aceptadas,
     }
+
+
 def es_cumpleanos_hoy(usuario: Usuario) -> bool:
     """Comprobar si hoy coincide con el día y mes de nacimiento del usuario."""
     fecha_nac = getattr(usuario, "fecha_nacimiento", None)
@@ -386,6 +381,7 @@ def es_cumpleanos_hoy(usuario: Usuario) -> bool:
         return False
     hoy = date.today()
     return fecha_nac.month == hoy.month and fecha_nac.day == hoy.day
+
 
 def edad_usuario_hoy(usuario: Usuario) -> int | None:
     """Calcular los años que cumple el usuario según su fecha de nacimiento."""

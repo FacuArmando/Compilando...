@@ -3,10 +3,11 @@ import hmac
 from flask import current_app
 from sqlalchemy import select
 
-from compilando.modules.categories.models import Categoria
-from compilando.modules.tags.models import Tag
-from compilando.modules.questions.services import normalizar_nombre
 from compilando.extensions import db
+from compilando.modules.categories.models import Categoria
+from compilando.modules.questions.services import normalizar_nombre
+from compilando.modules.tags.models import Tag
+
 
 def activar_administrador(usuario, codigo: str) -> bool:
     """Activar el rol de administrador si el código proporcionado es válido."""
@@ -34,6 +35,7 @@ def activar_administrador(usuario, codigo: str) -> bool:
         raise
 
     return True
+
 
 def crear_categoria(nombre: str, descripcion: str) -> Categoria:
     """Crear una categoría nueva."""
@@ -70,6 +72,7 @@ def crear_categoria(nombre: str, descripcion: str) -> Categoria:
         raise
 
     return categoria
+
 
 def editar_categoria(categoria_id: int, nombre: str, descripcion: str) -> Categoria:
     """Actualizar el nombre y la descripción de una categoría."""
@@ -108,6 +111,7 @@ def editar_categoria(categoria_id: int, nombre: str, descripcion: str) -> Catego
         raise
 
     return categoria
+
 
 def eliminar_tag(tag_id: int) -> None:
     """Eliminar una etiqueta y sus asociaciones con preguntas."""
@@ -156,6 +160,7 @@ def crear_tag(nombre: str) -> Tag:
 
     return tag
 
+
 def editar_tag(tag_id: int, nombre: str) -> Tag:
     """Editar el nombre de una etiqueta existente."""
     tag = db.session.get(Tag, tag_id)
@@ -174,10 +179,8 @@ def editar_tag(tag_id: int, nombre: str) -> Tag:
     etiquetas = db.session.scalars(select(Tag)).all()
 
     for etiqueta in etiquetas:
-        if (
-                etiqueta.id != tag.id
-                and normalizar_nombre(etiqueta.nombre)
-                == normalizar_nombre(nombre)
+        if etiqueta.id != tag.id and normalizar_nombre(etiqueta.nombre) == normalizar_nombre(
+            nombre
         ):
             raise ValueError("Ya existe una etiqueta con ese nombre.")
 

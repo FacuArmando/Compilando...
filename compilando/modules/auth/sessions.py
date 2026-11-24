@@ -25,8 +25,10 @@ def requiere_sesion(vista):
 
     return vista_protegida
 
+
 def requiere_admin(vista):
     """Permitir la vista solo a usuarios autenticados con rol de administrador."""
+
     @wraps(vista)
     def vista_protegida(*args, **kwargs):
         usuario = g.get("usuario_actual")
@@ -40,6 +42,7 @@ def requiere_admin(vista):
         return vista(*args, **kwargs)
 
     return vista_protegida
+
 
 def ahora_utc() -> datetime:
     """Usar UTC sin zona en la base para mantener compatibilidad con SQLite."""
