@@ -12,6 +12,7 @@ from flask import Flask
 
 from compilando.commands import register_commands
 from compilando.config import load_config
+from compilando.errors import not_found
 from compilando.extensions import csrf, db, migrate
 from compilando.i18n import init_app as init_i18n
 from compilando.modules import answers as answers
@@ -52,4 +53,5 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     app.register_blueprint(answers_bp)
     app.register_blueprint(ai_bp)
     app.register_blueprint(admin_bp)
+    app.register_error_handler(404, not_found)
     return app

@@ -552,29 +552,37 @@
 
 .balloon {
   position: absolute;
-  bottom: -90px;
-  width: 42px;
-  height: 52px;
-  border-radius: 50% 50% 50% 50% / 45% 45% 55% 55%;
-  opacity: 0.92;
-  animation: balloon-float var(--dur, 5s) ease-in forwards;
+  bottom: -180px;
+  width: var(--balloon-width, 64px);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: birthday-balloon-rise var(--balloon-duration, 10s) linear var(--balloon-delay, 0s) both;
 }
 
-.balloon::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  width: 1.5px;
-  height: 36px;
-  background: currentColor;
-  opacity: 0.45;
+.balloon-art {
+  display: block;
+  transform-origin: 50% 35%;
+  animation: birthday-balloon-sway var(--balloon-sway, 4s) ease-in-out var(--balloon-phase, 0s) infinite alternate;
 }
 
-@keyframes balloon-float {
-  0% { transform: translateY(0) rotate(-4deg); opacity: 0.95; }
-  50% { transform: translateY(-55vh) translateX(var(--sway, 18px)) rotate(5deg); }
-  100% { transform: translateY(-115vh) translateX(calc(var(--sway, 18px) * -1)) rotate(-4deg); opacity: 0; }
+.balloon-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(2px 5px 6px #111b3320);
+}
+
+@keyframes birthday-balloon-rise {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  8% { opacity: var(--balloon-opacity, .9); }
+  82% { opacity: var(--balloon-opacity, .9); }
+  100% { transform: translate3d(var(--balloon-drift, 0px), calc(-100vh - 220px), 0); opacity: 0; }
+}
+
+@keyframes birthday-balloon-sway {
+  from { transform: translateX(-8px) rotate(-7deg); }
+  to { transform: translateX(8px) rotate(7deg); }
 }
 
 @keyframes birthday-bounce {
@@ -589,7 +597,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stat-line, .stat-area, .stat-ring-progress, .birthday-badge, .balloon { animation: none !important; }
+  .stat-line, .stat-area, .stat-ring-progress, .birthday-badge, .balloon, .balloon-art { animation: none !important; }
   .stat-line { stroke-dashoffset: 0; }
   .stat-area { opacity: 1; }
   .birthday-balloons { display: none; }

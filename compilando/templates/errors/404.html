@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% from '_brand.html' import brand %}
+{% from 'system/_icons.html' import icon %}
+{% block title %}{{ tr("404 · Página no encontrada · Compilando") }}{% endblock %}
+{% block title_key %}404 · Página no encontrada · Compilando{% endblock %}
+{% block body_class %}not-found-page{% endblock %}
+{% block main_class %}not-found{% endblock %}
+{% block styles %}
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/not-found.css') }}">
+{% endblock %}
+{% block theme_control %}{% endblock %}
+{% block content %}
+  <img class="not-found-art" src="{{ url_for('static', filename='img/errors/404-night.png') }}"
+       width="1672" height="941" alt="" fetchpriority="high" aria-hidden="true">
+
+  <header class="not-found-header">
+    <a class="not-found-brand" href="{{ url_for('system.index') }}"
+       {{ i18n_attr('aria-label', 'Compilando · Volver al inicio') }}>{{ brand('not-found') }}</a>
+    <div class="appearance-controls">{% include 'community/_language_toggle.html' %}</div>
+  </header>
+
+  <section class="not-found-content" aria-labelledby="not-found-title">
+    <p class="not-found-code" aria-hidden="true">404<span>.</span></p>
+    <h1 id="not-found-title">{{ ui("No encontramos esta página.") }}</h1>
+    <p class="not-found-description">{{ ui("Puede que el enlace haya cambiado o que la dirección no sea correcta.") }}</p>
+    <nav class="not-found-actions" {{ i18n_attr('aria-label', 'Opciones para continuar') }}>
+      <a class="not-found-home" href="{{ url_for('system.index') }}">
+        {{ icon('home') }} {{ ui("Volver al inicio") }}
+      </a>
+      <a class="not-found-questions" href="{{ url_for('system.index', _anchor='preguntas') }}">
+        {{ ui("Ver preguntas recientes") }}<span aria-hidden="true">↗</span>
+      </a>
+    </nav>
+    <p class="not-found-note">{{ ui("Todavía hay mucho por descubrir en la comunidad.") }}</p>
+  </section>
+{% endblock %}
