@@ -1991,3 +1991,189 @@ cursor: pointer;
 .admin-flash-stack .form-error {
   margin-bottom: 0;
 }
+
+/* Coronita animada a la izquierda en Administración */
+.admin-nav-link .admin-crown {
+  flex: 0 0 auto;
+  color: #eab308;
+  transform-origin: 50% 80%;
+  animation: admin-crown-float 2.4s ease-in-out infinite;
+}
+
+.admin-nav-link:hover .admin-crown,
+.admin-nav-link.is-current .admin-crown {
+  color: #f59e0b;
+  animation: admin-crown-wiggle 0.9s ease-in-out infinite;
+}
+
+@keyframes admin-crown-float {
+  0%, 100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-2.5px) rotate(5deg);
+  }
+}
+
+@keyframes admin-crown-wiggle {
+  0%, 100% {
+    transform: translateY(-1px) rotate(-8deg) scale(1.06);
+  }
+  50% {
+    transform: translateY(-3px) rotate(8deg) scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-nav-link .admin-crown {
+    animation: none !important;
+  }
+}
+
+/* Emoji con movimiento y brillo suave */
+.admin-nav-link .admin-crown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 16px;
+  line-height: 1;
+  transform-origin: 50% 85%;
+  filter: drop-shadow(0 0 3px rgba(250, 204, 21, 0.55));
+  animation:
+    admin-crown-float 2.4s ease-in-out infinite,
+    admin-crown-glow 2.2s ease-in-out infinite;
+}
+
+.admin-nav-link:hover .admin-crown,
+.admin-nav-link.is-current .admin-crown {
+  filter: drop-shadow(0 0 7px rgba(253, 224, 71, 0.95));
+  animation:
+    admin-crown-wiggle 0.9s ease-in-out infinite,
+    admin-crown-glow 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-nav-link .admin-crown {
+    animation: none !important;
+    filter: drop-shadow(0 0 3px rgba(250, 204, 21, 0.5));
+  }
+}
+
+/* Cartel dorado de rol administrador arriba del título principal */
+.community-content .admin-unlocked {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px 28px;
+  margin: 0 0 28px;
+
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 18px;
+
+  background:
+    radial-gradient(circle at top right, rgba(212, 175, 55, 0.14), transparent 55%),
+    linear-gradient(120deg, rgba(212, 175, 55, 0.12), rgba(255, 255, 255, 0.02));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+
+  animation: admin-appear 0.65s ease-out both;
+}
+
+.community-content .admin-unlocked .admin-crown-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.14);
+}
+
+.community-content .admin-unlocked .admin-crown {
+  display: inline-block;
+  font-size: 2rem;
+  line-height: 1;
+  animation: crown-float 2.6s ease-in-out infinite;
+}
+
+.community-content .admin-unlocked .admin-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.community-content .admin-unlocked .admin-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+}
+
+.community-content .admin-unlocked h2 {
+  margin: 0;
+  color: var(--theme-heading, #1e304c);
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.4px;
+}
+
+.community-content .admin-unlocked p {
+  margin: 0;
+}
+
+.community-content .admin-unlocked .admin-crown {
+  display: inline-block;
+  font-size: 2rem;
+  line-height: 1;
+  transform-origin: 50% 85%;
+  filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.75));
+  animation: crown-float 2.4s ease-in-out infinite;
+}
+
+/* Movimiento un poco más alegre al pasar el mouse por el cartel */
+.community-content .admin-unlocked:hover .admin-crown {
+  animation: crown-wiggle 0.9s ease-in-out infinite;
+  filter: drop-shadow(0 0 9px rgba(253, 224, 71, 0.95));
+}
+
+@keyframes crown-float {
+  0%, 100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(5deg);
+  }
+}
+
+@keyframes crown-wiggle {
+  0%, 100% {
+    transform: translateY(-1px) rotate(-8deg) scale(1.06);
+  }
+  50% {
+    transform: translateY(-5px) rotate(8deg) scale(1.12);
+  }
+}
+
+@keyframes admin-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community-content .admin-unlocked,
+  .community-content .admin-unlocked .admin-crown {
+    animation: none !important;
+  }
+}

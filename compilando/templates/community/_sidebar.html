@@ -10,11 +10,12 @@
       <a href="{{ url_for('auth.account') }}"{% if request.endpoint == 'auth.account' %} class="is-current" aria-current="page"{% endif %}>
         {{ icon('user') }} {{ ui("Mi cuenta") }}
       </a>
-        {% if usuario_actual.es_admin %}
-        <a href="{{ url_for('admin.index') }}"{% if request.endpoint == 'admin.index' %} class="is-current" aria-current="page"{% endif %}>
-          {{ icon('settings') }} {{ ui("Administración") }}
-        </a>
-        {% endif %}
+          {% if usuario_actual.es_admin %}
+          <a href="{{ url_for('admin.index') }}" class="admin-nav-link{% if request.endpoint == 'admin.index' %} is-current{% endif %}"{% if request.endpoint == 'admin.index' %} aria-current="page"{% endif %}>
+              <span class="admin-crown" aria-hidden="true">👑</span>
+              <span>{{ ui("Administración") }}</span>
+          </a>
+          {% endif %}
       {% endif %}
   </nav>
   <div class="community-sidebar-note">

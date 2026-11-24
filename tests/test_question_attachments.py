@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 from flask_migrate import downgrade, upgrade
-from sqlalchemy import inspect, select
+from sqlalchemy import inspect, select, text
 from werkzeug.datastructures import FileStorage
 
 from compilando import create_app
@@ -280,19 +280,88 @@ def test_migracion_nueva_conserva_preguntas_y_se_puede_revertir_en_base_temporal
     app = create_app(
         {"TESTING": True, "SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'migracion.sqlite'}"}
     )
+
     with app.app_context():
         upgrade(revision="4b2e88c7eeba")
-        usuario = registrar_usuario("Mati", "mati@example.test", "clave-prueba")
-        pregunta = publicar_pregunta("Pregunta previa", "Mi código", "Java", [], usuario)
-        pregunta_id = pregunta.id
+
+        # Creamos un usuario compatible con el esquema histórico.
+        db.session.execute(
+            text("""
+                INSERT INTO usuarios (username, email, password_hash)
+                VALUES (:username, :email, :password_hash)
+            """),
+            {
+                "username": "Mati",
+                "email": "mati@example.test",
+                "password_hash": "clave-prueba",
+            },
+        )
+
+        usuario_id = db.session.execute(
+            text("SELECT id FROM usuarios WHERE email = :email"),
+            {"email": "mati@example.test"},
+        ).scalar_one()
+
+        # La pregunta necesita una categoría porque categoria_id es obligatorio.
+        db.session.execute(
+            text("""
+                INSERT INTO categorias (nombre, descripcion)
+                VALUES (:nombre, :descripcion)
+            """),
+            {
+                "nombre": "Java",
+                "descripcion": "Preguntas sobre Java",
+            },
+        )
+
+        categoria_id = db.session.execute(
+            text("SELECT id FROM categorias WHERE nombre = :nombre"),
+            {"nombre": "Java"},
+        ).scalar_one()
+
+        # Insertamos la pregunta usando únicamente columnas históricas.
+        db.session.execute(
+            text("""
+                INSERT INTO preguntas (
+                    titulo, cuerpo_detallado, fecha, usuario_id, categoria_id
+                )
+                VALUES (
+                    :titulo, :cuerpo, CURRENT_DATE, :usuario_id, :categoria_id
+                )
+            """),
+            {
+                "titulo": "Pregunta previa",
+                "cuerpo": "Mi código",
+                "usuario_id": usuario_id,
+                "categoria_id": categoria_id,
+            },
+        )
+
+        pregunta_id = db.session.execute(
+            text("SELECT id FROM preguntas WHERE titulo = :titulo"),
+            {"titulo": "Pregunta previa"},
+        ).scalar_one()
+
+        db.session.commit()
         db.session.remove()
+
         upgrade()
+
         assert "adjuntos_pregunta" in inspect(db.engine).get_table_names()
-        assert db.session.get(Pregunta, pregunta_id).titulo == "Pregunta previa"
+        assert db.session.execute(
+            text("SELECT titulo FROM preguntas WHERE id = :id"),
+            {"id": pregunta_id},
+        ).scalar_one() == "Pregunta previa"
+
         db.session.remove()
         downgrade(revision="4b2e88c7eeba")
+
         assert "adjuntos_pregunta" not in inspect(db.engine).get_table_names()
-        assert db.session.get(Pregunta, pregunta_id).titulo == "Pregunta previa"
+        assert db.session.execute(
+            text("SELECT titulo FROM preguntas WHERE id = :id"),
+            {"id": pregunta_id},
+        ).scalar_one() == "Pregunta previa"
+
         db.session.remove()
         db.engine.dispose()
 

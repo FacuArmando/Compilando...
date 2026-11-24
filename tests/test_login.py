@@ -127,7 +127,7 @@ def test_inicio_publico_y_login_son_pantallas_separadas(app_login, pregunta_con_
     assert inicio.status_code == 200
     html = inicio.get_data(as_text=True)
     assert f'href="/questions/{pregunta_con_sesion}"' in html
-    assert 'class="community-search"' in html
+    assert 'class="community-navbar-search"' in html
     assert 'class="auth-form"' not in html
     assert 'id="login-title"' not in html
     assert 'id="question-composer"' not in html
@@ -137,7 +137,7 @@ def test_inicio_publico_y_login_son_pantallas_separadas(app_login, pregunta_con_
         assert acceso.status_code == 200
         assert 'class="auth-form"' in acceso.get_data(as_text=True)
         assert 'id="preguntas"' not in acceso.get_data(as_text=True)
-        assert 'class="community-search"' not in acceso.get_data(as_text=True)
+        assert 'class="community-navbar-search"' not in acceso.get_data(as_text=True)
         assert f'href="/questions/{pregunta_con_sesion}"' not in acceso.get_data(as_text=True)
 
 
@@ -953,11 +953,11 @@ def test_migracion_de_sesiones_se_puede_revertir_sin_borrar_usuarios(app_login):
         downgrade(revision="bb57280189ce")
         assert "sesiones" not in inspect(db.engine).get_table_names()
         assert "limites_autenticacion" not in inspect(db.engine).get_table_names()
-        assert db.session.scalar(select(Usuario)).email == EMAIL
+        assert db.session.scalar(select(Usuario.email)) == EMAIL
         db.session.remove()
         upgrade()
         assert "sesiones" in inspect(db.engine).get_table_names()
-        assert db.session.scalar(select(Usuario)).email == EMAIL
+        assert db.session.scalar(select(Usuario.email)) == EMAIL
 
 
 @pytest.fixture

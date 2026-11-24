@@ -121,3 +121,105 @@ def test_catalogo_publico_solo_contiene_interfaz(client):
     assert catalog == CATALOG
     assert catalog["Inicio"] == "Home"
     assert "Set-Cookie" not in response.headers
+
+def test_pantallas_administrativas_en_ingles(
+        app, cliente_autenticado, usuario
+):
+    usuario.es_admin = True
+    from compilando.extensions import db
+    db.session.commit()
+
+    client = cliente_autenticado(usuario)
+    client.set_cookie(COOKIE, "en")
+
+    for path, texto in [
+        ("/admin/", "Administration"),
+        ("/admin/categories", "Category management"),
+        ("/admin/categories/new", "Create category"),
+        ("/admin/tags", "Tag management"),
+        ("/admin/tags/new", "Create tag"),
+    ]:
+        response = client.get(path)
+
+        assert response.status_code == 200
+        assert '<html lang="en">' in response.text
+        assert texto in Visible(response).text
+
+def test_validacion_categoria_administrativa_en_ingles(
+        app, cliente_autenticado, usuario
+):
+    usuario.es_admin = True
+    from compilando.extensions import db
+    db.session.commit()
+
+    client = cliente_autenticado(usuario)
+    client.set_cookie(COOKIE, "en")
+
+    response = client.post(
+        "/admin/categories/new",
+        data={
+            "nombre": "   ",
+            "descripcion": "Valid description.",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Enter a category name." in Visible(response).text
+    assert "Ingresá un nombre para la categoría." not in Visible(response).text
+
+def test_mensaje_exito_crear_etiqueta_en_ingles(
+        app, cliente_autenticado, usuario
+):
+    usuario.es_admin = True
+    from compilando.extensions import db
+    db.session.commit()
+
+    client = cliente_autenticado(usuario)
+    client.set_cookie(COOKIE, "en")
+
+    response = client.post(
+        "/admin/tags/new",
+        data={"nombre": "Python"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "The tag was created successfully." in Visible(response).text
+    assert "La etiqueta se creó correctamente." not in Visible(response).text
+
+def test_error_activacion_administrador_en_ingles(
+        app, cliente_autenticado, usuario
+):
+    app.config["ADMIN_ACTIVATION_CODE"] = "codigo-correcto"
+
+    client = cliente_autenticado(usuario)
+    client.set_cookie(COOKIE, "en")
+
+    response = client.post(
+        "/admin/activate",
+        data={"codigo_activacion": "codigo-incorrecto"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "The activation code is incorrect." in Visible(response).text
+    assert "El código de activación es incorrecto." not in Visible(response).text
+
+def test_exito_activacion_administrador_en_ingles(
+        app, cliente_autenticado, usuario
+):
+    app.config["ADMIN_ACTIVATION_CODE"] = "codigo-correcto"
+
+    client = cliente_autenticado(usuario)
+    client.set_cookie(COOKIE, "en")
+
+    response = client.post(
+        "/admin/activate",
+        data={"codigo_activacion": "codigo-correcto"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert usuario.es_admin is True
+    assert "Your account is now an administrator!" in Visible(response).text
+    assert "¡Tu cuenta ahora es administradora!" not in Visible(response).text

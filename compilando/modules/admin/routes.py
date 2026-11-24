@@ -152,7 +152,6 @@ def edit_category(categoria_id):
 
 @bp.get("/tags")
 @requiere_admin
-
 def tags():
     """Mostrar las etiquetas disponibles con paginación."""
     busqueda_etiqueta = request.args.get(

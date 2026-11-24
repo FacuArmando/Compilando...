@@ -44,6 +44,48 @@ Pegar la clave generada en `SECRET_KEY` dentro de `.env`. Cada integrante usa su
 
 `uv sync` instala el proyecto y las herramientas de desarrollo en `.venv`. `uv run` usa ese entorno sin activarlo a mano. Se incluyen `pyproject.toml`, `.python-version` y `uv.lock` en Git para compartir configuración y versiones.
 
+## Modo administrador
+
+El modo administrador permite gestionar y moderar aspectos de la comunidad **Compilando...**, brindando acceso a funcionalidades exclusivas que no están disponibles para los usuarios comunes.
+
+Entre sus funcionalidades se encuentran:
+
+- **Gestión de categorías:** crear nuevas categorías y editar las existentes.
+- **Gestión de etiquetas:** crear, editar y eliminar etiquetas.
+- **Administración de la comunidad:** acceder al panel de administración y a sus herramientas de gestión.
+
+### Activación
+
+Para habilitar el modo administrador, es necesario configurar un código de activación local.
+
+#### 1. Generar el código
+
+Desde la terminal, ejecutá el siguiente comando en la raíz del proyecto:
+
+```bash
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Copiá el código generado.
+
+#### 2. Configurar el archivo `.env`
+
+Agregá el código generado a la siguiente variable de entorno:
+
+```env
+ADMIN_ACTIVATION_CODE=tu_codigo_generado
+```
+
+Si la variable ya existe, reemplazá su valor.
+
+#### 3. Activar el modo administrador
+
+Iniciá la aplicación, ingresá a tu cuenta y utilizá el código de activación configurado para habilitar los permisos de administrador.
+
+**Importante:** cada desarrollador debe generar su propio código de activación. El archivo `.env` contiene información privada y no debe subirse al repositorio ni compartirse con otras personas.
+
+El modo administrador cuenta con una implementación básica, pensada para cubrir las necesidades iniciales de gestión de la comunidad. Por el momento, sus funcionalidades se limitan a la administración de categorías y etiquetas, y podrán ampliarse a medida que evolucione el proyecto.
+
 ## Servidor local
 
 ```bash

@@ -17,6 +17,20 @@
         <p class="notice" role="status">{{ ui(message) }}</p>
       {% endfor %}
 
+        {% if usuario_actual and usuario_actual.es_admin %}
+         <section class="admin-unlocked" aria-label="Cuenta administradora">
+          <span class="admin-crown-badge" aria-hidden="true">
+            <span class="admin-crown">👑</span>
+          </span>
+            <div class="admin-body">
+                <div class="admin-header">
+                    <h2>{{ ui("¡Acceso de administrador desbloqueado!") }}</h2>
+                </div>
+                <p>{{ ui("Tenés permisos especiales en la comunidad COMPILANDO...") }}</p>
+            </div>
+        </section>
+        {% endif %}
+
       <section class="community-welcome" aria-labelledby="community-title">
         <h1 id="community-title">{{ ui("¿Qué querés aprender hoy?") }}</h1>
         <p>{{ ui("Una duda, una idea, otra forma de resolverlo.") }}<br>{{ ui("La próxima conversación empieza con vos.") }}</p>
