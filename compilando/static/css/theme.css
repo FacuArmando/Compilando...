@@ -81,14 +81,7 @@
 :root[data-theme="dark"] ::selection { background: #466297; color: #fff; }
 
 @media (max-width: 720px) {
-  .community-topbar-actions { gap: 10px; }
   .theme-control-floating { top: 15px; right: 22px; }
-}
-@media (max-width: 360px) {
-  .community-topbar-inner { padding-inline: 14px; gap: 8px; }
-  .community-topbar-actions { gap: 6px; }
-  .community-brand { font-size: 14px; gap: 6px; }
-  .community-auth-links a { padding-inline: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .theme-toggle *, .theme-fade, .theme-fade * { transition: none !important; }

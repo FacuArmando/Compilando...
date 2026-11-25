@@ -42,11 +42,6 @@
 }
 
 @media (max-width: 520px) {
-  .community-brand {
-    width: min(100%, 220px);
-    min-width: 0;
-  }
-
   /* Los dos switches tienen su propia fila sobre la marca en acceso. */
   .auth-screen .auth-visual { padding-top: 84px; }
   .auth-screen .auth-brand { width: min(100%, 280px); max-width: none; }
