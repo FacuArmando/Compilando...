@@ -1,0 +1,50 @@
+{% macro pagina_url(numero) -%}
+  {{ url_for('system.index', page=numero, q=busqueda or none, categoria=categoria_seleccionada, _anchor='preguntas') }}
+{%- endmacro %}
+
+<div class="community-pagination">
+  {% if paginacion.pages > 1 %}
+    <nav class="community-pagination-controls" {{ i18n_attr("aria-label", "Paginación") }}>
+      {% if paginacion.has_prev %}
+        <a class="community-page-direction" rel="prev" href="{{ pagina_url(paginacion.prev_num) }}">
+          <span aria-hidden="true">‹</span> {{ ui("Anterior") }}
+        </a>
+      {% else %}
+        <span class="community-page-direction" aria-disabled="true">
+          <span aria-hidden="true">‹</span> {{ ui("Anterior") }}
+        </span>
+      {% endif %}
+
+      <ul class="community-page-numbers">
+        {% for numero in paginacion.iter_pages(left_edge=1, left_current=1, right_current=1, right_edge=1) %}
+          <li>
+            {% if numero == paginacion.page %}
+              <span class="community-page-number" aria-current="page" {{ i18n_attr("aria-label", "Página {page}", page=numero) }}>{{ numero }}</span>
+            {% elif numero %}
+              <a class="community-page-number" href="{{ pagina_url(numero) }}" {{ i18n_attr("aria-label", "Página {page}", page=numero) }}>{{ numero }}</a>
+            {% else %}
+              <span class="community-page-gap" aria-hidden="true">…</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if paginacion.has_next %}
+        <a class="community-page-direction" rel="next" href="{{ pagina_url(paginacion.next_num) }}">
+          {{ ui("Siguiente") }} <span aria-hidden="true">›</span>
+        </a>
+      {% else %}
+        <span class="community-page-direction" aria-disabled="true">
+          {{ ui("Siguiente") }} <span aria-hidden="true">›</span>
+        </span>
+      {% endif %}
+    </nav>
+  {% endif %}
+  <p class="community-pagination-summary">
+    {{ ui('Mostrando {first}–{last} de {total} preguntas', first=paginacion.first, last=paginacion.last, total=paginacion.total) }}
+    {% if paginacion.pages > 1 %}
+      <span aria-hidden="true">·</span>
+      {{ ui('Página {page} de {pages}', page=paginacion.page, pages=paginacion.pages) }}
+    {% endif %}
+  </p>
+</div>

@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from compilando.extensions import db
@@ -49,6 +49,7 @@ class Respuesta(db.Model):
     """Representa una respuesta publicada por un usuario o por IA a una pregunta."""
 
     __tablename__ = "respuestas"
+    __table_args__ = (Index("ix_respuestas_pregunta_estado", "pregunta_id", "estado"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     cuerpo: Mapped[str] = mapped_column(Text, nullable=False)

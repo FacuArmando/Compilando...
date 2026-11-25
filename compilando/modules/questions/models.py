@@ -1,7 +1,7 @@
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, ForeignKey, String, Text
+from sqlalchemy import Date, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from compilando.extensions import db
@@ -23,6 +23,10 @@ class Pregunta(db.Model):
     """Representa una pregunta publicada por un usuario."""
 
     __tablename__ = "preguntas"
+    __table_args__ = (
+        Index("ix_preguntas_fecha_id", "fecha", "id"),
+        Index("ix_preguntas_categoria_fecha_id", "categoria_id", "fecha", "id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     titulo: Mapped[str] = mapped_column(String(150), nullable=False)

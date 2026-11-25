@@ -362,7 +362,6 @@
   "Escribí el nombre de la etiqueta...": "Enter the tag name...",
   "Limpiar búsqueda": "Clear search",
   "Categorías disponibles": "Available categories",
-  "Etiquetas disponibles": "Available tags",
   "No se encontraron categorías.": "No categories found.",
   "No se encontraron etiquetas.": "No tags found.",
   "Volver a administración": "Back to administration",
@@ -411,7 +410,6 @@
   "Probá con otro nombre o limpiá la búsqueda para ver todas.": "Try another name or clear the search to see all categories.",
   "¡Acceso de administrador desbloqueado!": "Administrator access unlocked!",
   "Tenés permisos especiales en la comunidad COMPILANDO...": "You have special permissions in the COMPILANDO community...",
-  "Hoy": "Today",
   "404 · Página no encontrada · Compilando": "404 · Page not found · Compilando",
   "Compilando · Volver al inicio": "Compilando · Back to home",
   "No encontramos esta página.": "We couldn't find this page.",
@@ -419,5 +417,8 @@
   "Opciones para continuar": "Ways to continue",
   "Ver preguntas recientes": "Browse recent questions",
   "Todavía hay mucho por descubrir en la comunidad.": "There's still plenty to discover in the community.",
-  "Ajustar encuadre": "Adjust framing"
+  "Ajustar encuadre": "Adjust framing",
+  "Aceptadas primero": "Accepted answers first",
+  "Página {page}": "Page {page}",
+  "Mostrando {first}–{last} de {total} preguntas": "Showing {first}–{last} of {total} questions"
 }
