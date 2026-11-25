@@ -14,6 +14,11 @@
               method="get"
               role="search"
               {{ i18n_attr("aria-label", "Buscar preguntas") }}>
+        <svg class="community-navbar-search-icon" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5"/>
+            <path d="m16 16 4.5 4.5"/>
+        </svg>
         <label class="sr-only" for="navbar-search-q">
             {{ ui("Buscar preguntas") }}
         </label>
@@ -23,9 +28,6 @@
                value="{{ busqueda|default('') }}"
                {{ i18n_attr("placeholder", "Buscar preguntas…") }}>
 
-        <label for="navbar-search-category">
-            {{ ui("Categoría") }}
-        </label>
         <select id="navbar-search-category"
                 name="categoria"
                 {{ i18n_attr("aria-label", "Categoría") }}>
@@ -38,14 +40,14 @@
         {% endfor %}
         </select>
 
-        <button type="submit">{{ ui("Buscar") }}</button>
-
         {% if busqueda|default('') or categoria_seleccionada|default('') %}
         <a class="community-navbar-clear"
            href="{{ url_for('system.index') }}#preguntas">
             {{ ui("Limpiar") }}
         </a>
         {% endif %}
+
+        <button type="submit">{{ ui("Buscar") }}</button>
         </form>
 
         <div class="community-topbar-actions">

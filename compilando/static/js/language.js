@@ -78,24 +78,35 @@
   };
   const finish = () => {
     cancelAnimationFrame(frame);
-    active.forEach(({ element, value }) => {
-      if (element.isConnected) { element.replaceChildren(value); element.classList.remove("language-decoding"); }
+    active.forEach(({ element, value, attribute, textOnly }) => {
+      if (!element.isConnected) return;
+      if (attribute) element.setAttribute(attribute, value);
+      else if (textOnly) element.textContent = value;
+      else { element.replaceChildren(value); element.classList.remove("language-decoding"); }
     });
     active = [];
     root.classList.remove("language-changing");
     document.querySelectorAll("[data-language-toggle]").forEach((button) => button.removeAttribute("aria-busy"));
   };
+  const scramble = (value, progress) => Array.from(value).map((char, index, chars) => {
+    if (/\s/.test(char) || index / chars.length < progress) return char;
+    return alphabet[Math.floor(Math.random() * alphabet.length)];
+  }).join("");
   const draw = (now) => {
     let pending = false;
     active.forEach((item) => {
+      if (item.textOnly && !item.element.selected) {
+        item.element.textContent = item.value;
+        return;
+      }
       const progress = Math.max(0, Math.min(1, (now - item.start) / 900));
       if (progress < 1) pending = true;
       if (now - item.last < 40 && progress < 1) return;
       item.last = now;
-      item.overlay.textContent = Array.from(item.value).map((char, index, chars) => {
-        if (/\s/.test(char) || index / chars.length < progress) return char;
-        return alphabet[Math.floor(Math.random() * alphabet.length)];
-      }).join("");
+      const text = scramble(item.value, progress);
+      if (item.attribute) item.element.setAttribute(item.attribute, text);
+      else if (item.textOnly) item.element.textContent = text;
+      else item.overlay.textContent = text;
     });
     if (pending) frame = requestAnimationFrame(draw);
     else finish();
@@ -135,6 +146,25 @@
       element.classList.add("language-decoding");
       element.replaceChildren(text, overlay);
       active.push({ element, value, overlay, start: started + Math.random() * 140, last: 0 });
+    });
+    document.querySelectorAll(".community-navbar-search input[data-i18n-placeholder]").forEach((element) => {
+      if (element.value || !element.checkVisibility() || active.length >= 250) return;
+      const rect = element.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > innerHeight || rect.right < 0 || rect.left > innerWidth) return;
+      const value = element.getAttribute("placeholder");
+      if (!value) return;
+      element.setAttribute("placeholder", scramble(value, 0));
+      active.push({ element, value, attribute: "placeholder", start: started, last: 0 });
+    });
+    document.querySelectorAll(".community-navbar-search select").forEach((select) => {
+      const element = select.selectedOptions[0];
+      if (!element?.matches("[data-i18n]") || !select.checkVisibility() || active.length >= 250) return;
+      const rect = select.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > innerHeight || rect.right < 0 || rect.left > innerWidth) return;
+      const value = element.textContent;
+      if (!value) return;
+      element.textContent = scramble(value, 0);
+      active.push({ element, value, textOnly: true, start: started, last: 0 });
     });
     if (active.length) {
       root.classList.add("language-changing");
