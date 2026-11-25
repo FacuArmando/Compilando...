@@ -80,4 +80,3 @@ def aceptar_respuesta(respuesta_id: int, usuario: Usuario) -> Respuesta:
     except Exception:
         db.session.rollback()
         raise
-

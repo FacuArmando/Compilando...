@@ -252,7 +252,9 @@ def _preparar_imagen_avatar(contenido: bytes, max_pixels: int) -> tuple[Image.Im
     except (UnidentifiedImageError, OSError, SyntaxError, ValueError) as exc:
         if isinstance(exc, ValueError) and str(exc).startswith("Elegí una imagen válida"):
             raise
-        raise ValueError("No se pudo leer la imagen. Verificá que el archivo no esté dañado.") from exc
+        raise ValueError(
+            "No se pudo leer la imagen. Verificá que el archivo no esté dañado."
+        ) from exc
 
 
 def _guardar_variante_avatar(
@@ -323,8 +325,12 @@ def cambiar_avatar(usuario: Usuario, archivo: FileStorage | None) -> None:
 
     try:
         # 1. Guardar ambas versiones en disco primero
-        _guardar_variante_avatar(imagen_limpia, destino_full, full_size, formato_guardado, calidad=88)
-        _guardar_variante_avatar(imagen_limpia, destino_thumb, thumb_size, formato_guardado, calidad=82)
+        _guardar_variante_avatar(
+            imagen_limpia, destino_full, full_size, formato_guardado, calidad=88
+        )
+        _guardar_variante_avatar(
+            imagen_limpia, destino_thumb, thumb_size, formato_guardado, calidad=82
+        )
 
         # 2. Actualizar la base de datos solo cuando ambas versiones existen
         resultado = db.session.execute(
@@ -361,7 +367,6 @@ def eliminar_avatar(usuario: Usuario) -> None:
     db.session.commit()
 
     _borrar_archivos_avatar(anterior)
-
 
 
 def actualizar_perfil(usuario: Usuario, bio: str, fecha_nacimiento_str: str) -> None:

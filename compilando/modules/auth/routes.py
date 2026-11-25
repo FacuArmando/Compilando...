@@ -195,7 +195,6 @@ def avatar(nombre: str):
     return send_file(ruta, conditional=True, max_age=3600)
 
 
-
 @bp.post("/account/avatar")
 @requiere_sesion
 def change_avatar():
@@ -231,8 +230,6 @@ def delete_avatar():
 
     flash("Tu foto de perfil se eliminó.", "success")
     return redirect(url_for("auth.account"), code=303)
-
-
 
 
 @bp.post("/account/password")
