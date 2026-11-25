@@ -134,19 +134,47 @@
 
 
       <section class="account-card" aria-labelledby="account-data-title">
+        
         <header class="account-card-header">
-          <span class="community-avatar account-avatar" aria-hidden="true">
-         {% if usuario_actual.avatar_filename %}
-           <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}" alt="">
-         {% else %}
-           {{ usuario_actual.username[0]|upper }}
-         {% endif %}
-         </span> 
+          <span class="community-avatar account-avatar">
+            {% if usuario_actual.avatar_filename %}
+              <button
+                type="button"
+                id="abrir-avatar-ampliado"
+                data-full-src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}"
+                title="{{ tr('Ver foto ampliada') }}"
+                aria-label="{{ tr('Ver foto ampliada') }}"
+                style="width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; display: block;"
+              >
+                <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename, size='thumb') }}" alt="">
+              </button>
+
+              <dialog id="dialog-avatar-ampliado" aria-label="{{ tr('Foto de perfil ampliada') }}" style="border: 1px solid var(--community-border, #2a3342); border-radius: 14px; padding: 1rem; background: var(--theme-surface, #1e1e1e); color: inherit; width: min(460px, 90vw); overflow: hidden; margin: auto;">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: flex-end;">
+                  <button type="button" id="cerrar-avatar-ampliado">
+                    {{ ui("Cerrar") }}
+                  </button>
+                  <img
+                    id="img-avatar-ampliado"
+                    src=""
+                    alt="{{ tr('Foto de perfil ampliada') }}"
+                    style="width: 100%; max-height: 55vh; object-fit: contain; border-radius: 10px; display: block;"
+                  >
+                </div>
+              </dialog>
+
+
+            {% else %}
+              {{ usuario_actual.username|upper }}
+            {% endif %}
+          </span>
           <div>
             <h2 id="account-data-title">{{ ui("Tus datos personales") }}</h2>
             <p>{{ ui("Tu perfil en la comunidad de Compilando.") }}</p>
           </div>
         </header>
+
+       
         <dl class="account-data">
           <div>
             <dt>{{ ui("Nombre de usuario") }}</dt>
@@ -212,18 +240,49 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="field">
             <label for="avatar-file">{{ ui("Seleccionar imagen") }}</label>
-            <input id="avatar-file" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-rules" required>
-            <small id="avatar-rules">{{ ui("Formatos permitidos: JPG, PNG o WebP. Tamaño máximo: 5 MB.") }}</small>
+            
+            <input id="avatar-file" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-rules">
+            
+            <small id="avatar-rules">{{ ui("Formatos permitidos: JPG, PNG o WebP. Tamaño máximo: 20 MB.") }}</small>
+
+
+            <div id="avatar-cropper-box" hidden style="margin-top: 0.75rem; flex-direction: column; align-items: center; gap: 0.65rem;">
+              <canvas
+               id="avatar-crop-canvas"
+               width="220"
+               height="220"
+               style="border-radius: 50%; border: 2px solid var(--theme-accent, #06b6d4); cursor: grab; touch-action: none; background: #111;"
+              ></canvas>
+              <label for="avatar-zoom-range" style="font-size: 0.85rem;">
+               {{ ui("Zoom y arrastrá la imagen para encuadrar") }}
+              </label>
+              <input id="avatar-zoom-range" name="avatar_zoom" type="range" min="0.4" max="3" step="0.05" value="1" style="width: 220px;">
+            </div>
+
+
           </div>
           <button type="submit">{{ ui("Guardar foto de perfil") }}</button>
         </form>
 
         {% if usuario_actual.avatar_filename %}
-          <form class="account-settings-form" action="{{ url_for('auth.delete_avatar') }}" method="post" style="margin-top: 0.75rem;">
+          <form class="account-settings-form">
+            <button
+              type="button"
+              id="editar-avatar-actual"
+              data-avatar-src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}"
+            >
+              {{ ui("Ajustar encuadre") }}
+            </button>
+          </form>
+
+          <form class="account-settings-form" action="{{ url_for('auth.delete_avatar') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit">{{ ui("Quitar foto actual") }}</button>
           </form>
         {% endif %}
+
+
+
       </section>
 
 
@@ -362,4 +421,5 @@
   <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/passwords.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/account.js') }}" defer></script>
+
 {% endblock %}

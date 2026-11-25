@@ -156,3 +156,171 @@ if (balloonContainer) {
     if (document.hidden) balloonContainer.replaceChildren();
   });
 }
+
+// Visor de foto de perfil ampliada (1280 px)
+const btnAbrirAvatar = document.getElementById("abrir-avatar-ampliado");
+const dialogAvatar = document.getElementById("dialog-avatar-ampliado");
+const btnCerrarAvatar = document.getElementById("cerrar-avatar-ampliado");
+const imgAvatarAmpliada = document.getElementById("img-avatar-ampliado");
+
+if (btnAbrirAvatar && dialogAvatar && btnCerrarAvatar && imgAvatarAmpliada) {
+  btnAbrirAvatar.addEventListener("click", () => {
+    if (!imgAvatarAmpliada.getAttribute("src")) {
+      imgAvatarAmpliada.src = btnAbrirAvatar.dataset.fullSrc;
+    }
+    dialogAvatar.showModal();
+  });
+
+  btnCerrarAvatar.addEventListener("click", () => dialogAvatar.close());
+  dialogAvatar.addEventListener("click", (event) => {
+    if (event.target === dialogAvatar) dialogAvatar.close();
+  });
+}
+
+// Vista previa, encuadre circular y zoom antes de subir la foto
+const avatarForm = document.querySelector("#cambiar-avatar form[enctype='multipart/form-data']");
+const avatarInput = document.getElementById("avatar-file");
+const avatarBox = document.getElementById("avatar-cropper-box");
+const avatarCanvas = document.getElementById("avatar-crop-canvas");
+const avatarZoom = document.getElementById("avatar-zoom-range");
+
+if (avatarForm && avatarInput && avatarBox && avatarCanvas && avatarZoom) {
+  const ctx = avatarCanvas.getContext("2d");
+  let img = null;
+  let scale = 1;
+  let minScale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  let dragging = false;
+  let startX = 0;
+  let startY = 0;
+
+  const clampOffsets = () => {
+    const w = img.width * scale;
+    const h = img.height * scale;
+    if (w <= avatarCanvas.width) {
+      offsetX = (avatarCanvas.width - w) / 2;
+    } else {
+      offsetX = Math.min(0, Math.max(avatarCanvas.width - w, offsetX));
+    }
+    if (h <= avatarCanvas.height) {
+      offsetY = (avatarCanvas.height - h) / 2;
+    } else {
+      offsetY = Math.min(0, Math.max(avatarCanvas.height - h, offsetY));
+    }
+  };
+
+
+  const drawCropper = () => {
+    if (!img) return;
+    ctx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+    ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+  };
+
+  const cargarImagenEnRecortador = (url, revocarAlCargar) => {
+    const loaded = new Image();
+    loaded.onload = () => {
+      if (revocarAlCargar) URL.revokeObjectURL(url);
+      img = loaded;
+      minScale = Math.max(avatarCanvas.width / img.width, avatarCanvas.height / img.height);
+      scale = minScale;
+      avatarZoom.value = "1";
+      offsetX = (avatarCanvas.width - img.width * scale) / 2;
+      offsetY = (avatarCanvas.height - img.height * scale) / 2;
+      avatarBox.hidden = false;
+      avatarBox.style.display = "flex";
+      drawCropper();
+    };
+    loaded.onerror = () => {
+      if (revocarAlCargar) URL.revokeObjectURL(url);
+      avatarBox.hidden = true;
+      avatarBox.style.display = "none";
+      img = null;
+    };
+    loaded.src = url;
+  };
+
+  const btnEditarActual = document.getElementById("editar-avatar-actual");
+  if (btnEditarActual) {
+    btnEditarActual.addEventListener("click", () => {
+      cargarImagenEnRecortador(btnEditarActual.dataset.avatarSrc, false);
+      avatarBox.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  avatarInput.addEventListener("change", () => {
+    const file = avatarInput.files ? avatarInput.files.item(0) : null;
+    if (!file || !file.type.startsWith("image/")) {
+      avatarBox.hidden = true;
+      avatarBox.style.display = "none";
+      img = null;
+      return;
+    }
+    cargarImagenEnRecortador(URL.createObjectURL(file), true);
+  });
+
+  avatarZoom.addEventListener("input", () => {
+    if (!img) return;
+    const prevScale = scale;
+    scale = minScale * parseFloat(avatarZoom.value);
+    const cx = avatarCanvas.width / 2;
+    const cy = avatarCanvas.height / 2;
+    offsetX = cx - ((cx - offsetX) / prevScale) * scale;
+    offsetY = cy - ((cy - offsetY) / prevScale) * scale;
+    clampOffsets();
+    drawCropper();
+  });
+
+  avatarCanvas.addEventListener("pointerdown", (e) => {
+    if (!img) return;
+    dragging = true;
+    startX = e.clientX - offsetX;
+    startY = e.clientY - offsetY;
+    avatarCanvas.setPointerCapture(e.pointerId);
+  });
+
+  avatarCanvas.addEventListener("pointermove", (e) => {
+    if (!dragging || !img) return;
+    offsetX = e.clientX - startX;
+    offsetY = e.clientY - startY;
+    clampOffsets();
+    drawCropper();
+  });
+
+  avatarCanvas.addEventListener("pointerup", () => {
+    dragging = false;
+  });
+
+  avatarForm.addEventListener("submit", (e) => {
+    if (!img) return;
+    e.preventDefault();
+    const out = document.createElement("canvas");
+    out.width = 1280;
+    out.height = 1280;
+    const octx = out.getContext("2d");
+    const factor = out.width / avatarCanvas.width;
+    octx.drawImage(
+      img,
+      offsetX * factor,
+      offsetY * factor,
+      img.width * scale * factor,
+      img.height * scale * factor
+    );
+    out.toBlob(
+      (blob) => {
+        if (!blob) {
+          avatarForm.submit();
+          return;
+        }
+        const dt = new DataTransfer();
+        dt.items.add(new File([blob], "avatar.webp", { type: "image/webp" }));
+        avatarInput.files = dt.files;
+        avatarForm.submit();
+      },
+      "image/webp",
+      0.92
+    );
+  });
+}
+
+

@@ -214,8 +214,36 @@
 .account-settings-form label { color: var(--theme-secondary, #50627b); font-size: 12px; font-weight: 600; }
 .account-settings-form input { background: var(--theme-input, #fbfcff); border-color: var(--theme-border, #dce4f0); font-size: 14px; }
 .account-settings-form small { color: var(--theme-subtle, #8996a9); font-size: 11px; }
-.account-settings-form button { justify-self: start; padding: 12px 18px; border: 0; border-radius: 8px; background: var(--theme-primary, var(--community-blue)); color: var(--theme-on-primary, #fff); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-.account-settings-form button:hover { background: var(--theme-primary-hover, #103b89); }
+
+.account-settings-form button,
+#editar-avatar-actual { justify-self: start; padding: 12px 18px; border: 0; border-radius: 8px; background: var(--theme-primary, var(--community-blue)); color: var(--theme-on-primary, #fff); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.account-settings-form button:hover,
+#editar-avatar-actual:hover { background: var(--theme-primary-hover, #103b89); }
+
+.avatar-actions-group {
+  display: grid;
+  gap: 22px;
+  margin-top: 22px;
+  justify-items: start;
+}
+
+
+.avatar-actions-group button {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--theme-primary, var(--community-blue));
+  color: var(--theme-on-primary, #fff);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.avatar-actions-group button:hover {
+  background: var(--theme-primary-hover, #103b89);
+}
+
 
 @media (max-width: 1000px) {
   .community-search { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2184,4 +2212,24 @@ cursor: pointer;
   .community-content .admin-unlocked .admin-crown {
     animation: none !important;
   }
+}
+
+#dialog-avatar-ampliado {
+  width: min(440px, 90vw);
+  max-width: 440px;
+  max-height: 85vh;
+  overflow: hidden;
+  padding: 1rem;
+  border: 1px solid var(--community-border, #2a3342);
+  border-radius: 14px;
+  background: var(--theme-surface, #1e1e1e);
+  color: inherit;
+}
+
+#dialog-avatar-ampliado #img-avatar-ampliado {
+  width: 100%;
+  max-height: 55vh;
+  object-fit: contain;
+  border-radius: 10px;
+  display: block;
 }

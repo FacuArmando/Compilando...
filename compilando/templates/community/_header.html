@@ -59,7 +59,7 @@
                 <summary {{ i18n_attr('aria-label', 'Menú de {name}', name=usuario_actual.username) }}>
                 <span class="community-avatar">
                         {% if usuario_actual.avatar_filename %}
-                        <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename) }}" alt="">
+                        <img src="{{ url_for('auth.avatar', nombre=usuario_actual.avatar_filename, size='thumb') }}" alt="">
                         {% else %}
                         {{ usuario_actual.username[0]|upper }}
                         {% endif %}

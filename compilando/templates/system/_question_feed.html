@@ -15,7 +15,7 @@
             <header class="community-question-meta">
             <span class="community-avatar question-avatar" aria-hidden="true">
               {% if pregunta.usuario.avatar_filename %}
-                <img src="{{ url_for('auth.avatar', nombre=pregunta.usuario.avatar_filename) }}" alt="">
+                <img src="{{ url_for('auth.avatar', nombre=pregunta.usuario.avatar_filename, size='thumb') }}" alt="">
               {% else %}
                 {{ pregunta.usuario.username[0]|upper }}
               {% endif %}

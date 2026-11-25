@@ -6,7 +6,7 @@
                         <div class="question-person">
                             <span class="community-avatar answer-avatar" aria-hidden="true">
                               {% if respuesta.autor_avatar %}
-                                <img src="{{ url_for('auth.avatar', nombre=respuesta.autor_avatar) }}" alt="">
+                                <img src="{{ url_for('auth.avatar', nombre=respuesta.autor_avatar, size='thumb') }}" alt="">
                               {% else %}
                                 {{ respuesta.autor_nombre[0]|upper }}
                               {% endif %}

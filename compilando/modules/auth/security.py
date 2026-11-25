@@ -133,7 +133,7 @@ def init_app(app) -> None:
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "same-origin"
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; object-src 'none'; base-uri 'self'; "
+            "default-src 'self'; img-src 'self' blob:; object-src 'none'; base-uri 'self'; "
             "frame-ancestors 'none'; form-action 'self'"
         )
         if request.endpoint != "static":

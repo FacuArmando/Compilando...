@@ -3,10 +3,12 @@
 import re
 import secrets
 from datetime import date
+from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
 
 from flask import current_app
+from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from werkzeug.datastructures import FileStorage
@@ -196,15 +198,17 @@ def cambiar_username(usuario: Usuario, nuevo: str) -> None:
         raise
 
 
-def _extension_imagen_valida(contenido: bytes) -> str | None:
-    """Verificar la firma binaria real de la imagen sin confiar en el navegador."""
-    if contenido.startswith(b"\x89PNG\r\n\x1a\n"):
-        return ".png"
-    if contenido.startswith(b"\xff\xd8\xff"):
-        return ".jpg"
-    if len(contenido) >= 12 and contenido[:4] == b"RIFF" and contenido[8:12] == b"WEBP":
-        return ".webp"
-    return None
+FORMATOS_PILLOW_VALIDOS = {
+    "JPEG": (".jpg", "JPEG"),
+    "PNG": (".png", "PNG"),
+    "WEBP": (".webp", "WEBP"),
+}
+
+
+def nombre_miniatura_avatar(nombre_archivo: str) -> str:
+    """Convierte 'abc123.jpg' en 'abc123_thumb.jpg'."""
+    ruta = Path(nombre_archivo)
+    return f"{ruta.stem}_thumb{ruta.suffix}"
 
 
 def ruta_avatar(nombre_archivo: str) -> Path:
@@ -215,33 +219,114 @@ def ruta_avatar(nombre_archivo: str) -> Path:
     return ruta
 
 
+def _preparar_imagen_avatar(contenido: bytes, max_pixels: int) -> tuple[Image.Image, str, str]:
+    """Valida formato real, integridad y resolución; corrige orientación y quita metadatos."""
+    Image.MAX_IMAGE_PIXELS = max_pixels
+
+    try:
+        with Image.open(BytesIO(contenido)) as img_verificacion:
+            formato = (img_verificacion.format or "").upper()
+            if formato not in FORMATOS_PILLOW_VALIDOS:
+                raise ValueError("Elegí una imagen válida en formato JPG, PNG o WebP.")
+            img_verificacion.verify()
+
+        with Image.open(BytesIO(contenido)) as img_raw:
+            img_raw.load()
+            img_corregida = ImageOps.exif_transpose(img_raw)
+
+            modo_objetivo = "RGBA" if img_corregida.mode in ("RGBA", "LA", "P") else "RGB"
+            if img_corregida.mode != modo_objetivo:
+                img_limpia = img_corregida.convert(modo_objetivo)
+            else:
+                img_limpia = img_corregida.copy()
+
+            extension, formato_guardado = FORMATOS_PILLOW_VALIDOS[formato]
+            if formato_guardado == "JPEG" and img_limpia.mode == "RGBA":
+                fondo = Image.new("RGB", img_limpia.size, (255, 255, 255))
+                fondo.paste(img_limpia, mask=img_limpia.split())
+                img_limpia = fondo
+
+            return img_limpia, extension, formato_guardado
+    except Image.DecompressionBombError as exc:
+        raise ValueError("La resolución de la imagen supera el máximo permitido.") from exc
+    except (UnidentifiedImageError, OSError, SyntaxError, ValueError) as exc:
+        if isinstance(exc, ValueError) and str(exc).startswith("Elegí una imagen válida"):
+            raise
+        raise ValueError("No se pudo leer la imagen. Verificá que el archivo no esté dañado.") from exc
+
+
+def _guardar_variante_avatar(
+    imagen: Image.Image,
+    destino: Path,
+    lado_maximo: int,
+    formato_guardado: str,
+    calidad: int,
+) -> None:
+    copia = imagen.copy()
+    copia.thumbnail((lado_maximo, lado_maximo), Image.Resampling.LANCZOS)
+
+    kwargs: dict[str, object] = {}
+    if formato_guardado == "JPEG":
+        kwargs = {"quality": calidad, "optimize": True, "progressive": True}
+    elif formato_guardado == "WEBP":
+        kwargs = {"quality": calidad, "method": 4}
+    elif formato_guardado == "PNG":
+        kwargs = {"optimize": True}
+
+    buffer = BytesIO()
+    # No se pasan metadatos EXIF para eliminar ubicación GPS y datos de cámara
+    copia.save(buffer, format=formato_guardado, **kwargs)
+
+    with destino.open("xb") as f:
+        destino.chmod(0o600)
+        f.write(buffer.getvalue())
+
+
+def _borrar_archivos_avatar(nombre_archivo: str | None) -> None:
+    if not nombre_archivo:
+        return
+    for candidato in (nombre_archivo, nombre_miniatura_avatar(nombre_archivo)):
+        try:
+            ruta_avatar(candidato).unlink(missing_ok=True)
+        except ValueError:
+            pass
+
+
 def cambiar_avatar(usuario: Usuario, archivo: FileStorage | None) -> None:
-    """Validar y guardar la foto de perfil del usuario autenticado."""
+    """Validar, procesar y guardar versiones miniatura y ampliada de la foto de perfil."""
     if archivo is None or not archivo.filename:
         raise ValueError("Seleccioná una imagen para tu foto de perfil.")
 
-    max_bytes = current_app.config["AVATAR_MAX_BYTES"]
+    max_bytes = int(current_app.config["AVATAR_MAX_BYTES"])
+    max_pixels = int(current_app.config.get("AVATAR_MAX_PIXELS", 40_000_000))
+    thumb_size = int(current_app.config.get("AVATAR_THUMB_SIZE", 256))
+    full_size = int(current_app.config.get("AVATAR_FULL_SIZE", 1280))
+
     contenido = archivo.stream.read(max_bytes + 1)
     if not contenido:
         raise ValueError("El archivo de imagen está vacío.")
     if len(contenido) > max_bytes:
-        raise ValueError("La imagen no puede superar los 2 MB.")
+        limite_mb = max_bytes // (1024 * 1024)
+        raise ValueError(f"La imagen no puede superar los {limite_mb} MB.")
 
-    extension = _extension_imagen_valida(contenido)
-    if extension is None:
-        raise ValueError("Elegí una imagen válida en formato JPG, PNG o WebP.")
+    imagen_limpia, extension, formato_guardado = _preparar_imagen_avatar(contenido, max_pixels)
 
-    nuevo_nombre = f"{uuid4().hex}{extension}"
-    destino = ruta_avatar(nuevo_nombre)
-    destino.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    base_id = uuid4().hex
+    nuevo_nombre = f"{base_id}{extension}"
+    nuevo_thumb = f"{base_id}_thumb{extension}"
+
+    destino_full = ruta_avatar(nuevo_nombre)
+    destino_thumb = ruta_avatar(nuevo_thumb)
+    destino_full.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
     anterior = db.session.scalar(select(Usuario.avatar_filename).where(Usuario.id == usuario.id))
 
     try:
-        with destino.open("xb") as f:
-            destino.chmod(0o600)
-            f.write(contenido)
+        # 1. Guardar ambas versiones en disco primero
+        _guardar_variante_avatar(imagen_limpia, destino_full, full_size, formato_guardado, calidad=88)
+        _guardar_variante_avatar(imagen_limpia, destino_thumb, thumb_size, formato_guardado, calidad=82)
 
+        # 2. Actualizar la base de datos solo cuando ambas versiones existen
         resultado = db.session.execute(
             update(Usuario)
             .where(Usuario.id == usuario.id)
@@ -249,19 +334,16 @@ def cambiar_avatar(usuario: Usuario, archivo: FileStorage | None) -> None:
             .execution_options(synchronize_session=False)
         )
         if resultado.rowcount != 1:
-            destino.unlink(missing_ok=True)
             raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
         db.session.commit()
     except Exception:
-        destino.unlink(missing_ok=True)
+        destino_full.unlink(missing_ok=True)
+        destino_thumb.unlink(missing_ok=True)
         db.session.rollback()
         raise
 
-    if anterior:
-        try:
-            ruta_avatar(anterior).unlink(missing_ok=True)
-        except ValueError:
-            pass
+    if anterior and anterior != nuevo_nombre:
+        _borrar_archivos_avatar(anterior)
 
 
 def eliminar_avatar(usuario: Usuario) -> None:
@@ -278,10 +360,8 @@ def eliminar_avatar(usuario: Usuario) -> None:
     )
     db.session.commit()
 
-    try:
-        ruta_avatar(anterior).unlink(missing_ok=True)
-    except ValueError:
-        pass
+    _borrar_archivos_avatar(anterior)
+
 
 
 def actualizar_perfil(usuario: Usuario, bio: str, fecha_nacimiento_str: str) -> None:
