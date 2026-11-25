@@ -13,25 +13,27 @@
                             </span>
 
                             <div>
-                                <strong>{{ respuesta.autor_nombre }}</strong>
+                                <div class="answer-author-line">
+                                    <strong>{{ respuesta.autor_nombre }}</strong>
+                                    {% if respuesta.es_ia %}
+                                    <span class="answer-badge badge-ia">{{ ui("IA") }}</span>
+                                    {% elif respuesta.es_autor_pregunta %}
+                                    <span class="answer-badge badge-op">{{ ui("Autor de la pregunta") }}</span>
+                                    {% else %}
+                                    <span class="answer-badge badge-user">{{ ui("Comunidad") }}</span>
+                                    {% endif %}
+                                </div>
                                 <small>{{ ui_date(respuesta.fecha, detailed=true) }}</small>
                             </div>
                         </div>
 
-                        {% if respuesta.es_ia %}
-                        <span class="answer-badge badge-ia">{{ ui("IA") }}</span>
-                        {% elif respuesta.es_autor_pregunta %}
-                        <span class="answer-badge badge-op">{{ ui("Autor de la pregunta") }}</span>
-                        {% else %}
-                        <span class="answer-badge badge-user">{{ ui("Comunidad") }}</span>
-                        {% endif %}
-
                         {% if respuesta.estado == "Aceptada" %}
                         <span class="answer-accepted-badge">
-            {{ ui("Respuesta aceptada") }}
-          </span>
+                            {{ ui("Respuesta aceptada") }}
+                        </span>
                         {% endif %}
                     </header>
+
 
                     {% if respuesta.es_ia %}
                     <div class="answer-ai-content">

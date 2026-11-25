@@ -89,6 +89,14 @@
     transform: rotate(45deg);
     flex: 0 0 auto;
 }
+
+.answer-author-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .badge-user { background: var(--theme-hover, #f1f4f9); color: var(--theme-muted, #8692a5); }
 .badge-op { background: var(--theme-success-bg, #eaf5ef); color: var(--theme-success-text, #5c8b75); }
 .badge-ia { background: var(--theme-warning-bg, #fff4dc); color: var(--theme-warning-text, #ad863c); }

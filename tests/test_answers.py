@@ -322,7 +322,7 @@ def test_aceptar_otra_respuesta_desmarca_la_anterior(app, usuario):
 
     pregunta = publicar_pregunta(
         titulo="¿Cómo cambiar una respuesta aceptada?",
-        cuerpo="Quiero comprobar que solo exista una respuesta aceptada.",
+        cuerpo="Probando aceptar una segunda respuesta en la misma pregunta.",
         categoria_nombre="Testing",
         nombres_tags=["aceptacion"],
         usuario=usuario,
@@ -343,7 +343,7 @@ def test_aceptar_otra_respuesta_desmarca_la_anterior(app, usuario):
     aceptar_respuesta(respuesta_1.id, usuario)
     aceptar_respuesta(respuesta_2.id, usuario)
 
-    assert respuesta_1.estado == EstadoRespuesta.NO_ACEPTADA.value
+    assert respuesta_1.estado == EstadoRespuesta.ACEPTADA.value
     assert respuesta_2.estado == EstadoRespuesta.ACEPTADA.value
 
 
