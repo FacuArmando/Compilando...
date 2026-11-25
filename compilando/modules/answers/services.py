@@ -72,16 +72,6 @@ def aceptar_respuesta(respuesta_id: int, usuario: Usuario) -> Respuesta:
         raise PermissionError("Solo el autor de la pregunta puede aceptar una respuesta.")
 
     try:
-        respuestas_aceptadas = db.session.scalars(
-            select(Respuesta).where(
-                Respuesta.pregunta_id == respuesta.pregunta_id,
-                Respuesta.estado == EstadoRespuesta.ACEPTADA.value,
-            )
-        ).all()
-
-        for respuesta_anterior in respuestas_aceptadas:
-            respuesta_anterior.estado = EstadoRespuesta.NO_ACEPTADA.value
-
         respuesta.estado = EstadoRespuesta.ACEPTADA.value
 
         db.session.commit()
@@ -90,3 +80,4 @@ def aceptar_respuesta(respuesta_id: int, usuario: Usuario) -> Respuesta:
     except Exception:
         db.session.rollback()
         raise
+
