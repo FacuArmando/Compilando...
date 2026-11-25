@@ -1,0 +1,22 @@
+<section class="community-highlights" aria-labelledby="highlights-title">
+  <header>
+    <h2 id="highlights-title">{{ ui("Más útiles de la semana") }}</h2>
+    <p>{{ ui("Explicaciones que ayudaron a otras personas en los últimos 7 días.") }}</p>
+  </header>
+  {% if destacados %}
+  <ol class="community-highlights-list" role="list">
+    {% for destacada in destacados %}
+    <li>
+      <span class="highlight-rank" aria-hidden="true">{{ loop.index }}</span>
+      <div>
+        <span class="highlight-category">{{ destacada.categoria }}</span>
+        <a href="{{ url_for('questions.view_question', pregunta_id=destacada.pregunta_id) }}#respuestas">{{ destacada.titulo }}</a>
+        <p>{{ ui("Ayudó a {count} personas", count=destacada.personas) }}</p>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="highlights-empty">{{ ui("Cuando más personas evalúen respuestas, aparecerán aquí las preguntas destacadas.") }}</p>
+  {% endif %}
+</section>

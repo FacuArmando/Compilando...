@@ -225,6 +225,9 @@
 .community-empty-icon { display: inline-flex; padding: 12px; border-radius: 50%; background: var(--theme-tint, #eaf0fc); color: var(--theme-accent, #6b8ac0); }
 .community-empty h3 { margin: 16px 0 8px; font-size: 17px; font-weight: 600; }
 .community-empty p { margin: 0; color: var(--community-muted); font-size: 13px; line-height: 1.7; }
+.community-empty .community-search-suggestion { margin: 14px 0; }
+.community-search-suggestion a { display: inline-block; padding: 5px 10px; border-radius: 8px; background: var(--theme-tint, #eaf0fc); font-weight: 600; }
+.community-search-suggestion a:focus-visible { outline: 2px solid var(--community-blue); outline-offset: 3px; }
 
 .account-content { max-width: 960px; }
 .account-heading { margin: 4px 0 30px; }

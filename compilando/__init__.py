@@ -28,6 +28,7 @@ from compilando.modules.auth.sessions import init_app as init_auth
 from compilando.modules.questions.attachments import init_app as init_attachments
 from compilando.modules.questions.routes import bp as questions_bp
 from compilando.modules.system.routes import bp as system_bp
+from compilando.search_text import init_app as init_search
 
 
 def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
@@ -40,6 +41,7 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
 
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     db.init_app(app)
+    init_search(app)
     migrate.init_app(app, db, directory=str(project_root / "migrations"))
     init_i18n(app)
     init_security(app)

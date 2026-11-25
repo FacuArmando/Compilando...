@@ -51,6 +51,12 @@
                     <p class="answer-edited">{{ ui("Editado el") }} {{ ui_date(respuesta.fecha_edicion, detailed=true) }}</p>
                     {% endif %}
 
+                    {% include 'answers/_feedback.html' %}
+
+                    {% if usuario_actual and (
+                        (not respuesta.es_ia and usuario_actual.id == respuesta.usuario_id)
+                        or (usuario_actual.id == pregunta.usuario_id and respuesta.estado != "Aceptada")
+                    ) %}
                     <div class="answer-actions">
                         {% if usuario_actual and not respuesta.es_ia and usuario_actual.id == respuesta.usuario_id %}
                         <button type="button" class="answer-edit-button btn-editar-respuesta"
@@ -72,6 +78,7 @@
                         </form>
                         {% endif %}
                     </div>
+                    {% endif %}
                 </div>
 
                 {% if usuario_actual and not respuesta.es_ia and usuario_actual.id == respuesta.usuario_id %}

@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -71,6 +71,9 @@ class Respuesta(db.Model):
 
     pregunta: Mapped["Pregunta"] = relationship("Pregunta", back_populates="respuestas")
     usuario: Mapped["Usuario | None"] = relationship("Usuario")
+    evaluaciones: Mapped[list["EvaluacionRespuesta"]] = relationship(
+        back_populates="respuesta", cascade="all, delete-orphan"
+    )
 
     @property
     def autor_nombre(self) -> str:
@@ -114,3 +117,28 @@ class Respuesta(db.Model):
         if self.fecha_edicion is None:
             return None
         return _formatear_fecha_es(self.fecha_edicion)
+
+
+def _ahora_utc() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
+class EvaluacionRespuesta(db.Model):
+    """Experiencia de un lector; fechas guardadas en UTC, sin afectar aceptación."""
+
+    __tablename__ = "evaluaciones_respuestas"
+    __table_args__ = (Index("ix_evaluaciones_respuesta_util", "respuesta_id", "util"),)
+
+    respuesta_id: Mapped[int] = mapped_column(
+        ForeignKey("respuestas.id", ondelete="CASCADE"), primary_key=True
+    )
+    usuario_id: Mapped[int] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="CASCADE"), primary_key=True
+    )
+    util: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    fecha: Mapped[datetime] = mapped_column(DateTime, default=_ahora_utc, nullable=False)
+    fecha_actualizacion: Mapped[datetime] = mapped_column(
+        DateTime, default=_ahora_utc, onupdate=_ahora_utc, nullable=False
+    )
+
+    respuesta: Mapped["Respuesta"] = relationship(back_populates="evaluaciones")

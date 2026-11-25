@@ -3,6 +3,7 @@
 {% block title %}{{ tr("Comunidad · COMPILANDO...") }}{% endblock %}
 {% block title_key %}Comunidad · COMPILANDO...{% endblock %}
 {% block community_styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/highlights.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/questions.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/attachments.css') }}">
 {% endblock %}
@@ -78,6 +79,9 @@
       {% endif %}
       <p class="composer-caption">{{ ui("Las preguntas se construyen entre todos. Compartí la tuya.") }}</p>
 
+      {% if mostrar_destacados %}
+        {% include 'system/_highlights.html' %}
+      {% endif %}
       {% include 'system/_question_feed.html' %}
     </div>
   </div>

@@ -1,14 +1,17 @@
 """Rutas iniciales disponibles en esta entrega."""
 
 from flask import Blueprint, redirect, render_template, request, url_for
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload, selectinload
 
 from compilando.extensions import db
+from compilando.modules.answers.highlights import preguntas_utiles_semana
 from compilando.modules.answers.models import EstadoRespuesta, Respuesta
 from compilando.modules.auth.models import Usuario
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.models import Pregunta
+from compilando.modules.system.search import criterios_busqueda, terminos_busqueda
+from compilando.modules.system.suggestions import sugerir_busqueda
 from compilando.modules.tags.models import Tag
 
 bp = Blueprint("system", __name__)
@@ -45,25 +48,17 @@ def index():
         selectinload(Pregunta.tags).load_only(Tag.nombre),
     )
 
-    # Buscar palabras en el título o en el cuerpo.
+    # Cada término debe aparecer; priorizar título, etiquetas y luego cuerpo.
     if busqueda:
-        termino = f"%{busqueda}%"
-        consulta = consulta.where(
-            or_(
-                Pregunta.titulo.ilike(termino),
-                Pregunta.cuerpo_detallado.ilike(termino),
-            )
+        filtros, relevancia = criterios_busqueda(busqueda)
+        consulta = consulta.where(*filtros).order_by(
+            relevancia.desc(),
+            Pregunta.respuestas.any(Respuesta.estado == EstadoRespuesta.ACEPTADA.value).desc(),
         )
 
     # Filtrar por categoría seleccionada.
     if categoria_id is not None:
         consulta = consulta.where(Pregunta.categoria_id == categoria_id)
-
-        if busqueda:
-            # Al buscar, mostrar primero las preguntas con respuestas aceptadas.
-            consulta = consulta.order_by(
-                Pregunta.respuestas.any(Respuesta.estado == EstadoRespuesta.ACEPTADA.value).desc(),
-            )
 
     # La fecha y el ID dan un orden estable, también al filtrar solo por categoría.
     consulta = consulta.order_by(Pregunta.fecha.desc(), Pregunta.id.desc())
@@ -93,16 +88,28 @@ def index():
         else {}
     )
     categorias = db.session.scalars(select(Categoria).order_by(Categoria.nombre)).all()
+    sugerencia = (
+        sugerir_busqueda(busqueda, [categoria.nombre for categoria in categorias], categoria_id)
+        if busqueda and paginacion.total == 0 and terminos_busqueda(busqueda)
+        else None
+    )
 
     return render_template(
         "system/index.html",
         preguntas=paginacion.items,
         paginacion=paginacion,
         cantidad_respuestas=cantidad_respuestas,
-        priorizar_aceptadas=bool(busqueda and categoria_id is not None),
         categorias=categorias,
         busqueda=busqueda,
+        sugerencia_busqueda=sugerencia,
+        consulta_sin_terminos=bool(busqueda and not terminos_busqueda(busqueda)),
         categoria_seleccionada=categoria_id,
+        mostrar_destacados=not busqueda and categoria_id is None and pagina == 1,
+        destacados=(
+            preguntas_utiles_semana()
+            if not busqueda and categoria_id is None and pagina == 1
+            else []
+        ),
     )
 
 

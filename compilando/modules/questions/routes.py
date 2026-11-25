@@ -13,6 +13,7 @@ from flask import (
 from sqlalchemy import select
 
 from compilando.extensions import db
+from compilando.modules.answers.feedback import resumen_evaluaciones
 from compilando.modules.answers.models import EstadoRespuesta
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.attachments import (
@@ -174,4 +175,5 @@ def view_question(pregunta_id: int):
         pregunta=pregunta,
         preguntas_historial=preguntas_historial,
         respuestas=respuestas_ordenadas,
+        evaluaciones=resumen_evaluaciones(respuestas_ordenadas, g.usuario_actual),
     )

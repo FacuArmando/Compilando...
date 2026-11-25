@@ -101,6 +101,73 @@ def test_consultar_preguntas_publicadas(app, usuario):
     assert posicion_flask < posicion_python
 
 
+@pytest.mark.parametrize(
+    "busqueda", ["herencia java", "java herencia", "  JAVA   herencia JAVA  ", "java\therencia"]
+)
+def test_busqueda_por_terminos_distribuidos_y_sin_orden(client, usuario, busqueda):
+    esperada = publicar_pregunta(
+        "Clases y contratos en Java", "Un ejemplo de herencia.", "Java", [], usuario
+    )
+    publicar_pregunta("Contratos en Java", "Un ejemplo de interfaces.", "Java", [], usuario)
+    publicar_pregunta("Herencia en Python", "Un ejemplo de clases.", "Python", [], usuario)
+    response = client.get("/", query_string={"q": busqueda})
+    assert response.status_code == 200
+    feed = Feed(response.text)
+    assert feed.preguntas == [esperada.id]
+    assert feed.busqueda == busqueda.strip()
+
+
+@pytest.mark.parametrize("tecnologia", ["C++", "C#", ".NET"])
+def test_busqueda_conserva_simbolos_de_tecnologias(client, usuario, tecnologia):
+    esperadas = {}
+    for nombre in ["C++", "C#", ".NET", "dotnet"]:
+        esperadas[nombre] = publicar_pregunta(
+            f"Ejemplos para {nombre}", "Una explicación específica.", "Programación", [], usuario
+        ).id
+    assert Feed(client.get("/", query_string={"q": tecnologia}).text).preguntas == [
+        esperadas[tecnologia]
+    ]
+
+
+@pytest.mark.parametrize(
+    "literal, alternativa",
+    [("100%", "100X"), ("mi_variable", "miXvariable"), (r"C:\ejemplos", "C:ejemplos")],
+)
+def test_busqueda_trata_comodines_y_barra_como_texto(client, usuario, literal, alternativa):
+    esperada = publicar_pregunta(
+        f"Ejemplo de {literal}", "Contenido específico.", "Java", [], usuario
+    )
+    publicar_pregunta(f"Ejemplo de {alternativa}", "Otro contenido.", "Java", [], usuario)
+    assert Feed(client.get("/", query_string={"q": literal}).text).preguntas == [esperada.id]
+
+
+def test_varios_terminos_conservan_categoria_y_paginacion(client, usuario):
+    categoria = Categoria(nombre="Java", descripcion="Ejemplos")
+    preguntas = [
+        Pregunta(
+            titulo=f"Contratos Java {n}",
+            cuerpo_detallado="Ejemplo de herencia.",
+            usuario=usuario,
+            categoria=categoria,
+        )
+        for n in range(21)
+    ]
+    db.session.add_all(preguntas)
+    db.session.commit()
+    parametros = {"q": "herencia Java", "categoria": categoria.id}
+    primera = Feed(client.get("/", query_string=parametros).text)
+    assert primera.preguntas == [p.id for p in reversed(preguntas)][0:20]
+    siguiente = primera.paginas["next"]
+    query = parse_qs(urlsplit(siguiente).query)
+    assert query["q"] == [parametros["q"]]
+    assert query["categoria"] == [str(categoria.id)]
+    assert Feed(client.get(siguiente).text).preguntas == [preguntas[0].id]
+    otra = publicar_pregunta(
+        "Java y sus contratos", "Ejemplo de herencia.", "Otra categoría", [], usuario
+    )
+    assert otra.id not in Feed(client.get("/", query_string=parametros).text).preguntas
+
+
 def test_consultar_preguntas_sin_publicaciones(app):
     cliente = app.test_client()
     response = cliente.get("/")
@@ -345,7 +412,7 @@ def test_300_preguntas_se_recorren_sin_repeticiones_ni_omisiones(app, usuario):
     assert len(set(encontrados)) == 300
 
 
-def test_busqueda_combinada_conserva_prioridad_de_aceptadas(app, usuario):
+def test_busqueda_usa_aceptadas_para_desempatar_y_sin_busqueda_sigue_reciente(app, usuario):
     categoria_id, ids = crear_listado(usuario, 21)
     db.session.add(
         Respuesta(
@@ -359,12 +426,80 @@ def test_busqueda_combinada_conserva_prioridad_de_aceptadas(app, usuario):
     cliente = app.test_client()
     for parametros, orden in [
         ({"categoria": categoria_id}, ids),
-        ({"q": "interfaz"}, ids),
+        ({"q": "interfaz"}, [ids[-1], *ids[:-1]]),
         ({"q": "interfaz", "categoria": categoria_id}, [ids[-1], *ids[:-1]]),
     ]:
         html = cliente.get("/", query_string=parametros).get_data(as_text=True)
         assert Feed(html).preguntas == orden[:20]
-        assert ('data-i18n="Aceptadas primero"' in html) == (len(parametros) == 2)
+        assert ('data-i18n="Más relevantes"' in html) == ("q" in parametros)
+
+
+@pytest.mark.parametrize("con_categoria", [False, True])
+def test_relevancia_prioriza_titulo_etiquetas_cuerpo_antes_de_aceptacion(
+    client, usuario, con_categoria
+):
+    titulo = publicar_pregunta("Herencia en Java", "Ejemplo concreto.", "Java", [], usuario)
+    etiquetas = publicar_pregunta(
+        "Clases y contratos", "Ejemplo concreto.", "Java", ["java", "java-basics"], usuario
+    )
+    cuerpo = publicar_pregunta("Ejemplos de contratos", "Un ejemplo de Java.", "Java", [], usuario)
+    titulo.fecha = date(2020, 1, 1)
+    db.session.add(
+        Respuesta(
+            cuerpo="Solución aceptada pero menos relacionada.",
+            pregunta=cuerpo,
+            usuario=usuario,
+            estado=EstadoRespuesta.ACEPTADA.value,
+        )
+    )
+    db.session.commit()
+    parametros = {"q": "java"}
+    if con_categoria:
+        parametros["categoria"] = titulo.categoria_id
+    for consulta in ["java", "JAVA java JAVA"]:
+        html = client.get("/", query_string={**parametros, "q": consulta}).text
+        assert Feed(html).preguntas == [titulo.id, etiquetas.id, cuerpo.id]
+        assert 'data-i18n="Más relevantes"' in html
+    client.set_cookie("compilando-language", "en")
+    assert "Most relevant" in client.get("/", query_string=parametros).text
+
+
+def test_terminos_entre_titulo_y_etiquetas(client, usuario):
+    esperada = publicar_pregunta(
+        "Herencia entre objetos", "Una explicación con ejemplos.", "Java", ["java"], usuario
+    )
+    publicar_pregunta(
+        "Contratos entre objetos", "Una explicación con ejemplos.", "Java", ["java"], usuario
+    )
+    publicar_pregunta(
+        "Herencia entre clases", "Una explicación con ejemplos.", "Python", ["python"], usuario
+    )
+    assert Feed(client.get("/", query_string={"q": "java herencia"}).text).preguntas == [
+        esperada.id
+    ]
+
+
+def test_etiquetas_multiples_no_duplican_resultados_ni_paginas(client, usuario):
+    categoria = Categoria(nombre="Java", descripcion="Ejemplos")
+    etiquetas = [Tag(nombre="java"), Tag(nombre="java-basics")]
+    preguntas = [
+        Pregunta(
+            titulo=f"Pregunta sobre contratos {n}",
+            cuerpo_detallado="Ejemplo de interfaces.",
+            usuario=usuario,
+            categoria=categoria,
+            tags=etiquetas,
+        )
+        for n in range(21)
+    ]
+    db.session.add_all(preguntas)
+    db.session.commit()
+    primera = client.get("/", query_string={"q": "java contratos"})
+    feed = Feed(primera.text)
+    assert 'aria-label="21 resultados"' in primera.text
+    ids = feed.preguntas + Feed(client.get(feed.paginas["next"]).text).preguntas
+    assert ids == [p.id for p in reversed(preguntas)]
+    assert len(set(ids)) == 21
 
 
 def test_consultas_acotadas_y_conteos_sin_cargar_respuestas(app, usuario):
@@ -401,7 +536,7 @@ def test_consultas_acotadas_y_conteos_sin_cargar_respuestas(app, usuario):
     lecturas = [
         (sql, valores) for sql, valores in consultas if sql.lstrip().upper().startswith("SELECT")
     ]
-    assert len(lecturas) <= 6  # Cantidad constante, aunque haya veinte autores distintos.
+    assert len(lecturas) <= 7  # Incluye una consulta agrupada de destacados, sin crecer por autor.
     assert any("LIMIT ? OFFSET ?" in sql and valores[-2:] == (20, 0) for sql, valores in lecturas)
     respuestas = [(sql, valores) for sql, valores in lecturas if "FROM respuestas" in sql]
     assert len(respuestas) == 1

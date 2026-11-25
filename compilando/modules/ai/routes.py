@@ -18,6 +18,7 @@ from compilando.extensions import db
 from compilando.i18n import tr
 from compilando.modules.ai.providers import ErrorIA
 from compilando.modules.ai.services import consultar_ia
+from compilando.modules.answers.feedback import resumen_evaluaciones
 from compilando.modules.auth.security import DemasiadosIntentos
 
 bp = Blueprint("ai", __name__)
@@ -75,7 +76,10 @@ def ask(pregunta_id):
                 respuesta_id=respuesta.id,
                 cantidad=len(respuestas),
                 html=render_template(
-                    "answers/_list.html", pregunta=respuesta.pregunta, respuestas=respuestas
+                    "answers/_list.html",
+                    pregunta=respuesta.pregunta,
+                    respuestas=respuestas,
+                    evaluaciones=resumen_evaluaciones(respuestas, g.usuario_actual),
                 ),
             )
         return redirect(

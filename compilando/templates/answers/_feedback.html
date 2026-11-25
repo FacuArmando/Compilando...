@@ -1,0 +1,38 @@
+{% from 'answers/_feedback_icon.html' import feedback_icon %}
+{% set cantidad, eleccion = (evaluaciones|default({})).get(respuesta.id, (0, none)) %}
+{% set es_propia = usuario_actual and not respuesta.es_ia and usuario_actual.id == respuesta.usuario_id %}
+{% if not es_propia or cantidad %}
+<div class="answer-feedback">
+  {% if not es_propia %}
+  <p class="answer-feedback-prompt">{{ ui("¿Te ayudó esta respuesta?") }}</p>
+  {% if usuario_actual %}
+  <form class="answer-feedback-form" method="post" data-respuesta-id="{{ respuesta.id }}"
+        action="{{ url_for('answers.answer_feedback', respuesta_id=respuesta.id) }}"
+        {{ i18n_attr('aria-label', '¿Te ayudó esta respuesta?') }}>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" name="utilidad" data-feedback-choice="si" value="{{ 'retirar' if eleccion is true else 'si' }}"
+            aria-pressed="{{ 'true' if eleccion is true else 'false' }}"
+            {{ i18n_attr('title', 'Retirar mi evaluación' if eleccion is true else 'Me ayudó') }}>
+      {{ feedback_icon('si') }} {{ ui("Me ayudó") }}
+    </button>
+    <button type="submit" name="utilidad" data-feedback-choice="no" value="{{ 'retirar' if eleccion is false else 'no' }}"
+            aria-pressed="{{ 'true' if eleccion is false else 'false' }}"
+            {{ i18n_attr('title', 'Retirar mi evaluación' if eleccion is false else 'No me ayudó') }}>
+      {{ feedback_icon('no') }} {{ ui("No me ayudó") }}
+    </button>
+  </form>
+  <p class="answer-feedback-status" role="status" aria-live="polite" aria-atomic="true"></p>
+  {% else %}
+  <a class="answer-feedback-login"
+     href="{{ url_for('auth.login', next=url_for('questions.view_question', pregunta_id=pregunta.id, _anchor='respuesta-' ~ respuesta.id)) }}">
+    {{ ui("Ingresá para dar tu opinión") }}
+  </a>
+  {% endif %}
+  {% endif %}
+  {% if cantidad %}
+  <p class="answer-feedback-count">
+    {{ ui('A {count} persona le ayudó' if cantidad == 1 else 'A {count} personas les ayudó', count=cantidad) }}
+  </p>
+  {% endif %}
+</div>
+{% endif %}

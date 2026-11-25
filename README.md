@@ -104,6 +104,10 @@ uv run flask --app compilando:create_app check-db
 
 Comprueba una consulta real y crea, si hace falta, `instance/compilando.sqlite`. SQLite se utiliza provisionalmente en desarrollo mientras el equipo confirma el motor. Para usar PostgreSQL habrá que configurar `DATABASE_URL` e incorporar su controlador.
 
+En SQLite, el buscador ignora acentos y mayúsculas en títulos, cuerpos y etiquetas, conservando `ñ` y símbolos como `C++`. La aplicación registra el normalizador en cada conexión, sin modificar el contenido guardado ni requerir migraciones. Al incorporar otro motor habrá que adaptar esa normalización; por ahora los demás motores conservan la búsqueda con `ILIKE`.
+
+Las búsquedas exigen los conceptos indicados y ordenan por coincidencias en título, etiquetas y cuerpo, con respuestas aceptadas como desempate. Se omiten algunos artículos y preposiciones (`de`, `del`, `el`, `la`, `los`, `las`, `en`) y se reconoce la equivalencia entre `POO` y «programación orientada a objetos». Si no hay resultados, puede aparecer una sugerencia explícita para un error de escritura: usa vocabulario de etiquetas/categorías, evita opciones ambiguas y comprueba que la consulta sugerida tenga resultados dentro de la categoría elegida. El texto escrito nunca se reemplaza automáticamente.
+
 Las migraciones están en `migrations/versions/`: crean `usuarios`, `sesiones` y `limites_autenticacion`. Para aplicarlas en cada copia local, también después de actualizar el proyecto:
 
 ```bash

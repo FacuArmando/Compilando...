@@ -2,10 +2,10 @@
 <section class="community-feed" id="preguntas" aria-labelledby="feed-title">
   <header class="community-feed-header">
     <div class="community-feed-title">
-      <h2 id="feed-title">{{ ui("Preguntas recientes") }}</h2>
+      <h2 id="feed-title">{{ ui("Resultados de búsqueda" if busqueda else "Preguntas recientes") }}</h2>
       <span class="community-count" {{ i18n_attr('aria-label', '{count} resultado' if paginacion.total == 1 else '{count} resultados', count=paginacion.total) }}>{{ paginacion.total }}</span>
     </div>
-    <span class="community-feed-order">{{ icon('clock') }} {{ ui("Aceptadas primero" if priorizar_aceptadas else "Más recientes") }}</span>
+    <span class="community-feed-order">{{ icon('relevance' if busqueda else 'clock') }} {{ ui("Más relevantes" if busqueda else "Más recientes") }}</span>
   </header>
 
     {% if preguntas %}
@@ -48,7 +48,10 @@
         <span class="community-empty-icon">{{ icon('questions') }}</span>
         {% if busqueda or categoria_seleccionada %}
         <h3>{{ ui("No encontramos preguntas") }}</h3>
-        <p>{{ ui("Probá con otras palabras o seleccioná una categoría diferente.") }}</p>
+        <p>{{ ui("Escribí una tecnología, tema o concepto para buscar." if consulta_sin_terminos else "Probá con otras palabras o seleccioná una categoría diferente.") }}</p>
+        {% if sugerencia_busqueda %}
+        <p class="community-search-suggestion">{{ ui("¿Quisiste decir") }} <a href="{{ url_for('system.index', q=sugerencia_busqueda, categoria=categoria_seleccionada, _anchor='preguntas') }}">{{ sugerencia_busqueda }}</a>?</p>
+        {% endif %}
         <a href="{{ url_for('system.index') }}#preguntas">{{ ui("Ver todas las preguntas") }}</a>
         {% else %}
         <h3>{{ ui("Todavía no hay preguntas publicadas.") }}</h3>
