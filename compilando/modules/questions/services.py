@@ -1,6 +1,7 @@
 import unicodedata
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from werkzeug.datastructures import FileStorage
 
 from compilando.extensions import db
@@ -123,3 +124,30 @@ def publicar_pregunta(
         for ruta in guardados:
             ruta.unlink(missing_ok=True)
         raise
+
+def eliminar_pregunta(pregunta_id: int, usuario: Usuario) -> None:
+    """Permite al autor eliminar su propia pregunta junto con sus respuestas y adjuntos."""
+
+    pregunta = db.session.scalar(
+        select(Pregunta)
+        .options(selectinload(Pregunta.adjuntos))
+        .where(Pregunta.id == pregunta_id)
+    )
+
+    if pregunta is None:
+        raise ValueError("La pregunta que intentás eliminar no existe.")
+
+    if pregunta.usuario_id != usuario.id:
+        raise PermissionError("Solo el autor de la pregunta puede eliminarla.")
+
+    rutas_adjuntos = [ruta_adjunto(adjunto.id) for adjunto in pregunta.adjuntos]
+
+    try:
+        db.session.delete(pregunta)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
+    for ruta in rutas_adjuntos:
+        ruta.unlink(missing_ok=True)

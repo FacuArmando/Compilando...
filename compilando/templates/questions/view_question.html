@@ -72,9 +72,52 @@
               
               <div><small>{{ ui("Pregunta de") }}</small><strong>{{ pregunta.usuario.username }}</strong></div>
             </div>
-            <a class="question-reply-link" href="{{ '#tu-respuesta' if usuario_actual else login_url }}">{{ icon('reply') }} {{ ui("Responder") }}</a>
+            
+            <div class="question-detail-actions">
+              <a class="question-reply-link" href="{{ '#tu-respuesta' if usuario_actual else login_url }}">{{ icon('reply') }} {{ ui("Responder") }}</a>
+              {% if usuario_actual and usuario_actual.id == pregunta.usuario_id %}
+                <button type="button" class="question-delete-button" id="btn-abrir-eliminar-pregunta">
+                  {{ icon('trash') }} {{ ui("Eliminar pregunta") }}
+                </button>
+              {% endif %}
+            </div>
           </footer>
         </article>
+
+        {% if usuario_actual and usuario_actual.id == pregunta.usuario_id %}
+        <dialog id="dialog-eliminar-pregunta" class="question-delete-dialog" aria-labelledby="titulo-eliminar-pregunta">
+          <div class="question-delete-dialog-card">
+            <div class="question-delete-dialog-icon" aria-hidden="true">
+              {{ icon('trash') }}
+            </div>
+            <h3 id="titulo-eliminar-pregunta">{{ ui("¿Eliminar esta pregunta?") }}</h3>
+            <p>{{ ui("Esta acción es permanente y también eliminará sus respuestas y archivos adjuntos.") }}</p>
+            <form action="{{ url_for('questions.delete_question', pregunta_id=pregunta.id) }}" method="POST" class="question-delete-dialog-actions">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="button" class="question-cancel-delete-button" id="btn-cancelar-eliminar-pregunta">
+                {{ ui("Cancelar") }}
+              </button>
+              <button type="submit" class="question-confirm-delete-button">
+                {{ ui("Sí, eliminar pregunta") }}
+              </button>
+            </form>
+          </div>
+        </dialog>
+        
+        <script>
+          (() => {
+            const abrir = document.getElementById("btn-abrir-eliminar-pregunta");
+            const modal = document.getElementById("dialog-eliminar-pregunta");
+            const cancelar = document.getElementById("btn-cancelar-eliminar-pregunta");
+            if (!abrir || !modal || !cancelar) return;
+            abrir.addEventListener("click", () => modal.showModal());
+            cancelar.addEventListener("click", () => modal.close());
+            modal.addEventListener("click", (e) => { if (e.target === modal) modal.close(); });
+          })();
+        </script>
+
+        
+        {% endif %}
 
         <section class="question-answers" id="respuestas" aria-labelledby="answers-title">
           <header class="question-answers-heading">

@@ -444,5 +444,10 @@
   "Más útiles de la semana": "Most helpful this week",
   "Explicaciones que ayudaron a otras personas en los últimos 7 días.": "Answers that helped others over the last 7 days.",
   "Ayudó a {count} personas": "Helped {count} people",
-  "Cuando más personas evalúen respuestas, aparecerán aquí las preguntas destacadas.": "As more people give feedback on answers, featured questions will appear here."
+  "Cuando más personas evalúen respuestas, aparecerán aquí las preguntas destacadas.": "As more people give feedback on answers, featured questions will appear here.",
+  "Eliminar pregunta": "Delete question",
+  "La pregunta se eliminó correctamente.": "The question was deleted successfully.",
+  "¿Eliminar esta pregunta?": "Delete this question?",
+  "Esta acción es permanente y también eliminará sus respuestas y archivos adjuntos.": "This action is permanent and will also delete its answers and attachments.",
+  "Sí, eliminar pregunta": "Yes, delete question"
 }

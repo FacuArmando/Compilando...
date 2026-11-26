@@ -190,3 +190,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+// Modal de confirmación para eliminar pregunta
+const btnAbrirEliminarPregunta = document.getElementById("btn-abrir-eliminar-pregunta");
+const dialogEliminarPregunta = document.getElementById("dialog-eliminar-pregunta");
+const btnCancelarEliminarPregunta = document.getElementById("btn-cancelar-eliminar-pregunta");
+
+if (btnAbrirEliminarPregunta && dialogEliminarPregunta && btnCancelarEliminarPregunta) {
+  btnAbrirEliminarPregunta.addEventListener("click", () => dialogEliminarPregunta.showModal());
+  btnCancelarEliminarPregunta.addEventListener("click", () => dialogEliminarPregunta.close());
+  dialogEliminarPregunta.addEventListener("click", (event) => {
+    if (event.target === dialogEliminarPregunta) dialogEliminarPregunta.close();
+  });
+}

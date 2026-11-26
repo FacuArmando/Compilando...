@@ -389,3 +389,127 @@
 .question-ai-existing { margin-bottom: 24px; }
 .answer-ai-content pre { max-width: 100%; margin: 18px 0; padding: 18px; overflow-x: auto; border: 1px solid var(--theme-border, #e5eaf2); border-radius: 8px; background: var(--theme-input, #f7f9fe); color: var(--theme-text, #3c4e67); font: 12px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .answer-ai-disclaimer { margin: 20px 0 0; color: var(--theme-subtle, #8996aa); font-size: 11px; line-height: 1.8; }
+
+
+/* Eliminar preguntas */
+.question-detail-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.question-delete-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--theme-danger, #c94a53);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 550;
+    cursor: pointer;
+    transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.question-delete-button:hover {
+    background: color-mix(in srgb, var(--theme-danger, #c94a53) 12%, transparent);
+}
+
+.question-delete-button .community-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.question-delete-dialog {
+    padding: 0;
+    border: 1px solid var(--theme-border, #e5eaf2);
+    border-radius: 16px;
+    background: var(--theme-surface, #fff);
+    color: var(--theme-text, #3c4e67);
+    max-width: 420px;
+    width: calc(100% - 32px);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
+}
+
+.question-delete-dialog::backdrop {
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+}
+
+.question-delete-dialog-card {
+    padding: 24px;
+    display: grid;
+    gap: 12px;
+}
+
+.question-delete-dialog-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--theme-danger, #c94a53) 14%, transparent);
+    color: var(--theme-danger, #c94a53);
+}
+
+.question-delete-dialog-icon .community-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.question-delete-dialog-card h3 {
+    margin: 0;
+    color: var(--theme-heading, #293d59);
+    font-size: 17px;
+    font-weight: 650;
+}
+
+.question-delete-dialog-card p {
+    margin: 0;
+    color: var(--theme-muted, #6b7a90);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.question-delete-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.question-cancel-delete-button {
+    padding: 9px 14px;
+    border: 1px solid var(--theme-border, #dce3ee);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--theme-text, #3c4e67);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.question-cancel-delete-button:hover {
+    background: var(--theme-hover, #f1f4f9);
+}
+
+.question-confirm-delete-button {
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--theme-danger, #c94a53);
+    color: #ffffff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.question-confirm-delete-button:hover {
+    filter: brightness(1.08);
+}

@@ -23,7 +23,7 @@ from compilando.modules.questions.attachments import (
     ruta_adjunto,
 )
 from compilando.modules.questions.models import AdjuntoPregunta, Pregunta
-from compilando.modules.questions.services import publicar_pregunta
+from compilando.modules.questions.services import eliminar_pregunta, publicar_pregunta
 from compilando.modules.tags.models import Tag
 
 bp = Blueprint("questions", __name__)
@@ -177,3 +177,20 @@ def view_question(pregunta_id: int):
         respuestas=respuestas_ordenadas,
         evaluaciones=resumen_evaluaciones(respuestas_ordenadas, g.usuario_actual),
     )
+
+@bp.post("/questions/<int:pregunta_id>/delete")
+def delete_question(pregunta_id: int):
+    """Permite al autor eliminar su propia pregunta."""
+
+    if g.usuario_actual is None:
+        abort(401)
+
+    try:
+        eliminar_pregunta(pregunta_id=pregunta_id, usuario=g.usuario_actual)
+    except ValueError:
+        abort(404)
+    except PermissionError:
+        abort(403)
+
+    flash("La pregunta se eliminó correctamente.", "success")
+    return redirect(url_for("system.index", _anchor="preguntas"))
