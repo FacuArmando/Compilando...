@@ -4,7 +4,7 @@ Plataforma de preguntas y respuestas con participación humana y respuestas de I
 
 ## Estado actual
 
-Base Flask modular, página inicial, registro, inicio y cierre de sesión desde el navegador, `/health`, conexión SQLite y herramientas de calidad. El registro valida los datos, rechaza duplicados y guarda el hash de la contraseña. El login comprueba las credenciales y muestra el usuario conectado. Los formularios están protegidos con Flask-WTF (CSRF). La plataforma permite publicar y consultar preguntas y respuestas; permite solicitar respuestas reales de Gemini desde una pregunta, con sesión válida y confirmación del envío.
+Base Flask modular, página inicial, registro, inicio y cierre de sesión desde el navegador, `/health`, conexión SQLite o PostgreSQL y herramientas de calidad. El registro valida los datos, rechaza duplicados y guarda el hash de la contraseña. El login comprueba las credenciales y muestra el usuario conectado. Los formularios están protegidos con Flask-WTF (CSRF). La plataforma permite publicar y consultar preguntas y respuestas; permite solicitar respuestas reales de Gemini desde una pregunta, con sesión válida y confirmación del envío.
 
 El inicio `/` es público: permite leer preguntas y respuestas, buscar y filtrar. El login `/auth/login` y el registro `/auth/register` son pantallas independientes, sin listado de preguntas debajo. Al intentar preguntar o responder, el visitante pasa por el login y luego vuelve al formulario correspondiente. Solo se admiten destinos internos conocidos para ese regreso. Publicar y modificar contenido requiere una sesión válida; «Mi cuenta» también es privada.
 
@@ -12,7 +12,7 @@ El listado muestra 20 preguntas por página, con navegación numerada antes del 
 
 `registrar_usuario` en `compilando/modules/auth/services.py` valida los datos, guarda el correo en minúsculas, genera el hash y persiste la cuenta. Las contraseñas nuevas deben tener entre 8 y 18 caracteres. El login mantiene la compatibilidad con las contraseñas anteriores. Los datos inválidos o repetidos producen un `ValueError` con un mensaje para mostrar en el formulario.
 
-Para probar el recorrido, instalar las dependencias con `uv sync --locked`, aplicar `db upgrade`, iniciar el servidor y crear una cuenta en `/auth/register`. Después ingresar en `/auth/login` con el correo y contraseña registrados. El inicio muestra el nombre de usuario y el botón «Cerrar sesión». Los errores conservan el correo, pero requieren volver a escribir la contraseña.
+Para probar el recorrido, instalar las dependencias con `uv sync --locked`, aplicar `db upgrade` sobre SQLite local según la sección de base de datos, iniciar el servidor y crear una cuenta en `/auth/register`. Después ingresar en `/auth/login` con el correo y contraseña registrados. El inicio muestra el nombre de usuario y el botón «Cerrar sesión». Los errores conservan el correo, pero requieren volver a escribir la contraseña.
 
 El login crea una sesión en la base; la cookie firmada contiene un identificador aleatorio y la base guarda su hash. La sesión vence a las 8 horas o tras 30 minutos de inactividad. Cerrar sesión requiere POST con CSRF e invalida también las copias anteriores de esa cookie. Hay límites de intentos compartidos en la base: por ventana de 15 minutos se admiten 5 envíos de login por correo, 30 por IP y 10 registros por IP; al superarlos se devuelve 429 con `Retry-After`. Los envíos válidos también cuentan.
 
@@ -98,13 +98,23 @@ Abrir <http://127.0.0.1:5051>. El estado del proceso está en <http://127.0.0.1:
 
 ## Base de datos
 
+Para elegir la base del servidor local, configurar el `.env` personal y después iniciar Flask manualmente con el comando anterior:
+
+```dotenv
+DATABASE_BACKEND=sqlite
+# O, con el perfil privado configurado: DATABASE_BACKEND=supabase
+```
+
+Detener el servidor anterior antes de cambiar. Cada base conserva sus propios datos; no se copian ni sincronizan. Ver [preparación y selector de base](docs/cambiar-base.md). `database-info` muestra la selección y `check-db` comprueba la conexión:
+
 ```bash
+uv run flask --app compilando:create_app database-info
 uv run flask --app compilando:create_app check-db
 ```
 
-Comprueba una consulta real y crea, si hace falta, `instance/compilando.sqlite`. SQLite se utiliza provisionalmente en desarrollo mientras el equipo confirma el motor. Para usar PostgreSQL habrá que configurar `DATABASE_URL` e incorporar su controlador.
+Comprueba una consulta real sin crear tablas del dominio. El proyecto incluye Psycopg 3 para PostgreSQL/Supabase y conserva SQLite para desarrollo local. En modo SQLite, el archivo normal es `instance/compilando.sqlite`. El ejemplo de `.env` elige SQLite; las copias existentes sin selector conservan su configuración anterior mediante el modo `auto`.
 
-Las migraciones están en `migrations/versions/`: crean `usuarios`, `sesiones` y `limites_autenticacion`. Para aplicarlas en cada copia local, también después de actualizar el proyecto:
+Las migraciones están en `migrations/versions/`. Para aplicarlas en una copia local, confirmar primero que `database-info` indique SQLite; no aplicar automáticamente el historial de esta rama a una Supabase compartida que pueda tener revisiones diferentes:
 
 ```bash
 uv run flask --app compilando:create_app db upgrade
@@ -119,6 +129,10 @@ uv run flask --app compilando:create_app db upgrade
 ```
 
 En una copia nueva con revisiones existentes, aplicar `db upgrade`. No repetir `db init` ni regenerar migraciones compartidas.
+
+## Rendimiento
+
+Se redujeron consultas de navegación, estadísticas y login; ver [mediciones antes/después con Supabase](docs/rendimiento-mediciones.md). Las pruebas usan datos aislados y no cambian la base de los usuarios. Para desarrollo sin latencia de red se puede elegir `DATABASE_BACKEND=sqlite` en el `.env` y reiniciar Flask manualmente; el modo Supabase conserva la integración remota.
 
 ## Comprobaciones
 

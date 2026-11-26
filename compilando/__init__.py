@@ -12,6 +12,7 @@ from flask import Flask
 
 from compilando.commands import register_commands
 from compilando.config import load_config
+from compilando.database import configure_database
 from compilando.errors import not_found
 from compilando.extensions import csrf, db, migrate
 from compilando.i18n import init_app as init_i18n
@@ -38,7 +39,11 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     if test_config is not None:
         app.config.from_mapping(test_config)
 
-    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    backend = configure_database(
+        app, explicit_uri=test_config is not None and "SQLALCHEMY_DATABASE_URI" in test_config
+    )
+    if backend == "sqlite":
+        Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     db.init_app(app)
     migrate.init_app(app, db, directory=str(project_root / "migrations"))
     init_i18n(app)

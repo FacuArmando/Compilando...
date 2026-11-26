@@ -130,7 +130,7 @@
           <h2 id="related-title">{{ ui("Otras preguntas") }}</h2>
           <ul>
             {% for item in otras_preguntas[:5] %}
-              <li><a href="{{ url_for('questions.view_question', pregunta_id=item.id) }}">{{ item.titulo }}</a><small>{{ ui('{count} respuesta' if item.respuestas|length == 1 else '{count} respuestas', count=item.respuestas|length) }}</small></li>
+              <li><a href="{{ url_for('questions.view_question', pregunta_id=item.id) }}">{{ item.titulo }}</a><small>{{ ui('{count} respuesta' if item.cantidad_respuestas == 1 else '{count} respuestas', count=item.cantidad_respuestas) }}</small></li>
             {% endfor %}
           </ul>
         </aside>

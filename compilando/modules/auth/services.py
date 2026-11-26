@@ -321,44 +321,38 @@ def obtener_estadisticas_usuario(usuario_id: int) -> dict[str, int]:
     from compilando.modules.answers.models import EstadoRespuesta, Respuesta
     from compilando.modules.questions.models import Pregunta
 
-    preguntas_realizadas = (
-        db.session.scalar(select(func.count(Pregunta.id)).where(Pregunta.usuario_id == usuario_id))
-        or 0
+    preguntas = select(func.count(Pregunta.id)).where(Pregunta.usuario_id == usuario_id)
+
+    personas = (
+        select(func.count(func.distinct(Respuesta.usuario_id)))
+        .join(Pregunta, Respuesta.pregunta_id == Pregunta.id)
+        .where(
+            Pregunta.usuario_id == usuario_id,
+            Respuesta.es_ia.is_(False),
+            Respuesta.usuario_id.is_not(None),
+            Respuesta.usuario_id != usuario_id,
+        )
     )
 
-    personas_respondieron = (
-        db.session.scalar(
-            select(func.count(func.distinct(Respuesta.usuario_id)))
-            .join(Pregunta, Respuesta.pregunta_id == Pregunta.id)
-            .where(
-                Pregunta.usuario_id == usuario_id,
-                Respuesta.es_ia.is_(False),
-                Respuesta.usuario_id.is_not(None),
-                Respuesta.usuario_id != usuario_id,
-            )
-        )
-        or 0
+    totales = select(func.count(Respuesta.id)).where(
+        Respuesta.usuario_id == usuario_id,
+        Respuesta.es_ia.is_(False),
     )
 
-    respuestas_totales = (
-        db.session.scalar(
-            select(func.count(Respuesta.id)).where(
-                Respuesta.usuario_id == usuario_id,
-                Respuesta.es_ia.is_(False),
-            )
-        )
-        or 0
+    aceptadas = select(func.count(Respuesta.id)).where(
+        Respuesta.usuario_id == usuario_id,
+        Respuesta.es_ia.is_(False),
+        Respuesta.estado == EstadoRespuesta.ACEPTADA.value,
     )
-
-    respuestas_aceptadas = (
-        db.session.scalar(
-            select(func.count(Respuesta.id)).where(
-                Respuesta.usuario_id == usuario_id,
-                Respuesta.es_ia.is_(False),
-                Respuesta.estado == EstadoRespuesta.ACEPTADA.value,
+    preguntas_realizadas, personas_respondieron, respuestas_totales, respuestas_aceptadas = (
+        db.session.execute(
+            select(
+                preguntas.scalar_subquery(),
+                personas.scalar_subquery(),
+                totales.scalar_subquery(),
+                aceptadas.scalar_subquery(),
             )
-        )
-        or 0
+        ).one()
     )
 
     porcentaje_aceptadas = (

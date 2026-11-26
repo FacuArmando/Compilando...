@@ -14,7 +14,7 @@ function animateNumber(el, target) {
     return;
   }
 
-  const duration = 850;
+  const duration = 250;
   const start = performance.now();
   const step = (now) => {
     const progress = Math.min((now - start) / duration, 1);
@@ -26,11 +26,10 @@ function animateNumber(el, target) {
   requestAnimationFrame(step);
 }
 
-// Animación inicial al abrir Mi cuenta
+// Conservar los números que ya envió el servidor: no reiniciarlos a cero al abrir.
 document.querySelectorAll("[data-count-target]").forEach((el) => {
   const target = Number(el.dataset.countTarget) || 0;
-  el.dataset.currentValue = "0";
-  animateNumber(el, target);
+  el.dataset.currentValue = String(target);
 });
 
 // Actualización automática en segundo plano (al volver a la pestaña o cada 15s)
@@ -39,9 +38,15 @@ if (statsSection) {
   const statsUrl = statsSection.dataset.statsUrl;
   const ringEl = statsSection.querySelector("[data-ring-progress]");
   const ratioEl = statsSection.querySelector("[data-stat-ratio]");
+  const refreshInterval = 30000;
+  let refreshPending = false;
+  let lastRefresh = Date.now(); // El HTML inicial ya incluye las estadísticas.
 
-  const refreshStats = async () => {
-    if (document.hidden) return;
+  const refreshStats = async (event) => {
+    const restored = event && event.type === "pageshow" && event.persisted;
+    if (document.hidden || refreshPending || (!restored && Date.now() - lastRefresh < refreshInterval)) return;
+    refreshPending = true;
+    lastRefresh = Date.now();
     try {
       const res = await fetch(statsUrl, { headers: { Accept: "application/json" } });
       if (!res.ok) return;
@@ -63,12 +68,14 @@ if (statsSection) {
       }
     } catch {
       // Ignorar fallos temporales de red
+    } finally {
+      refreshPending = false;
     }
   };
 
   document.addEventListener("visibilitychange", refreshStats);
   window.addEventListener("pageshow", refreshStats);
-  setInterval(refreshStats, 15000);
+  setInterval(refreshStats, refreshInterval);
 }
 
 // Globos festivos cuando es el cumpleaños del usuario

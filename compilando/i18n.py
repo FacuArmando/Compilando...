@@ -1,5 +1,6 @@
 """Interfaz ES/EN explícita: nunca traduce contenido de la comunidad."""
 
+import hashlib
 import json
 import re
 from datetime import datetime
@@ -82,14 +83,18 @@ def ui_date(value: datetime, *, detailed=False):
 
 def init_app(app):
     app.jinja_env.globals.update(tr=tr, ui=ui, i18n_attr=i18n_attr, ui_date=ui_date)
+    catalog_script = "window.CompilandoCatalog=" + json.dumps(CATALOG) + ";"
+    catalog_etag = hashlib.sha256(catalog_script.encode("utf-8")).hexdigest()
 
     @app.get("/interface-catalog.js")
     def interface_catalog():
-        return Response(
-            "window.CompilandoCatalog=" + json.dumps(CATALOG) + ";",
+        response = Response(
+            catalog_script,
             mimetype="text/javascript",
             headers={"Cache-Control": "public, max-age=3600"},
         )
+        response.set_etag(catalog_etag)
+        return response.make_conditional(request)
 
     @app.context_processor
     def locale_context():

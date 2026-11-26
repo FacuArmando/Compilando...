@@ -22,6 +22,15 @@ def load_config() -> dict:
         "ADMIN_ACTIVATION_CODE": os.environ.get("ADMIN_ACTIVATION_CODE", ""),
         "SQLALCHEMY_DATABASE_URI": os.environ.get("DATABASE_URL")
         or f"sqlite:///{database_path.as_posix()}",
+        "DATABASE_BACKEND": os.environ.get("DATABASE_BACKEND", "auto"),
+        "SQLITE_DATABASE_URL": os.environ.get("SQLITE_DATABASE_URL")
+        or f"sqlite:///{database_path.as_posix()}",
+        "SUPABASE_ENV_FILE": str(database_path.parent.parent / ".env.supabase.local"),
+        "SUPABASE_DATABASE_URL": os.environ.get("SUPABASE_DATABASE_URL", ""),
+        "SUPABASE_DATABASE_PASSWORD": os.environ.get("SUPABASE_DATABASE_PASSWORD", ""),
+        "SUPABASE_DATABASE_POOL_MODE": os.environ.get("SUPABASE_DATABASE_POOL_MODE", "session"),
+        "DATABASE_PASSWORD": os.environ.get("DATABASE_PASSWORD", ""),
+        "DATABASE_POOL_MODE": os.environ.get("DATABASE_POOL_MODE", "session"),
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
         "QUESTION_UPLOAD_FOLDER": str(database_path.parent / "question-attachments"),
         "QUESTION_ATTACHMENT_MAX_FILES": 10,
@@ -49,6 +58,7 @@ def load_config() -> dict:
         "PERMANENT_SESSION_LIFETIME": timedelta(hours=8),
         "AUTH_SESSION_LIFETIME": timedelta(hours=8),
         "AUTH_IDLE_TIMEOUT": timedelta(minutes=30),
+        "AUTH_SESSION_ACTIVITY_INTERVAL": timedelta(seconds=30),
         "AUTH_RATE_WINDOW": timedelta(minutes=15),
         "AUTH_LOGIN_EMAIL_LIMIT": 5,
         "AUTH_LOGIN_IP_LIMIT": 30,

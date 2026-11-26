@@ -2,7 +2,7 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, ForeignKey, Index, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, query_expression, relationship
 
 from compilando.extensions import db
 
@@ -32,6 +32,9 @@ class Pregunta(db.Model):
     titulo: Mapped[str] = mapped_column(String(150), nullable=False)
     cuerpo_detallado: Mapped[str] = mapped_column(Text, nullable=False)
     fecha: Mapped[date] = mapped_column(Date, default=date.today, nullable=False)
+    # Valor calculado del listado; no agrega columnas ni requiere migración.
+    cantidad_respuestas_listado: Mapped[int | None] = query_expression()
+    total_listado: Mapped[int | None] = query_expression()
 
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=False)
 

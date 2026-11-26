@@ -10,10 +10,12 @@ from flask import (
     send_file,
     url_for,
 )
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.orm import joinedload, selectinload
 
 from compilando.extensions import db
-from compilando.modules.answers.models import EstadoRespuesta
+from compilando.modules.answers.models import EstadoRespuesta, Respuesta
+from compilando.modules.auth.models import Usuario
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.attachments import (
     AdjuntosInvalidos,
@@ -156,7 +158,19 @@ def publish_success():
 def view_question(pregunta_id: int):
     """Muestra una pregunta y sus respuestas ordenadas."""
 
-    pregunta = db.session.scalar(select(Pregunta).where(Pregunta.id == pregunta_id))
+    pregunta = db.session.scalar(
+        select(Pregunta)
+        .where(Pregunta.id == pregunta_id)
+        .options(
+            joinedload(Pregunta.usuario).load_only(Usuario.username, Usuario.avatar_filename),
+            joinedload(Pregunta.categoria).load_only(Categoria.nombre),
+            selectinload(Pregunta.tags),
+            selectinload(Pregunta.adjuntos),
+            selectinload(Pregunta.respuestas)
+            .joinedload(Respuesta.usuario)
+            .load_only(Usuario.username, Usuario.avatar_filename),
+        )
+    )
 
     if pregunta is None:
         abort(404)
@@ -167,7 +181,14 @@ def view_question(pregunta_id: int):
         key=lambda respuesta: respuesta.estado != EstadoRespuesta.ACEPTADA.value,
     )
 
-    preguntas_historial = db.session.scalars(select(Pregunta).order_by(Pregunta.id.desc())).all()
+    preguntas_historial = db.session.execute(
+        select(Pregunta.id, Pregunta.titulo, func.count(Respuesta.id).label("cantidad_respuestas"))
+        .outerjoin(Respuesta, Respuesta.pregunta_id == Pregunta.id)
+        .where(Pregunta.id != pregunta.id)
+        .group_by(Pregunta.id, Pregunta.titulo)
+        .order_by(Pregunta.id.desc())
+        .limit(5)
+    ).all()
 
     return render_template(
         "questions/view_question.html",

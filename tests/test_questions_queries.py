@@ -345,6 +345,24 @@ def test_300_preguntas_se_recorren_sin_repeticiones_ni_omisiones(app, usuario):
     assert len(set(encontrados)) == 300
 
 
+def test_etiquetas_multiples_no_duplican_total_ni_recortan_la_pagina(app, usuario):
+    _, ids = crear_listado(usuario, 22)
+    etiquetas = [Tag(nombre=f"extra{n}") for n in range(8)]
+    db.session.add_all(etiquetas)
+    for pregunta in db.session.scalars(db.select(Pregunta)):
+        pregunta.tags = etiquetas if pregunta.id % 2 else []
+    db.session.commit()
+    db.session.remove()
+
+    cliente = app.test_client()
+    for pagina, esperados in [(1, ids[:20]), (2, ids[20:])]:
+        respuesta = cliente.get(f"/?page={pagina}")
+        html = respuesta.get_data(as_text=True)
+        assert respuesta.status_code == 200
+        assert Feed(html).preguntas == esperados
+        assert 'aria-label="22 resultados"' in html
+
+
 def test_busqueda_combinada_conserva_prioridad_de_aceptadas(app, usuario):
     categoria_id, ids = crear_listado(usuario, 21)
     db.session.add(
@@ -401,11 +419,13 @@ def test_consultas_acotadas_y_conteos_sin_cargar_respuestas(app, usuario):
     lecturas = [
         (sql, valores) for sql, valores in consultas if sql.lstrip().upper().startswith("SELECT")
     ]
-    assert len(lecturas) <= 6  # Cantidad constante, aunque haya veinte autores distintos.
+    assert len(lecturas) <= 2  # Preguntas con total/etiquetas + categorías.
     assert any("LIMIT ? OFFSET ?" in sql and valores[-2:] == (20, 0) for sql, valores in lecturas)
     respuestas = [(sql, valores) for sql, valores in lecturas if "FROM respuestas" in sql]
     assert len(respuestas) == 1
     sql, valores = respuestas[0]
     assert "count(respuestas.id)" in sql
     assert "respuestas.cuerpo" not in sql
-    assert set(valores) == set(ids[:20])
+    assert "respuestas.pregunta_id = preguntas.id" in sql
+    assert valores[-2:] == (20, 0)
+    assert "count(*) OVER ()" in sql

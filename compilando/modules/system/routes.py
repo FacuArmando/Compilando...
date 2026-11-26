@@ -2,7 +2,7 @@
 
 from flask import Blueprint, redirect, render_template, request, url_for
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, with_expression
 
 from compilando.extensions import db
 from compilando.modules.answers.models import EstadoRespuesta, Respuesta
@@ -42,7 +42,17 @@ def index():
     consulta = select(Pregunta).options(
         joinedload(Pregunta.usuario).load_only(Usuario.username, Usuario.avatar_filename),
         joinedload(Pregunta.categoria).load_only(Categoria.nombre),
-        selectinload(Pregunta.tags).load_only(Tag.nombre),
+        # Con LIMIT, SQLAlchemy pagina las preguntas antes de unir las etiquetas.
+        # unique() de db.paginate evita tarjetas duplicadas por cada etiqueta.
+        joinedload(Pregunta.tags).load_only(Tag.nombre),
+        with_expression(Pregunta.total_listado, func.count().over()),
+        with_expression(
+            Pregunta.cantidad_respuestas_listado,
+            select(func.count(Respuesta.id))
+            .where(Respuesta.pregunta_id == Pregunta.id)
+            .correlate(Pregunta)
+            .scalar_subquery(),
+        ),
     )
 
     # Buscar palabras en el título o en el cuerpo.
@@ -74,24 +84,20 @@ def index():
         per_page=PREGUNTAS_POR_PAGINA,
         max_per_page=PREGUNTAS_POR_PAGINA,
         error_out=False,
+        count=False,
     )
+
+    # El total filtrado se calcula antes del LIMIT y viaja con la misma página.
+    # Evita un SELECT COUNT adicional sin cachear publicaciones entre solicitudes.
+    paginacion.total = paginacion.items[0].total_listado if paginacion.items else 0
 
     if pagina > 1 and not paginacion.items:
         return primera_pagina()
 
-    # Contar solo las respuestas de esta página, sin cargar sus cuerpos en memoria.
-    ids = [pregunta.id for pregunta in paginacion.items]
-    cantidad_respuestas = (
-        dict(
-            db.session.execute(
-                select(Respuesta.pregunta_id, func.count(Respuesta.id))
-                .where(Respuesta.pregunta_id.in_(ids))
-                .group_by(Respuesta.pregunta_id)
-            ).all()
-        )
-        if ids
-        else {}
-    )
+    # El conteo viaja con las filas de la página, sin otra ida a la base.
+    cantidad_respuestas = {
+        pregunta.id: pregunta.cantidad_respuestas_listado or 0 for pregunta in paginacion.items
+    }
     categorias = db.session.scalars(select(Categoria).order_by(Categoria.nombre)).all()
 
     return render_template(

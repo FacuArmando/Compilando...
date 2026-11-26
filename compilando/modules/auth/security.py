@@ -3,13 +3,16 @@
 import hashlib
 import hmac
 import math
+from datetime import timedelta
+from time import monotonic
 
 from flask import abort, current_app, request
-from sqlalchemy import case, delete, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import case, delete
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from compilando.extensions import db
-from compilando.modules.auth.models import LimiteIntentos
+from compilando.modules.auth.models import LimiteIntentos, Sesion
 from compilando.modules.auth.sessions import ahora_utc
 
 
@@ -49,41 +52,49 @@ def limitar_intentos(accion: str, email: str = "", *, usuario_id: int | None = N
         limites[0] = (limites[0][0], "AUTH_REGISTER_IP_LIMIT")
 
     esperar = 0
+    # Esta marca solo limita la limpieza; las decisiones de acceso siguen en DB.
+    cleanup_time = monotonic()
+    cleanup_due = cleanup_time >= current_app.extensions.get("auth_cleanup_after", 0)
     try:
-        db.session.execute(
-            delete(LimiteIntentos).where(LimiteIntentos.inicio_ventana <= ahora - ventana)
-        )
+        if cleanup_due:
+            db.session.execute(
+                delete(LimiteIntentos).where(LimiteIntentos.inicio_ventana <= ahora - ventana)
+            )
+            db.session.execute(
+                delete(Sesion).where(Sesion.fecha_vencimiento < ahora - timedelta(days=1))
+            )
         for identidad, config_key in limites:
             clave = hmac.new(secret, identidad.encode("utf-8"), hashlib.sha256).hexdigest()
             maximo = current_app.config[config_key]
+            insert = postgres_insert if db.engine.dialect.name == "postgresql" else sqlite_insert
+            expired = LimiteIntentos.inicio_ventana <= ahora - ventana
             incremento = (
-                update(LimiteIntentos)
-                .where(LimiteIntentos.clave == clave)
-                .values(
-                    intentos=case(
-                        (LimiteIntentos.intentos <= maximo, LimiteIntentos.intentos + 1),
-                        else_=LimiteIntentos.intentos,
-                    )
+                insert(LimiteIntentos)
+                .values(clave=clave, inicio_ventana=ahora, intentos=1)
+                .on_conflict_do_update(
+                    index_elements=[LimiteIntentos.clave],
+                    set_={
+                        "intentos": case(
+                            (expired, 1),
+                            (LimiteIntentos.intentos <= maximo, LimiteIntentos.intentos + 1),
+                            else_=LimiteIntentos.intentos,
+                        ),
+                        "inicio_ventana": case(
+                            (expired, ahora), else_=LimiteIntentos.inicio_ventana
+                        ),
+                    },
                 )
                 .returning(LimiteIntentos.intentos, LimiteIntentos.inicio_ventana)
             )
-            resultado = db.session.execute(incremento).first()
-            if resultado is None:
-                try:
-                    with db.session.begin_nested():
-                        db.session.add(
-                            LimiteIntentos(clave=clave, inicio_ventana=ahora, intentos=1)
-                        )
-                        db.session.flush()
-                    resultado = (1, ahora)
-                except IntegrityError:
-                    # Otro proceso creó el mismo contador mientras se lo consultaba.
-                    resultado = db.session.execute(incremento).one()
-            intentos, inicio = resultado
+            intentos, inicio = db.session.execute(incremento).one()
             if intentos > maximo:
                 esperar = max(esperar, math.ceil((inicio + ventana - ahora).total_seconds()))
                 break
         db.session.commit()
+        if cleanup_due:
+            current_app.extensions["auth_cleanup_after"] = cleanup_time + min(
+                ventana.total_seconds(), 900
+            )
     except Exception:
         db.session.rollback()
         raise
@@ -136,7 +147,14 @@ def init_app(app) -> None:
             "default-src 'self'; object-src 'none'; base-uri 'self'; "
             "frame-ancestors 'none'; form-action 'self'"
         )
-        if request.endpoint != "static":
+        recurso_publico = request.endpoint in {
+            "interface_catalog",
+            "auth.avatar",
+        } and response.status_code in {
+            200,
+            304,
+        }
+        if request.endpoint != "static" and not recurso_publico:
             response.headers["Cache-Control"] = "no-store"
         if production and request.is_secure:
             response.headers["Strict-Transport-Security"] = "max-age=31536000"

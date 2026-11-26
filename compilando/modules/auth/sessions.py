@@ -7,10 +7,22 @@ from datetime import UTC, datetime, timedelta
 from functools import wraps
 
 from flask import abort, current_app, g, redirect, request, session, url_for
-from sqlalchemy import delete, select, update
+from sqlalchemy import select, update
+from sqlalchemy.orm import load_only
+from sqlalchemy.orm.attributes import set_committed_value
 
 from compilando.extensions import db
 from compilando.modules.auth.models import Sesion, Usuario
+
+IDENTITY_FIELDS = (
+    Usuario.id,
+    Usuario.username,
+    Usuario.email,
+    Usuario.es_admin,
+    Usuario.avatar_filename,
+    Usuario.bio,
+    Usuario.fecha_nacimiento,
+)
 
 
 def requiere_sesion(vista):
@@ -68,7 +80,6 @@ def iniciar_sesion(usuario: Usuario) -> None:
         db.session.execute(
             update(Sesion).where(Sesion.id == _hash_token(token_anterior)).values(activa=False)
         )
-    db.session.execute(delete(Sesion).where(Sesion.fecha_vencimiento < ahora - timedelta(days=1)))
     token = secrets.token_urlsafe(32)
     db.session.add(
         Sesion(
@@ -98,10 +109,20 @@ def cerrar_sesion() -> None:
 
 
 def init_app(app) -> None:
+    # Registrar actividad por tandas; seguir validando revocación en cada solicitud.
+    # Limitar la tolerancia si una aplicación usa un idle timeout más corto.
+    # El vencimiento por inactividad puede adelantarse hasta ese intervalo;
+    # nunca se amplía la vida de una sesión por usar un dato de actividad antiguo.
+    activity_interval = min(
+        app.config["AUTH_SESSION_ACTIVITY_INTERVAL"], app.config["AUTH_IDLE_TIMEOUT"] / 10
+    )
+    if activity_interval < timedelta(0):
+        raise RuntimeError("AUTH_SESSION_ACTIVITY_INTERVAL no puede ser negativo.")
+
     @app.before_request
     def cargar_usuario():
         g.usuario_actual = None
-        if request.endpoint in {"static", "system.health"}:
+        if request.endpoint in {"static", "system.health", "interface_catalog", "auth.avatar"}:
             return
         token = _token_actual()
         if token is None:
@@ -113,6 +134,7 @@ def init_app(app) -> None:
             select(Sesion, Usuario)
             .join(Usuario, Sesion.usuario_id == Usuario.id)
             .where(Sesion.id == _hash_token(token))
+            .options(load_only(*IDENTITY_FIELDS))
             .execution_options(populate_existing=True)
         ).first()
         if resultado is None:
@@ -130,8 +152,27 @@ def init_app(app) -> None:
                 db.session.commit()
             session.clear()
             return
-        sesion.ultimo_acceso = ahora
-        db.session.commit()
+        if (
+            request.endpoint != "auth.account_stats"
+            and sesion.ultimo_acceso <= ahora - activity_interval
+        ):
+            identity = {field.key: getattr(usuario, field.key) for field in IDENTITY_FIELDS}
+            db.session.execute(
+                update(Sesion)
+                .where(
+                    Sesion.id == sesion.id,
+                    Sesion.activa.is_(True),
+                    Sesion.ultimo_acceso <= ahora - activity_interval,
+                )
+                .values(ultimo_acceso=ahora)
+                .execution_options(synchronize_session=False)
+            )
+            # La condición evita que una solicitud atrasada pise actividad reciente.
+            db.session.commit()
+            # Restaurar solo datos ya leídos en ESTA solicitud: no es caché entre
+            # solicitudes ni cambia expire_on_commit para el resto de la aplicación.
+            for name, value in identity.items():
+                set_committed_value(usuario, name, value)
         g.usuario_actual = usuario
 
     @app.context_processor
