@@ -178,6 +178,7 @@ def view_question(pregunta_id: int):
         evaluaciones=resumen_evaluaciones(respuestas_ordenadas, g.usuario_actual),
     )
 
+
 @bp.post("/questions/<int:pregunta_id>/delete")
 def delete_question(pregunta_id: int):
     """Permite al autor eliminar su propia pregunta."""

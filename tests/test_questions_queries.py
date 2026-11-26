@@ -545,6 +545,7 @@ def test_consultas_acotadas_y_conteos_sin_cargar_respuestas(app, usuario):
     assert "respuestas.cuerpo" not in sql
     assert set(valores) == set(ids[:20])
 
+
 def test_eliminar_pregunta_autor_exitosa(app, usuario, tmp_path):
     from io import BytesIO
 

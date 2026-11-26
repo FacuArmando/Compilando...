@@ -125,13 +125,12 @@ def publicar_pregunta(
             ruta.unlink(missing_ok=True)
         raise
 
+
 def eliminar_pregunta(pregunta_id: int, usuario: Usuario) -> None:
     """Permite al autor eliminar su propia pregunta junto con sus respuestas y adjuntos."""
 
     pregunta = db.session.scalar(
-        select(Pregunta)
-        .options(selectinload(Pregunta.adjuntos))
-        .where(Pregunta.id == pregunta_id)
+        select(Pregunta).options(selectinload(Pregunta.adjuntos)).where(Pregunta.id == pregunta_id)
     )
 
     if pregunta is None:

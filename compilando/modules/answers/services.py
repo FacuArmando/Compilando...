@@ -81,6 +81,7 @@ def aceptar_respuesta(respuesta_id: int, usuario: Usuario) -> Respuesta:
         db.session.rollback()
         raise
 
+
 def eliminar_respuesta(respuesta_id: int, usuario: Usuario) -> int:
     """Permite al autor eliminar su propia respuesta y devuelve el ID de la pregunta."""
     respuesta = db.session.scalar(select(Respuesta).where(Respuesta.id == respuesta_id))

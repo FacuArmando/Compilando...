@@ -483,6 +483,7 @@ def test_ruta_editar_respuesta_inexistente(app, usuario, cliente_autenticado):
 
     assert response.status_code == 404
 
+
 def test_eliminar_respuesta_autor_exitosa(app, usuario):
     from compilando.modules.answers.services import eliminar_respuesta
 

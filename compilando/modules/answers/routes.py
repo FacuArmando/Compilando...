@@ -160,6 +160,7 @@ def accept_answer(respuesta_id: int):
         )
     )
 
+
 @bp.post("/answers/<int:respuesta_id>/delete")
 def delete_answer(respuesta_id: int):
     """Permite al autor eliminar su propia respuesta."""
