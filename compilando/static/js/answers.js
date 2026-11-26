@@ -224,3 +224,52 @@ document.querySelectorAll("dialog[id^='dialog-eliminar-respuesta-']").forEach((d
     if (event.target === dialog) dialog.close();
   });
 });
+
+// Actualización en vivo cuando se genera automáticamente la respuesta de IA
+(() => {
+  const answerList = document.getElementById("answer-list");
+  if (!answerList || answerList.dataset.hasAi === "true") return;
+
+  const statusUrl = answerList.dataset.aiStatusUrl;
+  if (!statusUrl) return;
+
+  const intervalId = window.setInterval(async () => {
+    try {
+      const resp = await fetch(statusUrl, {
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (!data.tiene_ia || !data.html_lista) return;
+
+      const doc = new DOMParser().parseFromString(data.html_lista, "text/html");
+      const nuevasTarjetas = Array.from(doc.body.children);
+      if (!nuevasTarjetas.length) return;
+
+      answerList.dataset.hasAi = "true";
+      answerList.replaceChildren(...nuevasTarjetas);
+
+      document.querySelectorAll("[data-answer-count]").forEach((item) => {
+        if (window.I18n?.setText) {
+          window.I18n.setText(
+            item,
+            data.total_respuestas === 1 ? "{count} respuesta" : "{count} respuestas",
+            { count: data.total_respuestas }
+          );
+        } else {
+          item.textContent =
+            data.total_respuestas === 1
+              ? "1 respuesta"
+              : `${data.total_respuestas} respuestas`;
+        }
+      });
+
+      document.querySelector(".question-ai-suggested")?.remove();
+      document.querySelector("details.ai-consult")?.remove();
+      window.clearInterval(intervalId);
+    } catch (_) {
+      // Silencioso en caso de corte temporal de red
+    }
+  }, 4000);
+})();

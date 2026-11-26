@@ -25,6 +25,14 @@ from compilando.modules.questions.attachments import (
 from compilando.modules.questions.models import AdjuntoPregunta, Pregunta
 from compilando.modules.questions.services import eliminar_pregunta, publicar_pregunta
 from compilando.modules.tags.models import Tag
+from compilando.modules.ai.services import detectar_pregunta_requiere_ia
+
+from compilando.modules.ai.services import (
+    detectar_pregunta_requiere_ia,
+    responder_automaticamente_si_vencio,
+)
+
+
 
 bp = Blueprint("questions", __name__)
 
@@ -162,13 +170,19 @@ def view_question(pregunta_id: int):
     if pregunta is None:
         abort(404)
 
+    responder_automaticamente_si_vencio(pregunta)
+    db.session.refresh(pregunta)
+
     # Mostrar primero la respuesta aceptada.
     respuestas_ordenadas = sorted(
         pregunta.respuestas,
         key=lambda respuesta: respuesta.estado != EstadoRespuesta.ACEPTADA.value,
     )
 
+
     preguntas_historial = db.session.scalars(select(Pregunta).order_by(Pregunta.id.desc())).all()
+
+    deteccion_ia = detectar_pregunta_requiere_ia(pregunta)
 
     return render_template(
         "questions/view_question.html",
@@ -176,6 +190,7 @@ def view_question(pregunta_id: int):
         preguntas_historial=preguntas_historial,
         respuestas=respuestas_ordenadas,
         evaluaciones=resumen_evaluaciones(respuestas_ordenadas, g.usuario_actual),
+        deteccion_ia=deteccion_ia,
     )
 
 
@@ -195,3 +210,34 @@ def delete_question(pregunta_id: int):
 
     flash("La pregunta se eliminó correctamente.", "success")
     return redirect(url_for("system.index", _anchor="preguntas"))
+
+@bp.get("/questions/<int:pregunta_id>/ai-status")
+def question_ai_status(pregunta_id: int):
+    """Indica si la pregunta ya tiene una respuesta generada por IA y devuelve su HTML parcial."""
+    pregunta = db.session.scalar(select(Pregunta).where(Pregunta.id == pregunta_id))
+    if pregunta is None:
+        abort(404)
+
+    responder_automaticamente_si_vencio(pregunta)
+    db.session.refresh(pregunta)
+
+    respuestas_ordenadas = sorted(
+        pregunta.respuestas,
+        key=lambda respuesta: respuesta.estado != EstadoRespuesta.ACEPTADA.value,
+    )
+    tiene_ia = any(r.es_ia for r in respuestas_ordenadas)
+    if not tiene_ia:
+        return {"tiene_ia": False}
+
+    html_lista = render_template(
+        "answers/_list.html",
+        pregunta=pregunta,
+        respuestas=respuestas_ordenadas,
+        evaluaciones=resumen_evaluaciones(respuestas_ordenadas, g.usuario_actual),
+    )
+    return {
+        "tiene_ia": True,
+        "total_respuestas": len(respuestas_ordenadas),
+        "html_lista": html_lista,
+    }
+

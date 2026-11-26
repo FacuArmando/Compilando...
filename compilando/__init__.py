@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from flask import Flask
+from flask import Flask, request
 
 from compilando.commands import register_commands
 from compilando.config import load_config
@@ -56,4 +57,30 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     app.register_blueprint(ai_bp)
     app.register_blueprint(admin_bp)
     app.register_error_handler(404, not_found)
+
+
+    import threading
+    import time as _time
+
+    def iniciar_worker_ia() -> None:
+        if not app.config.get("AI_AUTO_RESPOND_UNANSWERED", False):
+            return
+        if app.config.get("TESTING", False):
+            return
+
+        def bucle_revision() -> None:
+            from compilando.modules.ai.services import procesar_preguntas_vencidas_ia
+
+            while True:
+                _time.sleep(15)
+                try:
+                    with app.app_context(), app.test_request_context("/"):
+                        procesar_preguntas_vencidas_ia(limite=3)
+                except Exception:
+                    app.logger.exception("Error en revisión periódica de preguntas para IA.")
+
+        hilo = threading.Thread(target=bucle_revision, name="ai-auto-responder", daemon=True)
+        hilo.start()
+
+    iniciar_worker_ia()
     return app

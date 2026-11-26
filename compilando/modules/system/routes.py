@@ -13,6 +13,7 @@ from compilando.modules.questions.models import Pregunta
 from compilando.modules.system.search import criterios_busqueda, terminos_busqueda
 from compilando.modules.system.suggestions import sugerir_busqueda
 from compilando.modules.tags.models import Tag
+from compilando.modules.ai.services import detectar_pregunta_requiere_ia
 
 bp = Blueprint("system", __name__)
 
@@ -74,19 +75,34 @@ def index():
     if pagina > 1 and not paginacion.items:
         return primera_pagina()
 
-    # Contar solo las respuestas de esta página, sin cargar sus cuerpos en memoria.
+
+    # Contar respuestas totales y respuestas de IA por pregunta en una sola consulta.
     ids = [pregunta.id for pregunta in paginacion.items]
-    cantidad_respuestas = (
-        dict(
-            db.session.execute(
-                select(Respuesta.pregunta_id, func.count(Respuesta.id))
-                .where(Respuesta.pregunta_id.in_(ids))
-                .group_by(Respuesta.pregunta_id)
-            ).all()
-        )
+    filas_respuestas = (
+        db.session.execute(
+            select(
+                Respuesta.pregunta_id,
+                func.count(Respuesta.id),
+                func.count(Respuesta.id).filter(Respuesta.es_ia.is_(True)),
+            )
+            .where(Respuesta.pregunta_id.in_(ids))
+            .group_by(Respuesta.pregunta_id)
+        ).all()
         if ids
-        else {}
+        else []
     )
+    cantidad_respuestas = {pid: total for pid, total, _ in filas_respuestas}
+    ids_con_ia = {pid for pid, _, total_ia in filas_respuestas if total_ia > 0}
+
+    detecciones_ia = {
+        pregunta.id: detectar_pregunta_requiere_ia(
+            pregunta,
+            cantidad_respuestas=cantidad_respuestas.get(pregunta.id, 0),
+            tiene_respuesta_ia=pregunta.id in ids_con_ia,
+        )
+        for pregunta in paginacion.items
+    }
+
     categorias = db.session.scalars(select(Categoria).order_by(Categoria.nombre)).all()
     sugerencia = (
         sugerir_busqueda(busqueda, [categoria.nombre for categoria in categorias], categoria_id)
@@ -94,11 +110,13 @@ def index():
         else None
     )
 
+
     return render_template(
         "system/index.html",
         preguntas=paginacion.items,
         paginacion=paginacion,
         cantidad_respuestas=cantidad_respuestas,
+        detecciones_ia=detecciones_ia,  
         categorias=categorias,
         busqueda=busqueda,
         sugerencia_busqueda=sugerencia,
@@ -117,3 +135,26 @@ def index():
 def health():
     """Indicar que el proceso web responde; no evalúa servicios externos."""
     return {"status": "ok", "application": "compilando"}
+
+from compilando.modules.ai.services import (
+    detectar_pregunta_requiere_ia,
+    procesar_preguntas_vencidas_ia,
+)
+
+@bp.get("/feed-ai-status")
+def feed_ai_status():
+    """Procesa preguntas vencidas para IA y devuelve el conteo actualizado de respuestas."""
+    raw_ids = request.args.get("ids", "")
+    ids = [int(item) for item in raw_ids.split(",") if item.strip().isdigit()][:30]
+    if not ids:
+        return {"respuestas": {}}
+
+    procesar_preguntas_vencidas_ia(limite=2)
+
+    filas = db.session.execute(
+        select(Respuesta.pregunta_id, func.count(Respuesta.id))
+        .where(Respuesta.pregunta_id.in_(ids))
+        .group_by(Respuesta.pregunta_id)
+    ).all()
+    conteos = {str(pid): int(total) for pid, total in filas}
+    return {"respuestas": {str(pid): conteos.get(str(pid), 0) for pid in ids}}

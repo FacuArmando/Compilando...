@@ -464,5 +464,10 @@
   "Ver guía": "Hold for hint",
   "Mezclar": "Shuffle",
   "¡Excelente! Completaste el rompecabezas.": "Awesome! You completed the puzzle.",
-  "movimientos": "moves"
+  "movimientos": "moves",
+  "Requiere IA": "Needs AI",
+  "Detectada por etiqueta de IA": "Detected by AI tag",
+  "Sin respuestas tras el tiempo de espera": "Unanswered past the wait threshold",
+  "Esta pregunta fue etiquetada para asistencia con IA.": "This question was tagged for AI assistance.",
+  "Esta pregunta lleva tiempo sin respuestas y es candidata para asistencia con IA.": "This question has gone unanswered for a while and is eligible for AI assistance."
 }

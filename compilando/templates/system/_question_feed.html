@@ -11,7 +11,8 @@
     {% if preguntas %}
     <div class="community-questions">
         {% for pregunta in preguntas %}
-        <article class="community-question">
+       
+        <article class="community-question" data-pregunta-id="{{ pregunta.id }}">
             <header class="community-question-meta">
             <span class="community-avatar question-avatar" aria-hidden="true">
               {% if pregunta.usuario.avatar_filename %}
@@ -30,11 +31,19 @@
           <h3><a href="{{ url_for('questions.view_question', pregunta_id=pregunta.id) }}">{{ pregunta.titulo }}</a></h3>
           <p class="community-question-preview">{{ pregunta.cuerpo_detallado|truncate(190, true) }}</p>
           <footer class="community-question-footer">
+            
             <div class="community-tags" {{ i18n_attr("aria-label", "Etiquetas") }}>
               {% for tag in pregunta.tags %}<span>#{{ tag.nombre }}</span>{% endfor %}
+              {% set det_ia = detecciones_ia.get(pregunta.id) if detecciones_ia is defined else None %}
+              {% if det_ia and det_ia.requiere %}
+                <span class="community-ai-badge" {{ i18n_attr('title', 'Detectada por etiqueta de IA' if det_ia.motivo == 'etiqueta' else 'Sin respuestas tras el tiempo de espera') }}>
+                  {{ icon('bulb') }} {{ ui("Requiere IA") }}
+                </span>
+              {% endif %}
             </div>
+
             {% set cantidad = cantidad_respuestas.get(pregunta.id, 0) %}
-            <span class="community-answer-count{% if cantidad %} has-answers{% endif %}">
+            <span class="community-answer-count{% if cantidad %} has-answers{% endif %}" data-feed-answer-count>
               {{ icon('reply') }} {{ ui('{count} respuesta' if cantidad == 1 else '{count} respuestas', count=cantidad) }}
             </span>
     </footer>

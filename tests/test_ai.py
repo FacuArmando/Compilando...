@@ -620,3 +620,120 @@ def test_fallo_guardando_no_deja_respuesta_parcial_y_libera_reserva(app_ia):
         assert db.session.scalar(select(Respuesta)) is None
         assert db.session.get(SolicitudIA, 1).estado == "error"
     assert consultar(browser).status_code == 200
+
+def test_detectar_pregunta_requiere_ia_por_etiqueta(app, usuario):
+    from compilando.modules.ai.services import detectar_pregunta_requiere_ia
+    from compilando.modules.questions.services import publicar_pregunta
+
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo optimizar esta consulta SQL?",
+        cuerpo="Necesito ayuda con índices compuestos.",
+        categoria_nombre="Bases de datos",
+        nombres_tags=["sql", "ia"],
+        usuario=usuario,
+    )
+
+    det = detectar_pregunta_requiere_ia(pregunta)
+    assert det.requiere is True
+    assert det.motivo == "etiqueta"
+
+
+def test_detectar_pregunta_requiere_ia_por_tiempo_sin_respuesta(app, usuario):
+    from datetime import date, timedelta
+    from compilando.modules.ai.services import detectar_pregunta_requiere_ia
+    from compilando.modules.questions.services import publicar_pregunta
+
+    app.config["AI_UNANSWERED_MINUTES"] = 1440
+
+    pregunta = publicar_pregunta(
+        titulo="¿Diferencia entre proceso e hilo?",
+        cuerpo="Explicación conceptual en sistemas operativos.",
+        categoria_nombre="Sistemas Operativos",
+        nombres_tags=["concurrencia"],
+        usuario=usuario,
+    )
+
+    # Recién creada no requiere IA todavía
+    assert detectar_pregunta_requiere_ia(pregunta).requiere is False
+
+    # Pasadas más de 24 horas (2 días atrás) sin respuestas sí requiere IA
+    pregunta.fecha = date.today() - timedelta(days=2)
+    det = detectar_pregunta_requiere_ia(pregunta)
+    assert det.requiere is True
+    assert det.motivo == "tiempo_sin_respuesta"
+
+
+
+
+def test_detectar_pregunta_no_requiere_ia_si_ya_tiene_respuesta_ia(app, usuario):
+    from compilando.modules.ai.services import detectar_pregunta_requiere_ia
+    from compilando.modules.answers.models import Respuesta
+    from compilando.modules.questions.services import publicar_pregunta
+
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo funciona async/await?",
+        cuerpo="Duda sobre event loop en Python.",
+        categoria_nombre="Python",
+        nombres_tags=["ia"],
+        usuario=usuario,
+    )
+    resp_ia = Respuesta(
+        pregunta_id=pregunta.id,
+        usuario_id=None,
+        es_ia=True,
+        cuerpo="Respuesta generada por IA.",
+    )
+    db.session.add(resp_ia)
+    db.session.commit()
+
+    det = detectar_pregunta_requiere_ia(pregunta)
+    assert det.requiere is False
+    assert det.motivo is None
+
+def test_respuesta_automatica_ia_cuando_vence_tiempo(app, usuario):
+    from datetime import date, timedelta
+    from compilando.modules.ai.services import procesar_preguntas_vencidas_ia
+    from compilando.modules.answers.models import Respuesta
+    from compilando.modules.questions.services import publicar_pregunta
+
+    app.config["AI_AUTO_RESPOND_UNANSWERED"] = True
+    app.config["AI_AUTO_RESPOND_IN_TESTS"] = True
+    app.config["AI_UNANSWERED_MINUTES"] = 1440
+
+    class ProveedorFake:
+        nombre = "gemini"
+        modelo = "gemini-test"
+
+        def responder(self, contexto: str) -> str:
+            return "Respuesta automática generada por IA tras vencer el tiempo."
+
+    app.extensions["ai_provider"] = ProveedorFake()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Qué es un deadlock?",
+        cuerpo="Necesito entender las 4 condiciones de Coffman.",
+        categoria_nombre="Sistemas Operativos",
+        nombres_tags=["procesos"],
+        usuario=usuario,
+    )
+
+    # Recién creada: no genera respuesta automática
+    assert procesar_preguntas_vencidas_ia() == 0
+
+    # Simulamos que pasaron más de 24 horas (2 días atrás) sin respuestas
+    pregunta.fecha = date.today() - timedelta(days=2)
+    db.session.commit()
+
+    with app.test_request_context("/"):
+        generadas = procesar_preguntas_vencidas_ia()
+    assert generadas == 1
+
+    resp_ia = db.session.scalar(
+        select(Respuesta).where(Respuesta.pregunta_id == pregunta.id, Respuesta.es_ia.is_(True))
+    )
+    assert resp_ia is not None
+    assert "Respuesta automática generada por IA" in resp_ia.cuerpo
+
+    # Una segunda ejecución no vuelve a generar duplicados
+    with app.test_request_context("/"):
+        assert procesar_preguntas_vencidas_ia() == 0
