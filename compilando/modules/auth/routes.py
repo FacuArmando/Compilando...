@@ -1,5 +1,6 @@
 """Pantallas de acceso, registro y consulta de la cuenta."""
 
+from io import BytesIO
 from urllib.parse import urlsplit
 
 from flask import (
@@ -35,6 +36,7 @@ from compilando.modules.auth.services import (
     ruta_avatar,
 )
 from compilando.modules.auth.sessions import cerrar_sesion, iniciar_sesion, requiere_sesion
+from compilando.storage import leer_blob, usa_base
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -49,6 +51,7 @@ def _destino_de_regreso(valor: str | None) -> str:
         "questions.view_question": {"", "tu-respuesta"},
         "questions.publish_question": {""},
         "auth.account": {""},
+        "saved.index": {""},
     }
     try:
         ruta = urlsplit(valor)
@@ -182,6 +185,15 @@ def avatar(nombre: str):
     if not nombre or "/" in nombre or "\\" in nombre or ".." in nombre:
         return "", 404
     tamano = request.args.get("size", "full").strip().lower()
+    if usa_base():
+        contenido = None
+        if tamano == "thumb":
+            contenido = leer_blob("avatars/" + nombre_miniatura_avatar(nombre))
+        if contenido is None:
+            contenido = leer_blob("avatars/" + nombre)
+        if contenido is None:
+            return "", 404
+        return send_file(BytesIO(contenido), download_name=nombre, conditional=True, max_age=3600)
     try:
         ruta = ruta_avatar(nombre)
         if tamano == "thumb":
@@ -309,7 +321,7 @@ def logout():
 
 @bp.route("/register", methods=["GET", "POST"])
 def register():
-    """Mostrar el formulario y registrar una cuenta cuando los datos son válidos."""
+    """Registrar la cuenta e iniciar sesión cuando los datos son válidos."""
     regreso = _destino_de_regreso(request.form.get("next", request.args.get("next")))
     username = ""
     email = ""
@@ -321,7 +333,7 @@ def register():
         password = request.form.get("password", "")
         try:
             limitar_intentos("register")
-            registrar_usuario(username, email, password)
+            usuario = registrar_usuario(username, email, password)
         except DemasiadosIntentos as exc:
             return formulario_con_limite(
                 "auth/register.html",
@@ -333,10 +345,9 @@ def register():
         except ValueError as exc:
             error = str(exc)
         else:
+            iniciar_sesion(usuario)
             flash("Tu cuenta se creó correctamente.", "success")
-            if regreso != url_for("system.index"):
-                return redirect(url_for("auth.login", next=regreso), code=303)
-            return redirect(url_for("system.index"), code=303)
+            return redirect(regreso, code=303)
 
     return render_template(
         "auth/register.html", username=username, email=email, error=error, next_url=regreso
@@ -393,8 +404,9 @@ def archivo_demasiado_grande(error):
     if request.endpoint == "auth.change_avatar":
         if g.usuario_actual is None:
             return redirect(url_for("auth.login"), code=303)
+        maximo = current_app.config["AVATAR_MAX_BYTES"] // (1024 * 1024)
         return _render_account(
             413,
-            avatar_error="La imagen no puede superar los 20 MB.",
+            avatar_error=f"La imagen no puede superar los {maximo} MB.",
         )
     return error

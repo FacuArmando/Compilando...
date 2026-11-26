@@ -122,6 +122,26 @@ def consultar(cliente, pregunta_id=1, *, headers=None, **datos):
     )
 
 
+@pytest.mark.parametrize("idioma", ["es", "en"])
+def test_tarjeta_ia_conserva_confirmacion_y_no_consulta_al_abrir(app_ia, idioma):
+    browser = cliente(app_ia)
+    browser.set_cookie("compilando-language", idioma)
+    html = browser.get("/questions/1").text
+    visible = TextoVisible(html).texto
+    assert ("Otra perspectiva" if idioma == "es" else "A fresh perspective") in visible
+    assert (
+        "La respuesta será pública." if idioma == "es" else "The answer will be public."
+    ) in visible
+    campo = re.search(r'<input[^>]*name="confirmar_envio"[^>]*>', html)[0]
+    assert "required" in campo and "checked" not in campo
+    assert 'class="ai-loading" hidden aria-hidden="true"' in html
+    assert 'class="ai-status" role="status" aria-live="polite" aria-atomic="true"' in html
+    assert 'data-ai-state="idle"' in html
+    assert "css/ai-consult.css" in html and "js/ai-consult.js" in html
+    assert 'name="csrf_token"' in html
+    assert not app_ia.extensions["ai_provider"].contextos
+
+
 def test_guarda_respuesta_y_solicitante_separados_sin_html_activo(app_ia):
     proveedor = app_ia.extensions["ai_provider"]
     proveedor.texto = "<img src=x onerror=alert(1)>\n```html\n<script>alert(2)</script>\n```"

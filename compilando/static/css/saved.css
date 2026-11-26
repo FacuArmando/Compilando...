@@ -1,0 +1,116 @@
+.question-save-control { position: relative; flex: 0 0 auto; }
+.question-save-form { margin: 0; }
+.community-main .question-save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--community-muted, #718096);
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+.question-save-button .community-icon { width: 20px; height: 20px; }
+.community-main .question-save-button:hover { background: var(--theme-tint, #eaf0fc); color: var(--community-blue, #1546a0); }
+.community-main .question-save-button[aria-pressed="true"] { color: #b17b0e; }
+.question-save-button[aria-pressed="true"] .community-icon { fill: #f5c75e; }
+:root[data-theme="dark"] .question-save-button[aria-pressed="true"] { color: #f5c75e; }
+.question-save-button:focus-visible { outline: 2px solid var(--community-blue, #1546a0); outline-offset: 2px; }
+.question-save-button:active { transform: scale(.93); }
+.question-save-button:disabled { opacity: .55; cursor: wait; }
+.question-save-button[data-save-effect] .community-icon { animation: question-saved 300ms ease-out; }
+.question-detail-title { display: flex; align-items: flex-start; gap: 16px; }
+.question-detail-title h1 { flex: 1; min-width: 0; }
+.saved-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--community-border, #e5eaf2);
+}
+.saved-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.saved-header-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--theme-warning-bg, #fff8e9);
+  color: var(--theme-warning-text, #9b7b42);
+}
+.saved-header-icon .community-icon { width: 22px; height: 22px; fill: currentColor; }
+.saved-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.saved-header h1 {
+  margin: 0;
+  color: var(--theme-heading, #1d2f4b);
+  font-size: clamp(26px, 2.6vw, 32px);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -.9px;
+  text-align: left;
+}
+.saved-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 25px;
+  padding: 0 7px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--theme-tint, #eaf0fc);
+  color: var(--community-blue, #1546a0);
+  font-size: 12px;
+  font-weight: 600;
+}
+.saved-header .saved-caption { margin: 7px 0 0; color: var(--community-muted, #718096); font-size: 12px; line-height: 1.6; }
+.saved-meta { display: grid; justify-items: end; flex: 0 0 auto; gap: 9px; }
+.saved-private, .saved-order { display: inline-flex; align-items: center; gap: 6px; color: var(--community-muted, #718096); font-size: 11px; line-height: 1.5; }
+.saved-private svg, .saved-order .community-icon { width: 14px; height: 14px; flex: 0 0 auto; }
+.saved-private { color: var(--theme-secondary, #50627c); }
+@media (max-width: 720px) {
+  .saved-header { align-items: flex-start; flex-direction: column; gap: 16px; padding-bottom: 20px; }
+  .saved-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-left: 58px; }
+}
+@media (max-width: 420px) {
+  .saved-heading { gap: 12px; }
+  .saved-header-icon { flex-basis: 40px; height: 40px; border-radius: 12px; }
+  .saved-meta { margin-left: 52px; }
+}
+.question-save-status.is-error {
+  position: absolute !important;
+  z-index: 25;
+  top: calc(100% + 4px);
+  right: 0;
+  box-sizing: border-box;
+  width: min(260px, 70vw) !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+  border: 1px solid var(--theme-border, #e5eaf2) !important;
+  border-radius: 12px;
+  background: var(--theme-surface, #fff);
+  color: var(--theme-error-text, #a05b53);
+  box-shadow: 0 4px 14px var(--theme-shadow, #23324a19);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.question-save-status a { color: var(--community-blue, #1546a0); text-decoration: underline; }
+@keyframes question-saved {
+  0% { transform: scale(.8) rotate(-12deg); }
+  55% { transform: scale(1.16) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-main .question-save-button,
+  .question-save-button[data-save-effect] .community-icon { animation: none; transition: none; transform: none; }
+}

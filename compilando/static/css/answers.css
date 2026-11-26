@@ -374,18 +374,7 @@
   .question-no-answers { padding: 20px; }
 }
 
-/* Consulta explícita de IA: acompaña al formulario humano sin reemplazar su borrador. */
-.ai-consult { margin-bottom: 28px; padding: 16px 18px; border: 1px solid var(--theme-border, #e5eaf2); border-radius: 10px; }
-.ai-consult summary { width: fit-content; color: var(--theme-accent, #1546a0); font-size: 13px; font-weight: 600; cursor: pointer; }
-.ai-consult form { display: grid; gap: 14px; padding-top: 16px; }
-.ai-consult p, .question-ai-existing { margin: 0; color: var(--theme-muted, #72839b); font-size: 12px; line-height: 1.8; }
-.ai-option { display: flex; align-items: flex-start; gap: 10px; color: var(--theme-text, #3c4e67); font-size: 12px; line-height: 1.8; }
-.ai-option input { flex: 0 0 auto; width: 16px; height: 16px; margin: 3px 0 0; accent-color: var(--theme-primary, #1546a0); }
-.ai-consult .answer-submit { width: fit-content; max-width: 100%; }
-.ai-consult .answer-submit:disabled { opacity: .7; cursor: wait; }
-.ai-consult form:not([aria-busy]) .answer-submit:disabled { cursor: default; }
-.ai-consult .ai-status { color: var(--theme-accent, #1546a0); min-height: 1.8em; }
-.ai-status a, .question-ai-existing a { color: var(--theme-accent, #1546a0); text-decoration: underline; }
-.question-ai-existing { margin-bottom: 24px; }
+.question-ai-existing { margin: 0 0 24px; color: var(--theme-muted, #72839b); font-size: 12px; line-height: 1.8; }
+.question-ai-existing a { color: var(--theme-accent, #1546a0); text-decoration: underline; }
 .answer-ai-content pre { max-width: 100%; margin: 18px 0; padding: 18px; overflow-x: auto; border: 1px solid var(--theme-border, #e5eaf2); border-radius: 8px; background: var(--theme-input, #f7f9fe); color: var(--theme-text, #3c4e67); font: 12px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .answer-ai-disclaimer { margin: 20px 0 0; color: var(--theme-subtle, #8996aa); font-size: 11px; line-height: 1.8; }

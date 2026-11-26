@@ -17,3 +17,5 @@ build/
 .respaldo-duplicados-*/
 .idea/
 .vscode/
+public/static/
+.vercel/

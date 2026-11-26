@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title data-i18n="{% block title_key %}{% endblock %}">{% block title %}COMPILANDO...{% endblock %}</title>
     <meta name="theme-color" content="#f6f8fc">
+    <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64"
+          href="{{ url_for('static', filename='img/brand/favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" sizes="any"
+          href="{{ url_for('static', filename='img/brand/favicon.svg') }}">
     <script src="{{ url_for('interface_catalog') }}" defer></script>
     <script src="{{ url_for('static', filename='js/language.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>

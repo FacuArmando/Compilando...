@@ -1,7 +1,7 @@
 """Los índices del listado se aplican sin perder publicaciones existentes."""
 
 from flask_migrate import downgrade, upgrade
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 from compilando import create_app
 from compilando.extensions import db
@@ -23,21 +23,30 @@ def test_indices_del_listado_conservan_preguntas_y_respuestas(tmp_path):
         upgrade(revision="c2a7f91e4d63")
         usuario = Usuario(username="autor", email="autor@example.com", password_hash="prueba")
         categoria = Categoria(nombre="Java", descripcion="Ejemplos de Java")
-        pregunta = Pregunta(
-            titulo="Cómo implementar una interfaz",
-            cuerpo_detallado="Necesito separar el contrato de su implementación.",
-            usuario=usuario,
-            categoria=categoria,
+        db.session.add_all([usuario, categoria])
+        db.session.flush()
+        # Sembrar solo columnas de esa revisión histórica.
+        pregunta_id = db.session.scalar(
+            text(
+                "INSERT INTO preguntas (titulo, cuerpo_detallado, fecha, usuario_id, categoria_id) "
+                "VALUES (:titulo, :cuerpo, CURRENT_DATE, :usuario, :categoria) RETURNING id"
+            ),
+            {
+                "titulo": "Cómo implementar una interfaz",
+                "cuerpo": "Contenido previo.",
+                "usuario": usuario.id,
+                "categoria": categoria.id,
+            },
         )
         respuesta = Respuesta(
             cuerpo="Definí el contrato en la interfaz.",
-            pregunta=pregunta,
+            pregunta_id=pregunta_id,
             usuario=usuario,
             estado=EstadoRespuesta.ACEPTADA.value,
         )
         db.session.add(respuesta)
         db.session.commit()
-        pregunta_id, respuesta_id = pregunta.id, respuesta.id
+        respuesta_id = respuesta.id
         db.session.remove()
 
         esperados = {
@@ -63,7 +72,9 @@ def test_indices_del_listado_conservan_preguntas_y_respuestas(tmp_path):
                         assert (nombre in encontrados) is presentes
                         if presentes:
                             assert encontrados[nombre] == columnas
-                assert db.session.get(Pregunta, pregunta_id).titulo == pregunta.titulo
+                assert (
+                    db.session.get(Pregunta, pregunta_id).titulo == "Cómo implementar una interfaz"
+                )
                 guardada = db.session.get(Respuesta, respuesta_id)
                 assert guardada.cuerpo == "Definí el contrato en la interfaz."
                 assert guardada.estado == EstadoRespuesta.ACEPTADA.value

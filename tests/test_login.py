@@ -230,22 +230,33 @@ def test_registro_desde_login_conserva_la_pregunta_a_responder(app_login, pregun
         },
     )
     assert response.status_code == 303
-    assert urlsplit(response.headers["Location"]).path == "/auth/login"
+    assert response.headers["Location"] == destino
     with cliente.session_transaction() as estado:
-        assert "auth_token" not in estado
-    formulario = cliente.get(response.headers["Location"])
-    assert campos(formulario)["next"]["value"] == destino
+        assert "auth_token" in estado
+    detalle = cliente.get(response.headers["Location"])
+    assert 'id="form-respuesta-usuario"' in detalle.get_data(as_text=True)
+    assert campos(detalle)["csrf_token"]["value"] != campos(registro)["csrf_token"]["value"]
+    respuesta = cliente.post(
+        f"/questions/{pregunta_con_sesion}/answers",
+        data={"csrf_token": campos(detalle)["csrf_token"]["value"], "cuerpo": "Mi solución."},
+    )
+    assert respuesta.status_code == 302
+    assert "Mi solución." in cliente.get(destino).get_data(as_text=True)
+    salida = cliente.post(
+        "/auth/logout", data={"csrf_token": campos(detalle)["csrf_token"]["value"]}
+    )
+    assert salida.status_code == 303
+    formulario = cliente.get("/auth/login")
     ingreso = cliente.post(
         "/auth/login",
         data={
             "csrf_token": campos(formulario)["csrf_token"]["value"],
-            "next": campos(formulario)["next"]["value"],
             "email": "nuevo@ejemplo.com",
             "password": PASSWORD,
         },
     )
     assert ingreso.status_code == 303
-    assert ingreso.headers["Location"] == destino
+    assert cliente.get("/auth/account").status_code == 200
 
 
 def test_login_con_sesion_vuelve_al_destino_sin_pedir_credenciales(app_login, pregunta_con_sesion):

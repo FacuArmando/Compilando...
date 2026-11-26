@@ -2486,3 +2486,22 @@ cursor: pointer;
   border-radius: 10px;
   display: block;
 }
+
+/* Recorte de avatar compatible con la política que bloquea estilos inline. */
+#avatar-cropper-box {
+  display: flex;
+  margin-top: 0.75rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+}
+#avatar-cropper-box[hidden] { display: none; }
+#avatar-crop-canvas {
+  border-radius: 50%;
+  border: 2px solid var(--theme-accent, #06b6d4);
+  cursor: grab;
+  touch-action: none;
+  background: #111;
+}
+#avatar-cropper-box label { font-size: 0.85rem; }
+#avatar-zoom-range { width: min(220px, 100%); }

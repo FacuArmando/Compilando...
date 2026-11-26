@@ -1,6 +1,6 @@
 """Rutas iniciales disponibles en esta entrega."""
 
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, g, jsonify, redirect, render_template, request, url_for
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -10,6 +10,8 @@ from compilando.modules.answers.models import EstadoRespuesta, Respuesta
 from compilando.modules.auth.models import Usuario
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.models import Pregunta
+from compilando.modules.saved.services import ids_guardadas
+from compilando.modules.system.autocomplete import sugerencias_preguntas
 from compilando.modules.system.search import criterios_busqueda, terminos_busqueda
 from compilando.modules.system.suggestions import sugerir_busqueda
 from compilando.modules.tags.models import Tag
@@ -19,6 +21,32 @@ bp = Blueprint("system", __name__)
 PREGUNTAS_POR_PAGINA = 20
 # SQLite acepta offsets de hasta 64 bits; una URL arbitraria no debe desbordarlos.
 MAXIMA_PAGINA = (2**63 - 1) // PREGUNTAS_POR_PAGINA
+
+
+@bp.get("/search/suggestions")
+def search_suggestions():
+    """Ofrecer hasta cinco destinos públicos sin almacenar búsquedas del visitante."""
+    categoria = request.args.get("categoria", "")
+    categoria_id = request.args.get("categoria", type=int)
+    # Un filtro inválido no debe ampliar silenciosamente la búsqueda.
+    if categoria and (categoria_id is None or not 0 < categoria_id < 2**63):
+        response = jsonify(preguntas=[])
+        response.status_code = 400
+    else:
+        preguntas = sugerencias_preguntas(request.args.get("q", ""), categoria_id)
+        response = jsonify(
+            preguntas=[
+                {
+                    "id": pregunta.id,
+                    "titulo": pregunta.titulo,
+                    "categoria": pregunta.categoria,
+                    "url": url_for("questions.view_question", pregunta_id=pregunta.id),
+                }
+                for pregunta in preguntas
+            ]
+        )
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @bp.get("/")
@@ -99,6 +127,7 @@ def index():
         preguntas=paginacion.items,
         paginacion=paginacion,
         cantidad_respuestas=cantidad_respuestas,
+        guardadas_ids=ids_guardadas(ids, g.usuario_actual.id if g.usuario_actual else None),
         categorias=categorias,
         busqueda=busqueda,
         sugerencia_busqueda=sugerencia,

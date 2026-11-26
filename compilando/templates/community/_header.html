@@ -10,6 +10,7 @@
         </a>
 
         <form class="community-navbar-search"
+              data-suggestions-url="{{ url_for('system.search_suggestions') }}"
               action="{{ url_for('system.index') }}#preguntas"
               method="get"
               role="search"
@@ -48,6 +49,21 @@
         {% endif %}
 
         <button type="submit">{{ ui("Buscar") }}</button>
+
+        <div class="community-search-suggestions" id="navbar-search-suggestions" hidden>
+            <div class="community-search-suggestions-heading">
+                {{ ui("Preguntas relacionadas") }}
+                <span class="community-search-shortcuts" aria-hidden="true">↑ ↓ · Enter</span>
+            </div>
+            <ul id="navbar-search-options" role="listbox"
+                {{ i18n_attr("aria-label", "Preguntas sugeridas") }}></ul>
+            <p class="community-search-message" hidden></p>
+            <a class="community-search-all" href="{{ url_for('system.index') }}#preguntas">
+                {{ ui("Ver todos los resultados") }} <span aria-hidden="true">↗</span>
+            </a>
+        </div>
+        <span class="sr-only" id="navbar-search-status" role="status" aria-live="polite"
+              aria-atomic="true"></span>
         </form>
 
         <div class="community-topbar-actions">
@@ -74,6 +90,7 @@
                     <p class="account-session">
                         {{ ui("Sesión iniciada como") }} <strong>{{ usuario_actual.username }}</strong>.
                     </p>
+                    <a href="{{ url_for('saved.index') }}">{{ icon('star') }} {{ ui('Guardadas') }}</a>
                     <a href="{{ url_for('auth.account') }}">{{ icon('user') }} {{ ui("Mi cuenta") }}</a>
                     <form action="{{ url_for('auth.logout') }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

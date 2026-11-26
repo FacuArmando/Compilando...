@@ -1,0 +1,17 @@
+.env
+.env.*
+.git
+.venv
+instance
+output
+tests
+docs
+.pytest_cache
+.ruff_cache
+__pycache__
+**/__pycache__
+.coverage
+htmlcov
+.idea
+.vscode
+roadmap*.md

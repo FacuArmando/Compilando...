@@ -10,6 +10,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from compilando import create_app
 from compilando.extensions import db
 from compilando.modules.auth import Usuario
+from compilando.modules.auth.models import Sesion
 from compilando.modules.auth.services import registrar_usuario
 
 
@@ -144,7 +145,7 @@ def test_registro_acepta_los_limites_de_longitud_de_contrasena(app_con_usuarios,
 
 
 @pytest.mark.parametrize("longitud", [8, 13, 18])
-def test_registro_por_formulario_permite_ingresar_con_el_nuevo_rango(cliente_registro, longitud):
+def test_registro_por_formulario_inicia_sesion_con_el_nuevo_rango(cliente_registro, longitud):
     formulario = cliente_registro.get("/auth/register")
     campos = campos_formulario(formulario)
     assert campos["password"]["pattern"] == r"[\s\S]{8,18}"
@@ -160,12 +161,6 @@ def test_registro_por_formulario_permite_ingresar_con_el_nuevo_rango(cliente_reg
         },
     )
     assert registro.status_code == 303
-    token = campos_formulario(cliente_registro.get("/auth/login"))["csrf_token"]["value"]
-    login = cliente_registro.post(
-        "/auth/login",
-        data={"csrf_token": token, "email": "mati@ejemplo.com", "password": password},
-    )
-    assert login.status_code == 303
     assert cliente_registro.get("/auth/account").status_code == 200
 
 
@@ -191,7 +186,7 @@ def test_registro_rechaza_duplicados_y_permite_reintentar(
     assert len(db.session.scalars(select(Usuario)).all()) == 2
 
 
-def test_formulario_registra_y_confirma_sin_reenviar_al_recargar(cliente_registro):
+def test_formulario_registra_inicia_sesion_y_confirma_sin_reenviar_al_recargar(cliente_registro):
     formulario = cliente_registro.get("/auth/register")
     assert formulario.status_code == 200
     token = campos_formulario(formulario)["csrf_token"]["value"]
@@ -213,12 +208,38 @@ def test_formulario_registra_y_confirma_sin_reenviar_al_recargar(cliente_registr
     assert usuario is not None
     assert usuario.username == "Mati"
     assert check_password_hash(usuario.password_hash, "clave-prueba")
+    sesion = db.session.scalar(select(Sesion))
+    assert sesion.usuario_id == usuario.id
+    assert sesion.activa
+    with cliente_registro.session_transaction() as estado:
+        assert "auth_token" in estado
+        assert "csrf_token" not in estado
 
     inicio = cliente_registro.get(response.headers["Location"])
     assert "Tu cuenta se creó correctamente." in inicio.get_data(as_text=True)
+    assert 'id="question-composer"' in inicio.get_data(as_text=True)
+    assert cliente_registro.get("/auth/account").status_code == 200
     recarga = cliente_registro.get("/")
     assert "Tu cuenta se creó correctamente." not in recarga.get_data(as_text=True)
     assert len(db.session.scalars(select(Usuario)).all()) == 1
+
+
+@pytest.mark.parametrize("destino", ["https://ajeno.invalid", "//ajeno.invalid", "/auth/logout"])
+def test_registro_inicia_sesion_sin_redirigir_a_destinos_no_permitidos(cliente_registro, destino):
+    token = campos_formulario(cliente_registro.get("/auth/register"))["csrf_token"]["value"]
+    response = cliente_registro.post(
+        "/auth/register",
+        data={
+            "csrf_token": token,
+            "username": "Mati",
+            "email": "mati@ejemplo.com",
+            "password": "clave-prueba",
+            "next": destino,
+        },
+    )
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/"
+    assert cliente_registro.get("/auth/account").status_code == 200
 
 
 @pytest.mark.parametrize("token", [None, "token-invalido"])
@@ -231,6 +252,9 @@ def test_formulario_rechaza_csrf_invalido_y_permite_reintentar(cliente_registro,
     assert response.status_code == 400
     assert "El formulario venció o no es válido." in response.get_data(as_text=True)
     assert db.session.scalars(select(Usuario)).all() == []
+    assert db.session.scalars(select(Sesion)).all() == []
+    with cliente_registro.session_transaction() as estado:
+        assert "auth_token" not in estado
 
     campos = campos_formulario(response)
     assert campos["username"]["value"] == "mati"
@@ -351,6 +375,9 @@ def test_formulario_informa_duplicados(cliente_registro, username, email, mensaj
     assert response.status_code == 400
     assert mensaje in response.get_data(as_text=True)
     assert len(db.session.scalars(select(Usuario)).all()) == 1
+    assert db.session.scalars(select(Sesion)).all() == []
+    with cliente_registro.session_transaction() as estado:
+        assert "auth_token" not in estado
 
 
 def test_formulario_escapa_datos_al_mostrar_error(cliente_registro):

@@ -16,6 +16,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from compilando.extensions import db
 from compilando.modules.auth.models import Sesion, Usuario
+from compilando.storage import borrar_blob, guardar_blob, usa_base
 
 ERROR_CREDENCIALES = "Credenciales incorrectas."
 # Se genera una sola vez; evita omitir el costo del hash cuando el correo no existe.
@@ -263,6 +264,7 @@ def _guardar_variante_avatar(
     lado_maximo: int,
     formato_guardado: str,
     calidad: int,
+    usuario_id: int | None = None,
 ) -> None:
     copia = imagen.copy()
     copia.thumbnail((lado_maximo, lado_maximo), Image.Resampling.LANCZOS)
@@ -279,6 +281,9 @@ def _guardar_variante_avatar(
     # No se pasan metadatos EXIF para eliminar ubicación GPS y datos de cámara
     copia.save(buffer, format=formato_guardado, **kwargs)
 
+    if usa_base():
+        guardar_blob("avatars/" + destino.name, buffer.getvalue(), usuario_id=usuario_id)
+        return
     with destino.open("xb") as f:
         destino.chmod(0o600)
         f.write(buffer.getvalue())
@@ -288,6 +293,9 @@ def _borrar_archivos_avatar(nombre_archivo: str | None) -> None:
     if not nombre_archivo:
         return
     for candidato in (nombre_archivo, nombre_miniatura_avatar(nombre_archivo)):
+        if usa_base():
+            borrar_blob("avatars/" + candidato)
+            continue
         try:
             ruta_avatar(candidato).unlink(missing_ok=True)
         except ValueError:
@@ -319,17 +327,28 @@ def cambiar_avatar(usuario: Usuario, archivo: FileStorage | None) -> None:
 
     destino_full = ruta_avatar(nuevo_nombre)
     destino_thumb = ruta_avatar(nuevo_thumb)
-    destino_full.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if not usa_base():
+        destino_full.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
     anterior = db.session.scalar(select(Usuario.avatar_filename).where(Usuario.id == usuario.id))
 
     try:
-        # 1. Guardar ambas versiones en disco primero
+        # En database, variantes y referencia se confirman juntas.
         _guardar_variante_avatar(
-            imagen_limpia, destino_full, full_size, formato_guardado, calidad=88
+            imagen_limpia,
+            destino_full,
+            full_size,
+            formato_guardado,
+            calidad=88,
+            usuario_id=usuario.id,
         )
         _guardar_variante_avatar(
-            imagen_limpia, destino_thumb, thumb_size, formato_guardado, calidad=82
+            imagen_limpia,
+            destino_thumb,
+            thumb_size,
+            formato_guardado,
+            calidad=82,
+            usuario_id=usuario.id,
         )
 
         # 2. Actualizar la base de datos solo cuando ambas versiones existen
@@ -341,14 +360,17 @@ def cambiar_avatar(usuario: Usuario, archivo: FileStorage | None) -> None:
         )
         if resultado.rowcount != 1:
             raise ValueError("Los datos de tu cuenta cambiaron. Volvé a iniciar sesión.")
+        if usa_base() and anterior:
+            _borrar_archivos_avatar(anterior)
         db.session.commit()
     except Exception:
-        destino_full.unlink(missing_ok=True)
-        destino_thumb.unlink(missing_ok=True)
+        if not usa_base():
+            destino_full.unlink(missing_ok=True)
+            destino_thumb.unlink(missing_ok=True)
         db.session.rollback()
         raise
 
-    if anterior and anterior != nuevo_nombre:
+    if not usa_base() and anterior and anterior != nuevo_nombre:
         _borrar_archivos_avatar(anterior)
 
 
@@ -364,9 +386,11 @@ def eliminar_avatar(usuario: Usuario) -> None:
         .values(avatar_filename=None)
         .execution_options(synchronize_session=False)
     )
+    if usa_base():
+        _borrar_archivos_avatar(anterior)
     db.session.commit()
-
-    _borrar_archivos_avatar(anterior)
+    if not usa_base():
+        _borrar_archivos_avatar(anterior)
 
 
 def actualizar_perfil(usuario: Usuario, bio: str, fecha_nacimiento_str: str) -> None:

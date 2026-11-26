@@ -241,22 +241,21 @@
           <div class="field">
             <label for="avatar-file">{{ ui("Seleccionar imagen") }}</label>
             
-            <input id="avatar-file" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-rules">
+            <input id="avatar-file" name="avatar" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-rules" data-max-bytes="{{ config['AVATAR_MAX_BYTES'] }}" data-size-error="{{ ui('La imagen no puede superar los {maximo} MB.', maximo=config['AVATAR_MAX_BYTES'] // (1024 * 1024)) }}">
             
-            <small id="avatar-rules">{{ ui("Formatos permitidos: JPG, PNG o WebP. Tamaño máximo: 20 MB.") }}</small>
+            <small id="avatar-rules">{{ ui('Formatos permitidos: JPG, PNG o WebP. Tamaño máximo: {maximo} MB.', maximo=config['AVATAR_MAX_BYTES'] // (1024 * 1024)) }}</small>
 
 
-            <div id="avatar-cropper-box" hidden style="margin-top: 0.75rem; flex-direction: column; align-items: center; gap: 0.65rem;">
+            <div id="avatar-cropper-box" hidden>
               <canvas
                id="avatar-crop-canvas"
                width="220"
                height="220"
-               style="border-radius: 50%; border: 2px solid var(--theme-accent, #06b6d4); cursor: grab; touch-action: none; background: #111;"
               ></canvas>
-              <label for="avatar-zoom-range" style="font-size: 0.85rem;">
+              <label for="avatar-zoom-range">
                {{ ui("Zoom y arrastrá la imagen para encuadrar") }}
               </label>
-              <input id="avatar-zoom-range" name="avatar_zoom" type="range" min="0.4" max="3" step="0.05" value="1" style="width: 220px;">
+              <input id="avatar-zoom-range" name="avatar_zoom" type="range" min="0.4" max="3" step="0.05" value="1">
             </div>
 
 

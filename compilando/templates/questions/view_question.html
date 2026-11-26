@@ -1,8 +1,10 @@
 {% extends 'community/base.html' %}
 {% from 'system/_icons.html' import icon %}
+{% from 'saved/_button.html' import save_button with context %}
 {% block title %}{{ pregunta.titulo }} · COMPILANDO...{% endblock %}
 {% block community_styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/answers.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-consult.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/attachments.css') }}">
 {% endblock %}
 {% block content %}
@@ -24,7 +26,10 @@
         {% endfor %}
 
         <header class="question-detail-heading">
-          <h1>{{ pregunta.titulo }}</h1>
+          <div class="question-detail-title">
+            <h1>{{ pregunta.titulo }}</h1>
+            {{ save_button(pregunta.id) }}
+          </div>
           <p>
             {{ ui("Preguntado el") }} {{ ui_date(pregunta.fecha) }}
             <span aria-hidden="true">·</span>
@@ -93,20 +98,7 @@
             {% if respuestas_ia %}
               <p class="question-ai-existing"><a href="#respuesta-{{ respuestas_ia[0].id }}">{{ ui("Ver respuesta de IA") }}</a> {{ ui("· Esta pregunta ya tiene una respuesta generada.") }}</p>
             {% else %}
-              <details class="ai-consult">
-                <summary id="btn-modo-ia">{{ ui("Consultar IA") }}</summary>
-                <form id="form-consulta-ia" action="{{ url_for('ai.ask', pregunta_id=pregunta.id) }}" method="POST">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <p>{{ ui("Gemini puede ayudarte a analizar esta pregunta. La respuesta quedará publicada para la comunidad.") }}</p>
-                  <p>{{ ui("Google puede usar las consultas del nivel gratuito para mejorar sus productos. Evitá enviar claves o datos privados.") }}</p>
-                  <label class="ai-option"><input type="checkbox" name="confirmar_envio" value="si" required> {{ ui("Enviar esta pregunta a Gemini.") }}</label>
-                  {% if pregunta.adjuntos %}
-                    <label class="ai-option"><input type="checkbox" name="incluir_adjuntos" value="si"> {{ ui('Incluir el código de los {count} archivos adjuntos (máximo 48 KB junto con la pregunta).', count=pregunta.adjuntos|length) }}</label>
-                  {% endif %}
-                  <button type="submit" class="answer-submit">{{ ui("Pedir respuesta a Gemini") }}</button>
-                  <p class="ai-status" role="status" aria-live="polite"></p>
-                </form>
-              </details>
+              {% include 'answers/_ai_consult.html' %}
             {% endif %}
             <form id="form-respuesta-usuario" action="{{ url_for('answers.publish_answer', pregunta_id=pregunta.id) }}"
                   method="POST" class="answer-form-box" novalidate>
@@ -130,7 +122,7 @@
           <h2 id="related-title">{{ ui("Otras preguntas") }}</h2>
           <ul>
             {% for item in otras_preguntas[:5] %}
-              <li><a href="{{ url_for('questions.view_question', pregunta_id=item.id) }}">{{ item.titulo }}</a><small>{{ ui('{count} respuesta' if item.respuestas|length == 1 else '{count} respuestas', count=item.respuestas|length) }}</small></li>
+              <li><a href="{{ url_for('questions.view_question', pregunta_id=item.id) }}">{{ item.titulo }}</a><small>{{ ui('{count} respuesta' if item.cantidad_respuestas == 1 else '{count} respuestas', count=item.cantidad_respuestas) }}</small></li>
             {% endfor %}
           </ul>
         </aside>
@@ -139,4 +131,5 @@
   </div>
   <script src="{{ url_for('static', filename='js/community.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/answers.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/ai-consult.js') }}" defer></script>
 {% endblock %}

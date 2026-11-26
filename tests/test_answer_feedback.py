@@ -4,7 +4,7 @@ from html.parser import HTMLParser
 
 import pytest
 from flask_migrate import downgrade, upgrade
-from sqlalchemy import event, inspect, select
+from sqlalchemy import event, inspect, select, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from compilando import create_app
@@ -255,9 +255,19 @@ def test_migracion_conserva_publicaciones(tmp_path):
         usuario = Usuario(username="lector", email="lector@test.com", password_hash="prueba")
         db.session.add(usuario)
         db.session.commit()
-        pregunta = publicar_pregunta("Pregunta previa", "Contenido previo.", "Java", [], usuario)
-        respuesta = publicar_respuesta(pregunta.id, "Respuesta previa.", usuario)
-        pregunta_id, respuesta_id = pregunta.id, respuesta.id
+        # Insertar las columnas históricas, anteriores a los campos de búsqueda.
+        categoria_id = db.session.scalar(
+            text("INSERT INTO categorias (nombre, descripcion) VALUES ('Java', '') RETURNING id")
+        )
+        pregunta_id = db.session.scalar(
+            text(
+                "INSERT INTO preguntas (titulo, cuerpo_detallado, fecha, usuario_id, categoria_id) "
+                "VALUES ('Pregunta previa', 'Contenido previo.', CURRENT_DATE, :u, :c) RETURNING id"
+            ),
+            {"u": usuario.id, "c": categoria_id},
+        )
+        respuesta = publicar_respuesta(pregunta_id, "Respuesta previa.", usuario)
+        respuesta_id = respuesta.id
         db.session.remove()
         try:
             upgrade()

@@ -5,10 +5,14 @@
 {% block theme_control %}{% endblock %}
 {% block styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/search-autocomplete.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/saved.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
   {% block community_styles %}{% endblock %}
 {% endblock %}
 {% block footer %}
   {% include 'community/_footer.html' %}
   <script src="{{ url_for('static', filename='js/footer.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/search-autocomplete.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/saved.js') }}" defer></script>
 {% endblock %}

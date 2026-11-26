@@ -13,6 +13,7 @@ from compilando.modules.questions.attachments import (
 )
 from compilando.modules.questions.models import Pregunta
 from compilando.modules.tags.models import Tag
+from compilando.storage import usa_base
 
 
 def normalizar_nombre(nombre: str) -> str:
@@ -108,9 +109,15 @@ def publicar_pregunta(
             tags=tags,
         )
 
+        if usa_base():
+            db.session.add(pregunta)
+            db.session.flush()
         for orden, archivo in enumerate(preparados):
-            adjunto = guardar_adjunto(archivo, orden)
-            guardados.append(ruta_adjunto(adjunto.id))
+            if usa_base():
+                adjunto = guardar_adjunto(archivo, orden, pregunta_id=pregunta.id)
+            else:
+                adjunto = guardar_adjunto(archivo, orden)
+                guardados.append(ruta_adjunto(adjunto.id))
             pregunta.adjuntos.append(adjunto)
 
         db.session.add(pregunta)

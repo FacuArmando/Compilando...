@@ -9,6 +9,7 @@ from flask import abort, current_app, request
 from werkzeug.datastructures import FileStorage
 
 from compilando.modules.questions.models import AdjuntoPregunta
+from compilando.storage import guardar_blob, leer_blob, usa_base
 
 MAX_NOMBRE_ADJUNTO = 120
 
@@ -98,8 +99,18 @@ def ruta_adjunto(identificador: str) -> Path:
     return Path(current_app.config["QUESTION_UPLOAD_FOLDER"]).resolve() / identificador
 
 
-def guardar_adjunto(archivo: ArchivoPreparado, orden: int) -> AdjuntoPregunta:
+def guardar_adjunto(
+    archivo: ArchivoPreparado, orden: int, *, pregunta_id: int | None = None
+) -> AdjuntoPregunta:
     identificador = uuid4().hex
+    if usa_base():
+        guardar_blob("attachments/" + identificador, archivo.contenido, pregunta_id=pregunta_id)
+        return AdjuntoPregunta(
+            id=identificador,
+            nombre_original=archivo.nombre,
+            tamanio=len(archivo.contenido),
+            orden=orden,
+        )
     ruta = ruta_adjunto(identificador)
     ruta.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     # La creación exclusiva evita reemplazar un archivo, incluso ante una colisión.
@@ -119,14 +130,24 @@ def guardar_adjunto(archivo: ArchivoPreparado, orden: int) -> AdjuntoPregunta:
     )
 
 
+def contenido_adjunto(adjunto: AdjuntoPregunta) -> bytes:
+    try:
+        if usa_base():
+            contenido = leer_blob("attachments/" + adjunto.id)
+        else:
+            with ruta_adjunto(adjunto.id).open("rb") as origen:
+                contenido = origen.read(current_app.config["QUESTION_ATTACHMENT_MAX_BYTES"] + 1)
+        if contenido is None or len(contenido) != adjunto.tamanio:
+            abort(404)
+        return contenido
+    except OSError:
+        abort(404)
+
+
 def leer_adjunto(adjunto: AdjuntoPregunta) -> str:
     try:
-        with ruta_adjunto(adjunto.id).open("rb") as origen:
-            contenido = origen.read(current_app.config["QUESTION_ATTACHMENT_MAX_BYTES"] + 1)
-        if len(contenido) != adjunto.tamanio:
-            abort(404)
-        return contenido.decode("utf-8-sig")
-    except (OSError, UnicodeDecodeError):
+        return contenido_adjunto(adjunto).decode("utf-8-sig")
+    except UnicodeDecodeError:
         abort(404)
 
 

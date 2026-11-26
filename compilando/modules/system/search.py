@@ -41,17 +41,20 @@ def criterios_busqueda(texto: str):
     """Exigir cada término y puntuar su mejor coincidencia, sin multiplicar por etiquetas."""
     filtros = []
     relevancia = literal(0)
-    usa_normalizacion = db.engine.dialect.name == "sqlite"
-    # Otros motores conservan ILIKE hasta definir su normalizador al incorporarlos.
-    titulo_campo, cuerpo_campo, tag_campo = (
-        func.normalizar_busqueda(campo) if usa_normalizacion else campo
-        for campo in (Pregunta.titulo, Pregunta.cuerpo_detallado, Tag.nombre)
-    )
-    for termino in terminos_busqueda(texto, normalizar=usa_normalizacion):
+    if db.engine.dialect.name == "postgresql":
+        titulo_campo, cuerpo_campo, tag_campo = (
+            Pregunta.titulo_busqueda,
+            Pregunta.cuerpo_busqueda,
+            Tag.nombre_busqueda,
+        )
+    else:
+        titulo_campo, cuerpo_campo, tag_campo = (
+            func.normalizar_busqueda(campo)
+            for campo in (Pregunta.titulo, Pregunta.cuerpo_detallado, Tag.nombre)
+        )
+    for termino in terminos_busqueda(texto):
         alternativas = ALTERNATIVAS_POO if termino.casefold() == "poo" else (termino,)
-        patrones = {
-            normalizar_busqueda(valor) if usa_normalizacion else valor for valor in alternativas
-        }
+        patrones = {normalizar_busqueda(valor) for valor in alternativas}
         patrones = [
             "%" + valor.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
             for valor in sorted(patrones)

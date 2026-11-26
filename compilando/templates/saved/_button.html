@@ -1,0 +1,26 @@
+{% from 'system/_icons.html' import icon %}
+{% macro save_button(pregunta_id) -%}
+<div class="question-save-control">
+  {% if usuario_actual %}
+    {% set guardada = pregunta_id in guardadas_ids|default([]) %}
+    {% set accion = 'Quitar de Guardadas' if guardada else 'Guardar pregunta' %}
+    <form class="question-save-form" data-saved-question="{{ pregunta_id }}"
+          data-saved-page="{{ 'true' if vista_guardadas|default(false) else 'false' }}"
+          action="{{ url_for('saved.change', pregunta_id=pregunta_id) }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="volver" value="{{ request.full_path }}">
+      <button type="submit" class="question-save-button" name="guardada"
+              value="{{ 'no' if guardada else 'si' }}" aria-pressed="{{ 'true' if guardada else 'false' }}"
+              {{ i18n_attr('aria-label', accion) }} {{ i18n_attr('title', accion) }}>
+        {{ icon('star') }}
+      </button>
+    </form>
+    <p class="question-save-status sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+  {% else %}
+    <a class="question-save-button"
+       href="{{ url_for('auth.login', next=url_for('questions.view_question', pregunta_id=pregunta_id)) }}"
+       {{ i18n_attr('aria-label', 'Iniciá sesión para guardar preguntas.') }}
+       {{ i18n_attr('title', 'Iniciá sesión para guardar preguntas.') }}>{{ icon('star') }}</a>
+  {% endif %}
+</div>
+{%- endmacro %}

@@ -1,5 +1,9 @@
 {% macro pagina_url(numero) -%}
+  {%- if vista_guardadas|default(false) -%}
+  {{ url_for('saved.index', page=numero, _anchor='preguntas') }}
+  {%- else -%}
   {{ url_for('system.index', page=numero, q=busqueda or none, categoria=categoria_seleccionada, _anchor='preguntas') }}
+  {%- endif -%}
 {%- endmacro %}
 
 <div class="community-pagination">

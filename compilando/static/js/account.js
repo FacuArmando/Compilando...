@@ -219,13 +219,11 @@ if (avatarForm && avatarInput && avatarBox && avatarCanvas && avatarZoom) {
       offsetX = (avatarCanvas.width - img.width * scale) / 2;
       offsetY = (avatarCanvas.height - img.height * scale) / 2;
       avatarBox.hidden = false;
-      avatarBox.style.display = "flex";
       drawCropper();
     };
     loaded.onerror = () => {
       if (revocarAlCargar) URL.revokeObjectURL(url);
       avatarBox.hidden = true;
-      avatarBox.style.display = "none";
       img = null;
     };
     loaded.src = url;
@@ -241,9 +239,17 @@ if (avatarForm && avatarInput && avatarBox && avatarCanvas && avatarZoom) {
 
   avatarInput.addEventListener("change", () => {
     const file = avatarInput.files ? avatarInput.files.item(0) : null;
+    avatarInput.setCustomValidity("");
+    if (file && file.size > Number(avatarInput.dataset.maxBytes)) {
+      avatarInput.setCustomValidity(avatarInput.dataset.sizeError);
+      avatarInput.reportValidity();
+      avatarInput.value = "";
+      avatarBox.hidden = true;
+      img = null;
+      return;
+    }
     if (!file || !file.type.startsWith("image/")) {
       avatarBox.hidden = true;
-      avatarBox.style.display = "none";
       img = null;
       return;
     }

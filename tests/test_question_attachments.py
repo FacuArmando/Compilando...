@@ -167,7 +167,7 @@ def test_nombre_y_codigo_se_muestran_como_texto_sin_ejecutar_html(app_adjuntos, 
     [
         ([(f"Clase{i}.java", b"class Clase {}") for i in range(11)], "hasta 10"),
         ([("Clase.java", b"a" * (1024 * 1024 + 1))], "por archivo"),
-        ([(f"C{i}.java", b"a" * (5 * 1024 * 1024 // 6 + 1)) for i in range(6)], "total"),
+        ([(f"C{i}.java", b"a" * (3 * 1024 * 1024 // 6 + 1)) for i in range(6)], "total"),
         ([("Clase.java.exe", b"texto")], "tipos"),
         ([(".env", b"SECRET=valor")], "tipos"),
         ([("Proyecto.zip", b"PK")], "tipos"),
@@ -189,14 +189,14 @@ def test_rechaza_cargas_invalidas_sin_guardar_pregunta_ni_archivos(
 
 def test_limites_exactos_de_cantidad_archivo_y_total_se_aceptan(app_adjuntos, cliente_adjuntos):
     limite = app_adjuntos.config["QUESTION_ATTACHMENT_MAX_BYTES"]
-    # Diez archivos, uno exactamente de 1 MB, y el conjunto exactamente de 5 MB.
-    tamanios = [limite] + [3 * limite // 8] * 8 + [limite]
+    # Diez archivos, dos exactamente de 1 MB, y el conjunto exactamente de 3 MB.
+    tamanios = [limite] + [limite // 8] * 8 + [limite]
     response = publicar(
         cliente_adjuntos, [(f"Clase{i}.java", b"x" * n) for i, n in enumerate(tamanios)]
     )
     assert response.status_code == 302
     assert len(guardados(app_adjuntos)) == 10
-    assert sum(a.tamanio for a in guardados(app_adjuntos)) == 5 * limite
+    assert sum(a.tamanio for a in guardados(app_adjuntos)) == 3 * limite
 
 
 def test_error_en_campos_conserva_texto_y_no_guarda_archivos(app_adjuntos, cliente_adjuntos):

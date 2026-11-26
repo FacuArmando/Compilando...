@@ -7,6 +7,9 @@
     </a>
     <a href="{{ url_for('system.index') }}#preguntas"{% if request.endpoint == 'questions.view_question' %} class="is-current" aria-current="true"{% endif %}>{{ icon('questions') }} {{ ui("Preguntas recientes") }}</a>
       {% if usuario_actual %}
+      <a href="{{ url_for('saved.index') }}"{% if request.endpoint == 'saved.index' %} class="is-current" aria-current="page"{% endif %}>
+        {{ icon('star') }} {{ ui('Guardadas') }}
+      </a>
       <a href="{{ url_for('auth.account') }}"{% if request.endpoint == 'auth.account' %} class="is-current" aria-current="page"{% endif %}>
         {{ icon('user') }} {{ ui("Mi cuenta") }}
       </a>

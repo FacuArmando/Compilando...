@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from flask import (
     Blueprint,
     abort,
@@ -10,20 +12,21 @@ from flask import (
     send_file,
     url_for,
 )
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from compilando.extensions import db
 from compilando.modules.answers.feedback import resumen_evaluaciones
-from compilando.modules.answers.models import EstadoRespuesta
+from compilando.modules.answers.models import EstadoRespuesta, Respuesta
 from compilando.modules.categories.models import Categoria
 from compilando.modules.questions.attachments import (
     AdjuntosInvalidos,
+    contenido_adjunto,
     leer_adjunto,
     opciones_adjuntos,
-    ruta_adjunto,
 )
 from compilando.modules.questions.models import AdjuntoPregunta, Pregunta
 from compilando.modules.questions.services import publicar_pregunta
+from compilando.modules.saved.services import ids_guardadas
 from compilando.modules.tags.models import Tag
 
 bp = Blueprint("questions", __name__)
@@ -137,11 +140,8 @@ def view_attachment(pregunta_id: int, adjunto_id: str):
 @bp.get("/questions/<int:pregunta_id>/attachments/<adjunto_id>/download")
 def download_attachment(pregunta_id: int, adjunto_id: str):
     adjunto = _obtener_adjunto(pregunta_id, adjunto_id)
-    ruta = ruta_adjunto(adjunto.id)
-    if not ruta.is_file():
-        abort(404)
     return send_file(
-        ruta,
+        BytesIO(contenido_adjunto(adjunto)),
         as_attachment=True,
         download_name=adjunto.nombre_original,
         mimetype="application/octet-stream",
@@ -168,7 +168,14 @@ def view_question(pregunta_id: int):
         key=lambda respuesta: respuesta.estado != EstadoRespuesta.ACEPTADA.value,
     )
 
-    preguntas_historial = db.session.scalars(select(Pregunta).order_by(Pregunta.id.desc())).all()
+    preguntas_historial = db.session.execute(
+        select(Pregunta.id, Pregunta.titulo, func.count(Respuesta.id).label("cantidad_respuestas"))
+        .outerjoin(Respuesta, Respuesta.pregunta_id == Pregunta.id)
+        .where(Pregunta.id != pregunta.id)
+        .group_by(Pregunta.id, Pregunta.titulo)
+        .order_by(Pregunta.id.desc())
+        .limit(5)
+    ).all()
 
     return render_template(
         "questions/view_question.html",
@@ -176,4 +183,7 @@ def view_question(pregunta_id: int):
         preguntas_historial=preguntas_historial,
         respuestas=respuestas_ordenadas,
         evaluaciones=resumen_evaluaciones(respuestas_ordenadas, g.usuario_actual),
+        guardadas_ids=ids_guardadas(
+            [pregunta.id], g.usuario_actual.id if g.usuario_actual else None
+        ),
     )

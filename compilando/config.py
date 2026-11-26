@@ -11,26 +11,41 @@ from pathlib import Path
 
 def load_config() -> dict:
     database_path = Path(__file__).resolve().parents[1] / "instance" / "compilando.sqlite"
-    environment = os.environ.get("APP_ENV", "development")
+    vercel = os.environ.get("VERCEL") == "1"
+    environment = os.environ.get("APP_ENV", "production" if vercel else "development")
     if environment not in {"development", "production"}:
         raise RuntimeError("APP_ENV debe ser development o production.")
+    if vercel and environment != "production":
+        raise RuntimeError("Vercel requiere APP_ENV=production.")
     production = environment == "production"
     trusted_hosts = os.environ.get("TRUSTED_HOSTS", "")
+    hosts = [host.strip() for host in trusted_hosts.split(",") if host.strip()]
+    if vercel:
+        hosts.extend(
+            value
+            for name in ("VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL")
+            if (value := os.environ.get(name, ""))
+        )
     return {
         "APP_ENV": "production" if production else "development",
         "SECRET_KEY": os.environ.get("SECRET_KEY"),
         "ADMIN_ACTIVATION_CODE": os.environ.get("ADMIN_ACTIVATION_CODE", ""),
         "SQLALCHEMY_DATABASE_URI": os.environ.get("DATABASE_URL")
         or f"sqlite:///{database_path.as_posix()}",
+        "DATABASE_PASSWORD": os.environ.get("DATABASE_PASSWORD", ""),
+        "DATABASE_POOL_MODE": os.environ.get("DATABASE_POOL_MODE", "direct"),
+        "STORAGE_BACKEND": os.environ.get("STORAGE_BACKEND", ""),
+        "STORAGE_OBJECT_MAX_BYTES": 3 * 1024 * 1024,
+        "STORAGE_TOTAL_BYTES": 100 * 1024 * 1024,
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
         "QUESTION_UPLOAD_FOLDER": str(database_path.parent / "question-attachments"),
         "QUESTION_ATTACHMENT_MAX_FILES": 10,
         "QUESTION_ATTACHMENT_MAX_BYTES": 1024 * 1024,
-        "QUESTION_ATTACHMENT_TOTAL_BYTES": 5 * 1024 * 1024,
+        "QUESTION_ATTACHMENT_TOTAL_BYTES": 3 * 1024 * 1024,
         "QUESTION_ATTACHMENT_EXTENSIONS": (".java", ".py", ".js", ".jsx", ".txt"),
         "AVATAR_UPLOAD_FOLDER": str(database_path.parent / "avatars"),
-        "AVATAR_MAX_BYTES": 20 * 1024 * 1024,
-        "MAX_CONTENT_LENGTH": 21 * 1024 * 1024,
+        "AVATAR_MAX_BYTES": 3 * 1024 * 1024,
+        "MAX_CONTENT_LENGTH": 4 * 1024 * 1024,
         "AVATAR_MAX_PIXELS": 40_000_000,
         "AVATAR_THUMB_SIZE": 256,
         "AVATAR_FULL_SIZE": 1280,
@@ -61,6 +76,5 @@ def load_config() -> dict:
         "ADMIN_ACTIVATION_ACCOUNT_LIMIT": 5,
         "AUTH_PASSWORD_IP_LIMIT": 30,
         "AUTH_PASSWORD_ACCOUNT_LIMIT": 5,
-        "TRUSTED_HOSTS": [host.strip() for host in trusted_hosts.split(",") if host.strip()]
-        or None,
+        "TRUSTED_HOSTS": list(dict.fromkeys(hosts)) or None,
     }

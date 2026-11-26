@@ -4,14 +4,17 @@ Carga la configuración, inicializa las herramientas de base de datos
 y registra las rutas de las páginas y los comandos de terminal.
 """
 
+import os
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from compilando.commands import register_commands
 from compilando.config import load_config
+from compilando.database import configure_database
 from compilando.errors import not_found
 from compilando.extensions import csrf, db, migrate
 from compilando.i18n import init_app as init_i18n
@@ -27,20 +30,28 @@ from compilando.modules.auth.security import init_app as init_security
 from compilando.modules.auth.sessions import init_app as init_auth
 from compilando.modules.questions.attachments import init_app as init_attachments
 from compilando.modules.questions.routes import bp as questions_bp
+from compilando.modules.saved.routes import bp as saved_bp
 from compilando.modules.system.routes import bp as system_bp
 from compilando.search_text import init_app as init_search
+from compilando.storage import init_app as init_storage
 
 
 def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     """Crear una instancia independiente para desarrollo, pruebas o despliegue."""
     project_root = Path(__file__).resolve().parents[1]
     app = Flask(__name__, instance_path=str(project_root / "instance"))
+    if os.environ.get("VERCEL") == "1":
+        # Vercel sobrescribe estas cabeceras; no confiar en ellas en el servidor local.
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=0)
     app.config.from_mapping(load_config())
     if test_config is not None:
         app.config.from_mapping(test_config)
 
-    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    backend = configure_database(app)
+    if backend == "sqlite":
+        Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     db.init_app(app)
+    init_storage(app, backend)
     init_search(app)
     migrate.init_app(app, db, directory=str(project_root / "migrations"))
     init_i18n(app)
@@ -52,6 +63,7 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     app.register_blueprint(auth_bp)
     register_commands(app)
     app.register_blueprint(questions_bp)
+    app.register_blueprint(saved_bp)
     app.register_blueprint(answers_bp)
     app.register_blueprint(ai_bp)
     app.register_blueprint(admin_bp)
