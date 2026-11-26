@@ -39,3 +39,46 @@
     <a class="site-footer-top" href="#page-top" data-footer-top>{{ ui("Volver arriba") }} {{ icon('arrow-up') }}</a>
   </div>
 </footer>
+
+<dialog id="dialog-axolotl-puzzle" class="puzzle-dialog" aria-labelledby="puzzle-dialog-title">
+  <div class="puzzle-dialog-card">
+    <div class="puzzle-dialog-header">
+      <div class="puzzle-dialog-title-group">
+        <span class="puzzle-dialog-badge">✦ Easter egg</span>
+        <h2 id="puzzle-dialog-title">{{ ui("Armá el ajolote de Compilando") }}</h2>
+      </div>
+      <button type="button" class="puzzle-close-btn" id="btn-cerrar-puzzle" {{ i18n_attr('aria-label', 'Cerrar') }}>✕</button>
+    </div>
+
+    <p class="puzzle-dialog-subtitle">
+      {{ ui("Arrastrá una ficha sobre otra con el mouse (o hacé clic en dos) para armar la imagen.") }}
+    </p>
+
+    <div class="puzzle-stage">
+      <div id="axolotl-puzzle-board"
+           class="puzzle-board"
+           data-img="{{ url_for('static', filename='img/brand/axolotl-puzzle.png') }}">
+      </div>
+      <img id="axolotl-puzzle-preview"
+           class="puzzle-preview-overlay"
+           src="{{ url_for('static', filename='img/brand/axolotl-puzzle.png') }}"
+           alt=""
+           hidden>
+    </div>
+
+    <div class="puzzle-dialog-footer">
+      <div class="puzzle-stats-pill">
+        <span id="puzzle-moves-label">{{ ui("Movimientos") }}</span>: <strong id="puzzle-moves-count">0</strong>
+      </div>
+      <div class="puzzle-footer-actions">
+        <button type="button" class="puzzle-hint-btn" id="btn-pista-puzzle">{{ ui("Ver guía") }}</button>
+        <button type="button" class="puzzle-reset-btn" id="btn-reiniciar-puzzle">{{ ui("Mezclar") }}</button>
+      </div>
+    </div>
+
+    <p id="puzzle-win-banner" class="puzzle-win-banner" role="status" hidden>
+      🎉 <span id="puzzle-win-text">{{ ui("¡Excelente! Completaste el rompecabezas.") }}</span>
+      (<strong id="puzzle-win-moves">0</strong> <span id="puzzle-win-moves-label">{{ ui("movimientos") }}</span>)
+    </p>
+  </div>
+</dialog>
