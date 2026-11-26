@@ -449,5 +449,10 @@
   "La pregunta se eliminó correctamente.": "The question was deleted successfully.",
   "¿Eliminar esta pregunta?": "Delete this question?",
   "Esta acción es permanente y también eliminará sus respuestas y archivos adjuntos.": "This action is permanent and will also delete its answers and attachments.",
-  "Sí, eliminar pregunta": "Yes, delete question"
+  "Sí, eliminar pregunta": "Yes, delete question",
+  "Eliminar respuesta": "Delete answer",
+  "Tu respuesta fue eliminada correctamente.": "Your answer was deleted successfully.",
+  "¿Eliminar esta respuesta?": "Delete this answer?",
+  "Esta acción es permanente y eliminará tu respuesta de esta pregunta.": "This action is permanent and will delete your answer from this question.",
+  "Sí, eliminar respuesta": "Yes, delete answer"
 }

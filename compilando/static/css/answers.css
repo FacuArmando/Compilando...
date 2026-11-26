@@ -513,3 +513,31 @@
 .question-confirm-delete-button:hover {
     filter: brightness(1.08);
 }
+
+.answer-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.answer-delete-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--theme-danger, #c94a53);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.answer-delete-button:hover {
+    text-decoration: underline;
+}
+
+.answer-delete-button .community-icon {
+    width: 14px;
+    height: 14px;
+}

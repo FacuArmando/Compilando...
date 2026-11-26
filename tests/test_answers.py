@@ -482,3 +482,75 @@ def test_ruta_editar_respuesta_inexistente(app, usuario, cliente_autenticado):
     )
 
     assert response.status_code == 404
+
+def test_eliminar_respuesta_autor_exitosa(app, usuario):
+    from compilando.modules.answers.services import eliminar_respuesta
+
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo borrar mi propia respuesta?",
+        cuerpo="Probando eliminación de respuesta propia.",
+        categoria_nombre="Python",
+        nombres_tags=["pytest"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Esta es mi respuesta para eliminar.",
+        usuario=usuario,
+    )
+
+    pregunta_id = eliminar_respuesta(respuesta_id=respuesta.id, usuario=usuario)
+
+    assert pregunta_id == pregunta.id
+    assert db.session.get(Respuesta, respuesta.id) is None
+
+
+def test_eliminar_respuesta_otro_usuario_falla(app, usuario):
+    from compilando.modules.answers.services import eliminar_respuesta
+
+    intruso = Usuario(
+        username="intruso_resp",
+        email="intruso_resp@test.com",
+        password_hash="hash_intruso",
+    )
+    db.session.add(intruso)
+    db.session.commit()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Puede otro usuario borrar mi respuesta?",
+        cuerpo="Solo el autor de la respuesta debería poder eliminarla.",
+        categoria_nombre="Seguridad",
+        nombres_tags=["permisos"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Respuesta protegida contra terceros.",
+        usuario=usuario,
+    )
+
+    with pytest.raises(PermissionError, match="Solo el autor"):
+        eliminar_respuesta(respuesta_id=respuesta.id, usuario=intruso)
+
+
+def test_ruta_eliminar_respuesta(app, usuario, client, cliente_autenticado):
+    pregunta = publicar_pregunta(
+        titulo="¿Ruta POST para eliminar respuesta?",
+        cuerpo="Probando endpoint HTTP de eliminación de respuesta.",
+        categoria_nombre="Flask",
+        nombres_tags=["rutas"],
+        usuario=usuario,
+    )
+    respuesta = publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Respuesta que será eliminada vía HTTP POST.",
+        usuario=usuario,
+    )
+
+    resp_anon = client.post(f"/answers/{respuesta.id}/delete")
+    assert resp_anon.status_code == 401
+
+    auth_client = cliente_autenticado(usuario)
+    resp_ok = auth_client.post(f"/answers/{respuesta.id}/delete", follow_redirects=False)
+    assert resp_ok.status_code == 302
+    assert db.session.get(Respuesta, respuesta.id) is None

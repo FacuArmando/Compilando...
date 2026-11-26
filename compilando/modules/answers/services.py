@@ -80,3 +80,22 @@ def aceptar_respuesta(respuesta_id: int, usuario: Usuario) -> Respuesta:
     except Exception:
         db.session.rollback()
         raise
+
+def eliminar_respuesta(respuesta_id: int, usuario: Usuario) -> int:
+    """Permite al autor eliminar su propia respuesta y devuelve el ID de la pregunta."""
+    respuesta = db.session.scalar(select(Respuesta).where(Respuesta.id == respuesta_id))
+    if respuesta is None:
+        raise ValueError("La respuesta que intentás eliminar no existe.")
+
+    if respuesta.es_ia or respuesta.usuario_id != usuario.id:
+        raise PermissionError("Solo el autor de la respuesta puede eliminarla.")
+
+    pregunta_id = respuesta.pregunta_id
+
+    try:
+        db.session.delete(respuesta)
+        db.session.commit()
+        return pregunta_id
+    except Exception:
+        db.session.rollback()
+        raise

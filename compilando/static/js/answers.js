@@ -203,3 +203,24 @@ if (btnAbrirEliminarPregunta && dialogEliminarPregunta && btnCancelarEliminarPre
     if (event.target === dialogEliminarPregunta) dialogEliminarPregunta.close();
   });
 }
+
+// Modal de confirmación para eliminar respuestas propias
+document.querySelectorAll(".btn-abrir-eliminar-respuesta").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const dialog = document.getElementById(`dialog-eliminar-respuesta-${btn.dataset.respuestaId}`);
+    if (dialog) dialog.showModal();
+  });
+});
+
+document.querySelectorAll(".btn-cancelar-eliminar-respuesta").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const dialog = document.getElementById(`dialog-eliminar-respuesta-${btn.dataset.respuestaId}`);
+    if (dialog) dialog.close();
+  });
+});
+
+document.querySelectorAll("dialog[id^='dialog-eliminar-respuesta-']").forEach((dialog) => {
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+});
