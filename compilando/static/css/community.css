@@ -2494,9 +2494,11 @@ cursor: pointer;
   border-radius: 22px;
   background: var(--theme-surface, #131a24);
   color: var(--theme-text, #dbe5f4);
-  max-width: 520px;
-  width: calc(100% - 28px);
+  max-width: min(500px, 92vw);
+  max-height: 92dvh;
+  width: 100%;
   box-shadow: 0 28px 65px rgba(5, 10, 20, 0.55);
+  overflow-y: auto;
 }
 
 .puzzle-dialog::backdrop {
@@ -2505,9 +2507,9 @@ cursor: pointer;
 }
 
 .puzzle-dialog-card {
-  padding: 26px;
+  padding: clamp(14px, 2.5vh, 24px);
   display: grid;
-  gap: 16px;
+  gap: clamp(10px, 1.6vh, 16px);
 }
 
 .puzzle-dialog-header {
@@ -2581,6 +2583,8 @@ cursor: pointer;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
+  width: min(100%, 52dvh);
+  margin-inline: auto;
 }
 
 .puzzle-preview-overlay {
