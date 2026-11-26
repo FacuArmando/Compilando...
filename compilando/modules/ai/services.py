@@ -1,17 +1,15 @@
 """Contexto acotado, límites persistentes y reserva atómica antes de consultar IA."""
 
 import json
+from dataclasses import dataclass
+from datetime import datetime, time, timedelta
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from flask import abort, current_app
 from sqlalchemy import or_, select, update
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import NotFound
-
-from dataclasses import dataclass
-from datetime import datetime, time, timedelta
-from zoneinfo import ZoneInfo
-
 
 from compilando.extensions import db
 from compilando.modules.ai.models import SolicitudIA
@@ -169,6 +167,7 @@ def consultar_ia(
         db.session.commit()
         raise
 
+
 @dataclass(frozen=True)
 class DeteccionIA:
     requiere: bool
@@ -210,9 +209,7 @@ def detectar_pregunta_requiere_ia(
         if referencia - fecha_pregunta >= timedelta(minutes=minutos_espera):
             return DeteccionIA(requiere=True, motivo="tiempo_sin_respuesta")
 
-
     return DeteccionIA(requiere=False, motivo=None)
-
 
 
 def listar_preguntas_requieren_ia() -> list[tuple[Pregunta, DeteccionIA]]:
@@ -226,7 +223,6 @@ def listar_preguntas_requieren_ia() -> list[tuple[Pregunta, DeteccionIA]]:
         if deteccion.requiere:
             resultado.append((pregunta, deteccion))
     return resultado
-
 
 
 def responder_automaticamente_si_vencio(pregunta: Pregunta) -> Respuesta | None:
@@ -258,12 +254,12 @@ def responder_automaticamente_si_vencio(pregunta: Pregunta) -> Respuesta | None:
 
 
 def procesar_preguntas_vencidas_ia(limite: int = 5) -> int:
-    """Busca preguntas sin respuestas que superaron el tiempo configurado y les genera respuesta IA."""
+    """Busca preguntas vencidas sin respuestas y les genera una respuesta de IA."""
     if not current_app.config.get("AI_AUTO_RESPOND_UNANSWERED", False):
         return 0
     if current_app.config.get("TESTING") and not current_app.config.get("AI_AUTO_RESPOND_IN_TESTS"):
-     return 0  # (o return 0 en procesar_preguntas_vencidas_ia)
-    
+        return 0  # (o return 0 en procesar_preguntas_vencidas_ia)
+
     preguntas_sin_respuestas = db.session.scalars(
         select(Pregunta)
         .where(~Pregunta.respuestas.any())

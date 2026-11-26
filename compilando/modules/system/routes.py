@@ -5,6 +5,10 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload, selectinload
 
 from compilando.extensions import db
+from compilando.modules.ai.services import (
+    detectar_pregunta_requiere_ia,
+    procesar_preguntas_vencidas_ia,
+)
 from compilando.modules.answers.highlights import preguntas_utiles_semana
 from compilando.modules.answers.models import EstadoRespuesta, Respuesta
 from compilando.modules.auth.models import Usuario
@@ -13,7 +17,6 @@ from compilando.modules.questions.models import Pregunta
 from compilando.modules.system.search import criterios_busqueda, terminos_busqueda
 from compilando.modules.system.suggestions import sugerir_busqueda
 from compilando.modules.tags.models import Tag
-from compilando.modules.ai.services import detectar_pregunta_requiere_ia
 
 bp = Blueprint("system", __name__)
 
@@ -75,7 +78,6 @@ def index():
     if pagina > 1 and not paginacion.items:
         return primera_pagina()
 
-
     # Contar respuestas totales y respuestas de IA por pregunta en una sola consulta.
     ids = [pregunta.id for pregunta in paginacion.items]
     filas_respuestas = (
@@ -110,13 +112,12 @@ def index():
         else None
     )
 
-
     return render_template(
         "system/index.html",
         preguntas=paginacion.items,
         paginacion=paginacion,
         cantidad_respuestas=cantidad_respuestas,
-        detecciones_ia=detecciones_ia,  
+        detecciones_ia=detecciones_ia,
         categorias=categorias,
         busqueda=busqueda,
         sugerencia_busqueda=sugerencia,
@@ -136,10 +137,6 @@ def health():
     """Indicar que el proceso web responde; no evalúa servicios externos."""
     return {"status": "ok", "application": "compilando"}
 
-from compilando.modules.ai.services import (
-    detectar_pregunta_requiere_ia,
-    procesar_preguntas_vencidas_ia,
-)
 
 @bp.get("/feed-ai-status")
 def feed_ai_status():

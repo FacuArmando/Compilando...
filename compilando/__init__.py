@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from flask import Flask
-from flask import Flask, request
 
 from compilando.commands import register_commands
 from compilando.config import load_config
@@ -57,7 +56,6 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     app.register_blueprint(ai_bp)
     app.register_blueprint(admin_bp)
     app.register_error_handler(404, not_found)
-
 
     import threading
     import time as _time

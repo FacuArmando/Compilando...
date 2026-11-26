@@ -621,6 +621,7 @@ def test_fallo_guardando_no_deja_respuesta_parcial_y_libera_reserva(app_ia):
         assert db.session.get(SolicitudIA, 1).estado == "error"
     assert consultar(browser).status_code == 200
 
+
 def test_detectar_pregunta_requiere_ia_por_etiqueta(app, usuario):
     from compilando.modules.ai.services import detectar_pregunta_requiere_ia
     from compilando.modules.questions.services import publicar_pregunta
@@ -640,6 +641,7 @@ def test_detectar_pregunta_requiere_ia_por_etiqueta(app, usuario):
 
 def test_detectar_pregunta_requiere_ia_por_tiempo_sin_respuesta(app, usuario):
     from datetime import date, timedelta
+
     from compilando.modules.ai.services import detectar_pregunta_requiere_ia
     from compilando.modules.questions.services import publicar_pregunta
 
@@ -661,8 +663,6 @@ def test_detectar_pregunta_requiere_ia_por_tiempo_sin_respuesta(app, usuario):
     det = detectar_pregunta_requiere_ia(pregunta)
     assert det.requiere is True
     assert det.motivo == "tiempo_sin_respuesta"
-
-
 
 
 def test_detectar_pregunta_no_requiere_ia_si_ya_tiene_respuesta_ia(app, usuario):
@@ -690,8 +690,10 @@ def test_detectar_pregunta_no_requiere_ia_si_ya_tiene_respuesta_ia(app, usuario)
     assert det.requiere is False
     assert det.motivo is None
 
+
 def test_respuesta_automatica_ia_cuando_vence_tiempo(app, usuario):
     from datetime import date, timedelta
+
     from compilando.modules.ai.services import procesar_preguntas_vencidas_ia
     from compilando.modules.answers.models import Respuesta
     from compilando.modules.questions.services import publicar_pregunta
