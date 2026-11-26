@@ -544,3 +544,92 @@ def test_consultas_acotadas_y_conteos_sin_cargar_respuestas(app, usuario):
     assert "count(respuestas.id)" in sql
     assert "respuestas.cuerpo" not in sql
     assert set(valores) == set(ids[:20])
+
+
+def test_eliminar_pregunta_autor_exitosa(app, usuario, tmp_path):
+    from io import BytesIO
+
+    from werkzeug.datastructures import FileStorage
+
+    from compilando.modules.answers.services import publicar_respuesta
+    from compilando.modules.questions.attachments import ruta_adjunto
+    from compilando.modules.questions.models import AdjuntoPregunta, Pregunta
+    from compilando.modules.questions.services import eliminar_pregunta, publicar_pregunta
+
+    app.config["ATTACHMENTS_FOLDER"] = str(tmp_path)
+    archivo = FileStorage(
+        stream=BytesIO(b"print('hola')\n"),
+        filename="ejemplo.py",
+        content_type="text/x-python",
+    )
+
+    pregunta = publicar_pregunta(
+        titulo="¿Cómo borrar una pregunta?",
+        cuerpo="Probando eliminación completa con adjunto y respuesta.",
+        categoria_nombre="Python",
+        nombres_tags=["pytest"],
+        usuario=usuario,
+        archivos=[archivo],
+    )
+    adjunto_id = pregunta.adjuntos[0].id
+    ruta_archivo = ruta_adjunto(adjunto_id)
+    assert ruta_archivo.is_file()
+
+    publicar_respuesta(
+        pregunta_id=pregunta.id,
+        cuerpo="Esta respuesta debe eliminarse en cascada.",
+        usuario=usuario,
+    )
+
+    eliminar_pregunta(pregunta_id=pregunta.id, usuario=usuario)
+
+    assert db.session.get(Pregunta, pregunta.id) is None
+    assert db.session.get(AdjuntoPregunta, adjunto_id) is None
+    assert not ruta_archivo.exists()
+
+
+def test_eliminar_pregunta_otro_usuario_falla(app, usuario):
+    from compilando.modules.auth.models import Usuario
+    from compilando.modules.questions.services import eliminar_pregunta, publicar_pregunta
+
+    intruso = Usuario(
+        username="intruso_preg",
+        email="intruso_preg@test.com",
+        password_hash="hash_intruso",
+    )
+    db.session.add(intruso)
+    db.session.commit()
+
+    pregunta = publicar_pregunta(
+        titulo="¿Puede otro usuario borrar mi pregunta?",
+        cuerpo="Solo el autor debería poder eliminarla.",
+        categoria_nombre="Seguridad",
+        nombres_tags=["permisos"],
+        usuario=usuario,
+    )
+
+    with pytest.raises(PermissionError, match="Solo el autor"):
+        eliminar_pregunta(pregunta_id=pregunta.id, usuario=intruso)
+
+
+def test_ruta_eliminar_pregunta(app, usuario, client, cliente_autenticado):
+    from compilando.modules.questions.models import Pregunta
+    from compilando.modules.questions.services import publicar_pregunta
+
+    pregunta = publicar_pregunta(
+        titulo="¿Ruta POST para eliminar pregunta?",
+        cuerpo="Probando endpoint HTTP de eliminación.",
+        categoria_nombre="Flask",
+        nombres_tags=["rutas"],
+        usuario=usuario,
+    )
+
+    # Sin sesión devuelve 401
+    resp_anon = client.post(f"/questions/{pregunta.id}/delete")
+    assert resp_anon.status_code == 401
+
+    # Con sesión del autor elimina y redirige
+    auth_client = cliente_autenticado(usuario)
+    resp_ok = auth_client.post(f"/questions/{pregunta.id}/delete", follow_redirects=False)
+    assert resp_ok.status_code == 302
+    assert db.session.get(Pregunta, pregunta.id) is None

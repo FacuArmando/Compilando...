@@ -12,6 +12,7 @@ dependencies = [
     "pillow>=13.0.0",
     "psycopg[binary]>=3.2,<4",
     "python-dotenv>=1.2.4",
+    "tzdata>=2026.6",
 ]
 
 [build-system]

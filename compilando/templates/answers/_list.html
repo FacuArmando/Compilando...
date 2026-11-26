@@ -58,13 +58,18 @@
                         or (usuario_actual.id == pregunta.usuario_id and respuesta.estado != "Aceptada")
                     ) %}
                     <div class="answer-actions">
-                        {% if usuario_actual and not respuesta.es_ia and usuario_actual.id == respuesta.usuario_id %}
+                      {% if usuario_actual and not respuesta.es_ia and usuario_actual.id == respuesta.usuario_id %}
                         <button type="button" class="answer-edit-button btn-editar-respuesta"
                                 data-respuesta-id="{{ respuesta.id }}"
                                 aria-controls="form-editar-respuesta-{{ respuesta.id }}">
                             {{ ui("Editar respuesta") }}
                         </button>
+                        <button type="button" class="answer-delete-button btn-abrir-eliminar-respuesta"
+                                data-respuesta-id="{{ respuesta.id }}">
+                            {{ icon('trash') }} {{ ui("Eliminar respuesta") }}
+                        </button>
                         {% endif %}
+
 
                         {% if usuario_actual and usuario_actual.id == pregunta.usuario_id
                         and respuesta.estado != "Aceptada" %}
@@ -94,6 +99,27 @@
                         <button type="button" class="answer-cancel btn-cancelar-edicion" data-respuesta-id="{{ respuesta.id }}">{{ ui("Cancelar") }}</button>
                     </div>
                 </form>
+
+                <dialog id="dialog-eliminar-respuesta-{{ respuesta.id }}" class="question-delete-dialog" aria-labelledby="titulo-eliminar-respuesta-{{ respuesta.id }}">
+                    <div class="question-delete-dialog-card">
+                        <div class="question-delete-dialog-icon" aria-hidden="true">
+                            {{ icon('trash') }}
+                        </div>
+                        <h3 id="titulo-eliminar-respuesta-{{ respuesta.id }}">{{ ui("¿Eliminar esta respuesta?") }}</h3>
+                        <p>{{ ui("Esta acción es permanente y eliminará tu respuesta de esta pregunta.") }}</p>
+                        <form action="{{ url_for('answers.delete_answer', respuesta_id=respuesta.id) }}" method="POST" class="question-delete-dialog-actions">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="question-cancel-delete-button btn-cancelar-eliminar-respuesta" data-respuesta-id="{{ respuesta.id }}">
+                                {{ ui("Cancelar") }}
+                            </button>
+                            <button type="submit" class="question-confirm-delete-button">
+                                {{ ui("Sí, eliminar respuesta") }}
+                            </button>
+                        </form>
+                    </div>
+                </dialog>
+
+
                 {% endif %}
             </article>
             {% else %}

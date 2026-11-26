@@ -81,3 +81,45 @@ if (account) {
     }
   });
 }
+
+// Actualización en vivo en el inicio cuando la IA responde automáticamente una pregunta
+(() => {
+  const cards = Array.from(document.querySelectorAll(".community-question[data-pregunta-id]"));
+  if (!cards.length) return;
+
+  const ids = cards.map((card) => card.dataset.preguntaId).filter(Boolean);
+  if (!ids.length) return;
+
+  window.setInterval(async () => {
+    try {
+      const resp = await fetch(`/feed-ai-status?ids=${encodeURIComponent(ids.join(","))}`, {
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (!data.respuestas) return;
+
+      cards.forEach((card) => {
+        const id = card.dataset.preguntaId;
+        const total = data.respuestas[id];
+        if (typeof total !== "number" || total <= 0) return;
+
+        const badge = card.querySelector("[data-feed-answer-count]");
+        if (!badge || badge.classList.contains("has-answers")) return;
+
+        badge.classList.add("has-answers");
+        const iconSvg = badge.querySelector("svg");
+        const texto = total === 1 ? "1 respuesta" : `${total} respuestas`;
+        if (iconSvg) {
+          badge.replaceChildren(iconSvg, ` ${texto}`);
+        } else {
+          badge.textContent = texto;
+        }
+        card.querySelector(".community-ai-badge")?.remove();
+      });
+    } catch (_) {
+      // Silencioso ante cortes temporales de red
+    }
+  }, 5000);
+})();

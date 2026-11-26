@@ -149,6 +149,12 @@ El archivo `.github/workflows/checks.yml` configura estas comprobaciones para Gi
 
 Siguiente hito: publicar pregunta → consultar pregunta, con autor autenticado, persistencia y pruebas de permisos.
 
+## Easter Egg
+
+👀 Hay un pequeño secreto escondido en Compilando.
+
+Quizás el logo del **pie de página** tenga algo más para ofrecer de lo que aparenta. ¿Y si **cinco pequeños toques seguidos** fueran suficientes para revelar algo inesperado? 🤫
+
 # Integrantes Del Grupo:
 
     #Integrante 1:

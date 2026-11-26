@@ -1,7 +1,10 @@
 """Contexto acotado, límites persistentes y reserva atómica antes de consultar IA."""
 
 import json
+from dataclasses import dataclass
+from datetime import datetime, time, timedelta
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from flask import abort, current_app
 from sqlalchemy import or_, select, update
@@ -16,6 +19,7 @@ from compilando.modules.auth.security import limitar_intentos
 from compilando.modules.auth.sessions import ahora_utc
 from compilando.modules.questions.attachments import leer_adjunto
 from compilando.modules.questions.models import Pregunta
+from compilando.modules.questions.services import normalizar_nombre
 
 
 def proveedor_actual() -> ProveedorIA:
@@ -68,7 +72,13 @@ def preparar_contexto(pregunta: Pregunta, incluir_adjuntos: bool) -> str:
     return contexto
 
 
-def consultar_ia(pregunta_id: int, solicitante_id: int, incluir_adjuntos: bool) -> Respuesta:
+def consultar_ia(
+    pregunta_id: int,
+    solicitante_id: int,
+    incluir_adjuntos: bool,
+    *,
+    aplicar_limite: bool = True,
+) -> Respuesta:
     pregunta = db.session.get(Pregunta, pregunta_id)
     if pregunta is None:
         abort(404)
@@ -84,7 +94,8 @@ def consultar_ia(pregunta_id: int, solicitante_id: int, incluir_adjuntos: bool) 
     if actual and actual.estado == "pendiente" and actual.vence > ahora:
         raise ErrorIA("Ya se está preparando una respuesta. Esperá y recargá la pregunta.", 409)
     # También cuentan los intentos fallidos; los duplicados no hacen otra llamada a Gemini.
-    limitar_intentos("ai", usuario_id=solicitante_id)
+    if aplicar_limite:
+        limitar_intentos("ai", usuario_id=solicitante_id)
     token = uuid4().hex
     valores = {
         "solicitante_id": solicitante_id,
@@ -155,3 +166,111 @@ def consultar_ia(pregunta_id: int, solicitante_id: int, incluir_adjuntos: bool) 
         )
         db.session.commit()
         raise
+
+
+@dataclass(frozen=True)
+class DeteccionIA:
+    requiere: bool
+    motivo: str | None = None
+
+
+def detectar_pregunta_requiere_ia(
+    pregunta: Pregunta,
+    *,
+    cantidad_respuestas: int | None = None,
+    tiene_respuesta_ia: bool | None = None,
+    ahora: datetime | None = None,
+) -> DeteccionIA:
+    """Detecta si una pregunta requiere IA por etiqueta o por tiempo sin respuestas."""
+
+    if tiene_respuesta_ia is None:
+        tiene_respuesta_ia = any(r.es_ia for r in pregunta.respuestas)
+    if tiene_respuesta_ia:
+        return DeteccionIA(requiere=False, motivo=None)
+
+    etiquetas_ia = {
+        normalizar_nombre(tag)
+        for tag in current_app.config.get("AI_TRIGGER_TAGS", ("ia", "ai", "gemini", "asistente-ia"))
+    }
+    if any(normalizar_nombre(tag.nombre) in etiquetas_ia for tag in pregunta.tags):
+        return DeteccionIA(requiere=True, motivo="etiqueta")
+
+    if cantidad_respuestas is None:
+        cantidad_respuestas = len(pregunta.respuestas)
+
+    if cantidad_respuestas == 0 and pregunta.fecha is not None:
+        minutos_espera = int(current_app.config.get("AI_UNANSWERED_MINUTES", 1440))
+        tz_ar = ZoneInfo("America/Argentina/Buenos_Aires")
+        referencia = (ahora or datetime.now(tz_ar)).replace(tzinfo=None)
+        if isinstance(pregunta.fecha, datetime):
+            fecha_pregunta = pregunta.fecha.replace(tzinfo=None)
+        else:
+            fecha_pregunta = datetime.combine(pregunta.fecha, time.min)
+        if referencia - fecha_pregunta >= timedelta(minutes=minutos_espera):
+            return DeteccionIA(requiere=True, motivo="tiempo_sin_respuesta")
+
+    return DeteccionIA(requiere=False, motivo=None)
+
+
+def listar_preguntas_requieren_ia() -> list[tuple[Pregunta, DeteccionIA]]:
+    """Devuelve todas las preguntas publicadas que cumplen algún criterio para IA."""
+    preguntas = db.session.scalars(
+        select(Pregunta).order_by(Pregunta.fecha.desc(), Pregunta.id.desc())
+    ).all()
+    resultado: list[tuple[Pregunta, DeteccionIA]] = []
+    for pregunta in preguntas:
+        deteccion = detectar_pregunta_requiere_ia(pregunta)
+        if deteccion.requiere:
+            resultado.append((pregunta, deteccion))
+    return resultado
+
+
+def responder_automaticamente_si_vencio(pregunta: Pregunta) -> Respuesta | None:
+    if current_app.config.get("TESTING") and not current_app.config.get("AI_AUTO_RESPOND_IN_TESTS"):
+        return None  # (o return 0 en procesar_preguntas_vencidas_ia)
+    """Genera una respuesta de IA automáticamente si la pregunta venció el tiempo sin respuestas."""
+    if not current_app.config.get("AI_AUTO_RESPOND_UNANSWERED", False):
+        return None
+    if pregunta.usuario_id is None:
+        return None
+
+    deteccion = detectar_pregunta_requiere_ia(pregunta)
+    if not deteccion.requiere or deteccion.motivo != "tiempo_sin_respuesta":
+        return None
+
+    try:
+        return consultar_ia(
+            pregunta_id=pregunta.id,
+            solicitante_id=pregunta.usuario_id,
+            incluir_adjuntos=False,
+            aplicar_limite=False,
+        )
+    except Exception:
+        current_app.logger.warning(
+            "No se pudo generar la respuesta automática de IA para la pregunta %s.",
+            pregunta.id,
+        )
+        return None
+
+
+def procesar_preguntas_vencidas_ia(limite: int = 5) -> int:
+    """Busca preguntas vencidas sin respuestas y les genera una respuesta de IA."""
+    if not current_app.config.get("AI_AUTO_RESPOND_UNANSWERED", False):
+        return 0
+    if current_app.config.get("TESTING") and not current_app.config.get("AI_AUTO_RESPOND_IN_TESTS"):
+        return 0  # (o return 0 en procesar_preguntas_vencidas_ia)
+
+    preguntas_sin_respuestas = db.session.scalars(
+        select(Pregunta)
+        .where(~Pregunta.respuestas.any())
+        .order_by(Pregunta.fecha.asc(), Pregunta.id.asc())
+        .limit(limite * 4)
+    ).all()
+
+    generadas = 0
+    for pregunta in preguntas_sin_respuestas:
+        if generadas >= limite:
+            break
+        if responder_automaticamente_si_vencio(pregunta) is not None:
+            generadas += 1
+    return generadas

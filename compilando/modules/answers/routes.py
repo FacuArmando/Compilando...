@@ -12,6 +12,7 @@ from compilando.modules.answers.models import Respuesta
 from compilando.modules.answers.services import (
     aceptar_respuesta,
     editar_respuesta,
+    eliminar_respuesta,
     publicar_respuesta,
 )
 from compilando.modules.questions.models import Pregunta
@@ -156,5 +157,31 @@ def accept_answer(respuesta_id: int):
         url_for(
             "questions.view_question",
             pregunta_id=respuesta.pregunta_id,
+        )
+    )
+
+
+@bp.post("/answers/<int:respuesta_id>/delete")
+def delete_answer(respuesta_id: int):
+    """Permite al autor eliminar su propia respuesta."""
+    if g.usuario_actual is None:
+        abort(401)
+
+    try:
+        pregunta_id = eliminar_respuesta(
+            respuesta_id=respuesta_id,
+            usuario=g.usuario_actual,
+        )
+    except ValueError:
+        abort(404)
+    except PermissionError:
+        abort(403)
+
+    flash("Tu respuesta fue eliminada correctamente.", "success")
+    return redirect(
+        url_for(
+            "questions.view_question",
+            pregunta_id=pregunta_id,
+            _anchor="respuestas",
         )
     )
