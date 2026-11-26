@@ -547,7 +547,9 @@ def test_consultas_acotadas_y_conteos_sin_cargar_respuestas(app, usuario):
 
 def test_eliminar_pregunta_autor_exitosa(app, usuario, tmp_path):
     from io import BytesIO
+
     from werkzeug.datastructures import FileStorage
+
     from compilando.modules.answers.services import publicar_respuesta
     from compilando.modules.questions.attachments import ruta_adjunto
     from compilando.modules.questions.models import AdjuntoPregunta, Pregunta
